@@ -1,0 +1,38 @@
+name: evenly
+description: "Trip expense splitting app for friends and family."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.10.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # Firebase
+  firebase_core: ^3.13.0
+  firebase_auth: ^5.6.0
+  cloud_firestore: ^5.6.0
+
+  # State Management
+  flutter_riverpod: ^2.6.1
+
+  # PDF Generation
+  pdf: ^3.11.2
+  printing: ^5.14.2
+
+  # Utilities
+  intl: ^0.20.2
+  share_plus: ^10.1.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  generate: true

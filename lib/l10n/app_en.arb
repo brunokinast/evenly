@@ -1,0 +1,261 @@
+{
+  "@@locale": "en",
+  
+  "appTitle": "Evenly",
+  
+  "settingUp": "Setting up...",
+  "failedToInitialize": "Failed to initialize: {error}",
+  "@failedToInitialize": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "retry": "Retry",
+  "errorLoadingProfile": "Error loading profile: {error}",
+  "@errorLoadingProfile": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  
+  "welcomeTitle": "Welcome to Evenly",
+  "welcomeSubtitle": "Split expenses fairly with friends and family",
+  "whatsYourName": "What's your name?",
+  "enterYourName": "Enter your name",
+  "pleaseEnterName": "Please enter your name",
+  "getStarted": "Get Started",
+  
+  "myTrips": "My Trips",
+  "noTripsYet": "No trips yet",
+  "createFirstTrip": "Create your first trip to start splitting expenses with friends!",
+  "newTrip": "New Trip",
+  "pullToRefresh": "Pull to refresh",
+  
+  "createTrip": "Create Trip",
+  "tripName": "Trip Name",
+  "enterTripName": "Enter trip name",
+  "pleaseEnterTripName": "Please enter a trip name",
+  "currency": "Currency",
+  "create": "Create",
+  "failedToCreateTrip": "Failed to create trip: {error}",
+  "@failedToCreateTrip": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  
+  "joinTrip": "Join Trip",
+  "invalidInviteLink": "Invalid or expired invite code",
+  "goBack": "Go Back",
+  "alreadyMemberOf": "You're already a member of",
+  "openTrip": "Open Trip",
+  "youreInvitedToJoin": "You're invited to join",
+  "joining": "Joining...",
+  "failedToJoinTrip": "Failed to join trip: {error}",
+  "@failedToJoinTrip": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  
+  "enterInviteCode": "Enter Invite Code",
+  "enterInviteCodeHint": "Ask the trip owner for the 6-digit code",
+  "paste": "Paste",
+  "validating": "Validating...",
+  "findTrip": "Find Trip",
+  "invalidCodeFormat": "Please enter a 6-digit code",
+  "invalidOrExpiredCode": "Invalid or expired invite code",
+  "enterDifferentCode": "Enter a different code",
+  
+  "inviteCode": "Invite Code",
+  "showInviteCode": "Show Invite Code",
+  "shareCodeInstructions": "Share this code with friends so they can join your trip",
+  "codeExpiresIn": "Expires in {time}",
+  "@codeExpiresIn": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "copyCode": "Copy Code",
+  "codeCopied": "Code copied to clipboard!",
+  "regenerateCode": "Regenerate Code",
+  "regenerateCodeConfirm": "Generate a new invite code? The current code will stop working.",
+  "regenerate": "Regenerate",
+  "codeRegenerated": "New invite code generated",
+  
+  "members": "Members",
+  "expenses": "Expenses",
+  "summary": "Summary",
+  "share": "Share",
+  "addMember": "Add Member",
+  "addExpense": "Add Expense",
+  "exportPdf": "Export PDF",
+  
+  "membersCount": "Members ({count})",
+  "@membersCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "noMembers": "No members yet",
+  "youIndicator": "(You)",
+  "owner": "Owner",
+  "manualIndicator": "(manual)",
+  "removeMember": "Remove Member",
+  "removeMemberConfirm": "Remove {name} from the trip?",
+  "@removeMemberConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "cannotRemoveWithExpenses": "Cannot remove member with expenses",
+  "remove": "Remove",
+  "cancel": "Cancel",
+  "add": "Add",
+  "memberName": "Member Name",
+  "enterMemberName": "Enter member name",
+  "pleaseEnterMemberName": "Please enter a member name",
+  "memberNameExists": "A member with this name already exists",
+  
+  "expensesCount": "Expenses ({count})",
+  "@expensesCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "noExpenses": "No expenses yet",
+  "addFirstExpense": "Add your first expense to get started!",
+  "paidBy": "Paid by {name}",
+  "@paidBy": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "splitBetween": "Split between {count}",
+  "@splitBetween": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "deleteExpense": "Delete Expense",
+  "deleteExpenseConfirm": "Delete \"{title}\"?",
+  "@deleteExpenseConfirm": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "delete": "Delete",
+  
+  "description": "Description",
+  "whatWasItFor": "What was it for?",
+  "pleaseEnterDescription": "Please enter a description",
+  "amount": "Amount",
+  "pleaseEnterAmount": "Please enter an amount",
+  "invalidAmount": "Please enter a valid amount",
+  "whoPaid": "Who Paid?",
+  "selectWhoPaid": "Select who paid",
+  "pleaseSelectWhoPaid": "Please select who paid",
+  "splitBetweenTitle": "Split Between",
+  "selectAtLeastOne": "Select at least one person",
+  "save": "Save",
+  "saveExpense": "Save Expense",
+  "failedToSaveExpense": "Failed to save expense: {error}",
+  "@failedToSaveExpense": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  
+  "totalExpenses": "Total Expenses",
+  "perPerson": "Per Person (avg)",
+  "allSettled": "All settled! No payments needed.",
+  "suggestedSettlements": "Suggested Settlements",
+  "pays": "pays",
+  "balances": "Balances",
+  "owes": "owes {amount}",
+  "@owes": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "getsBack": "gets back {amount}",
+  "@getsBack": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "settledUp": "settled up",
+  
+  "shareTripLink": "Share Trip Code",
+  "shareVia": "Share via...",
+  "joinTripMessage": "Join my trip \"{title}\" on Evenly! Use invite code: ",
+  "@joinTripMessage": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  
+  "tripSettings": "Trip Settings",
+  "editTripName": "Edit Trip Name",
+  "deleteTrip": "Delete Trip",
+  "deleteTripConfirm": "Delete \"{title}\"? This cannot be undone.",
+  "@deleteTripConfirm": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "tripDeleted": "Trip deleted",
+  
+  "profile": "Profile",
+  "displayName": "Display Name",
+  "yourDisplayName": "Your display name",
+  "updateProfile": "Update Profile",
+  "profileUpdated": "Profile updated!",
+  "failedToUpdateProfile": "Failed to update profile",
+  
+  "close": "Close",
+  "ok": "OK",
+  "error": "Error",
+  "loading": "Loading...",
+  "unknown": "Unknown",
+  
+  "editExpense": "Edit Expense",
+  "updateExpense": "Update Expense",
+  "expenseUpdated": "Expense updated",
+  "expenseAdded": "Expense added",
+  "expenseDeleted": "Expense deleted",
+  "deleteExpenseQuestion": "Delete Expense?",
+  "deleteExpenseWarning": "Are you sure you want to delete this expense? This cannot be undone.",
+  "saving": "Saving...",
+  "selectAll": "Select All",
+  "deselectAll": "Deselect All",
+  "splitBetweenLabel": "Split between",
+  "eachPersonPays": "Each person pays:",
+  
+  "balanceSummary": "Balance Summary",
+  "totalSpent": "Total Spent",
+  "expensesCountStat": "{count} expenses",
+  "@expensesCountStat": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "membersCountStat": "{count} members",
+  "@membersCountStat": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "individualBalances": "Individual Balances",
+  "getsBackLabel": "Gets back",
+  "owesLabel": "Owes",
+  "settled": "Settled",
+  "dataNotReady": "Data not ready yet",
+  "failedToExportPdf": "Failed to export PDF: {error}",
+  "@failedToExportPdf": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "tripNotFound": "Trip not found"
+}
