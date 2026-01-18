@@ -6,12 +6,13 @@ A simple, low-friction, friend-focused trip expense splitting app built with Flu
 
 - **No Account Required** - Anonymous authentication means zero signup friction
 - **Create Trips** - Organize expenses by trip with custom currency
-- **Share via Link** - Invite friends to join trips with a simple link
+- **Invite via Code** - Share a 6-digit code for friends to join trips
 - **Track Expenses** - Add expenses and specify who paid and who participated
 - **Equal Split** - Automatically split expenses equally among participants
 - **Balance Summary** - See who owes whom at a glance
 - **Smart Settlements** - Get optimized payment suggestions to minimize transfers
 - **PDF Export** - Export trip summaries for records
+- **Localization** - English and Portuguese (Brazil) support
 
 ## Getting Started
 
@@ -21,7 +22,6 @@ A simple, low-friction, friend-focused trip expense splitting app built with Flu
 - Firebase project with:
   - Authentication (Anonymous provider enabled)
   - Cloud Firestore
-- FlutterFire CLI (recommended)
 
 ### Firebase Setup
 
@@ -42,7 +42,7 @@ A simple, low-friction, friend-focused trip expense splitting app built with Flu
 
 4. **Deploy Firestore Rules**
    ```bash
-   firebase deploy --only firestore:rules
+   firebase deploy --only firestore:rules --project=your-project-id
    ```
 
 ### Running the App
@@ -63,10 +63,11 @@ A simple, low-friction, friend-focused trip expense splitting app built with Flu
 lib/
 ├── main.dart              # App entry point with Firebase init
 ├── models/                # Data models
-│   ├── expense.dart       # Expense model
-│   ├── member.dart        # Member model
-│   ├── transfer.dart      # Settlement transfer model
-│   └── trip.dart          # Trip model
+│   ├── expense.dart
+│   ├── member.dart
+│   ├── transfer.dart
+│   ├── trip.dart
+│   └── user_profile.dart
 ├── providers/             # Riverpod providers
 │   ├── auth_providers.dart
 │   ├── balance_providers.dart
@@ -78,12 +79,16 @@ lib/
 │   ├── create_trip_screen.dart
 │   ├── join_trip_screen.dart
 │   ├── trip_detail_screen.dart
-│   └── trip_list_screen.dart
-└── services/              # Business logic
-    ├── auth_service.dart       # Anonymous auth
-    ├── balance_calculator.dart # Balance & settlement logic
-    ├── firestore_repository.dart
-    └── pdf_exporter.dart       # PDF generation
+│   ├── trip_list_screen.dart
+│   └── welcome_screen.dart
+├── services/              # Business logic
+│   ├── auth_service.dart
+│   ├── balance_calculator.dart
+│   ├── firestore_repository.dart
+│   └── pdf_exporter.dart
+└── l10n/                  # Localization
+    ├── app_en.arb
+    └── app_pt.arb
 ```
 
 ## Data Model
@@ -94,8 +99,11 @@ lib/
   "title": "Trip to Brasilia",
   "currency": "BRL",
   "ownerUid": "uid_123",
-  "shareToken": "abc123",
-  "createdAt": 1670000000000
+  "inviteCode": "482917",
+  "inviteCodeActive": true,
+  "inviteCodeCreatedAt": "timestamp",
+  "inviteCodeExpiresAt": "timestamp (7 days)",
+  "createdAt": "timestamp"
 }
 ```
 
@@ -103,8 +111,14 @@ lib/
 ```json
 {
   "uid": "uid_123",
-  "name": "Bruno",
-  "createdAt": 1670000000000
+  "createdAt": "timestamp"
+}
+```
+Or for manual members (people without the app):
+```json
+{
+  "manualName": "John",
+  "createdAt": "timestamp"
 }
 ```
 
@@ -116,7 +130,7 @@ lib/
   "payer_member_id": "memberA",
   "participant_member_ids": ["memberA", "memberB", "memberC"],
   "createdByUid": "uid_123",
-  "createdAt": 1670000000000
+  "createdAt": "timestamp"
 }
 ```
 
@@ -133,56 +147,17 @@ lib/
    - Minimize number of transfers
    - Generate suggested payments
 
-## Deep Links
+## Invite Code System
 
-The app supports deep links for sharing trips:
+Trip owners can invite others using a 6-digit numeric code:
 
-```
-https://evenly.app/join?tripId=XXX&token=YYY
-evenly://join?tripId=XXX&token=YYY
-```
+1. Owner opens trip → sees invite code
+2. Owner shares code verbally or via text
+3. Joiner opens app → taps "Join Trip" → enters code
+4. Code is validated (active + not expired)
+5. Joiner is added as member
 
-### Android Setup
-Add to `android/app/src/main/AndroidManifest.xml`:
-```xml
-<intent-filter android:autoVerify="true">
-    <action android:name="android.intent.action.VIEW" />
-    <category android:name="android.intent.category.DEFAULT" />
-    <category android:name="android.intent.category.BROWSABLE" />
-    <data android:scheme="https" android:host="evenly.app" />
-</intent-filter>
-<intent-filter>
-    <action android:name="android.intent.action.VIEW" />
-    <category android:name="android.intent.category.DEFAULT" />
-    <category android:name="android.intent.category.BROWSABLE" />
-    <data android:scheme="evenly" android:host="join" />
-</intent-filter>
-```
-
-### iOS Setup
-Add to `ios/Runner/Info.plist`:
-```xml
-<key>CFBundleURLTypes</key>
-<array>
-    <dict>
-        <key>CFBundleURLSchemes</key>
-        <array>
-            <string>evenly</string>
-        </array>
-    </dict>
-</array>
-<key>FlutterDeepLinkingEnabled</key>
-<true/>
-```
-
-## Future Enhancements
-
-- Custom splits (fixed amounts / percentages)
-- Offline support with Firestore persistence
-- Expense categories
-- Payment integrations (Pix, Stripe)
-- User account upgrade
-- Voice commands / Assistant integration
+Codes expire after 7 days. Owners can regenerate codes at any time.
 
 ## License
 
