@@ -31,7 +31,7 @@ class _JoinTripScreenState extends ConsumerState<JoinTripScreen> {
 
   Future<void> _validateCode() async {
     final code = _codeController.text.trim();
-    
+
     // Validate format (6 digits)
     if (code.length != 6 || int.tryParse(code) == null) {
       setState(() => _error = 'invalid_format');
@@ -102,9 +102,7 @@ class _JoinTripScreenState extends ConsumerState<JoinTripScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.joinTrip),
-      ),
+      appBar: AppBar(title: Text(l10n.joinTrip)),
       body: _buildBody(l10n),
     );
   }
@@ -122,7 +120,7 @@ class _JoinTripScreenState extends ConsumerState<JoinTripScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: 32),
-          
+
           // Icon and title
           const Icon(Icons.pin, size: 64),
           const SizedBox(height: 16),
@@ -135,8 +133,8 @@ class _JoinTripScreenState extends ConsumerState<JoinTripScreen> {
           Text(
             l10n.enterInviteCodeHint,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
@@ -148,9 +146,9 @@ class _JoinTripScreenState extends ConsumerState<JoinTripScreen> {
             textAlign: TextAlign.center,
             maxLength: 6,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  letterSpacing: 8,
-                  fontWeight: FontWeight.bold,
-                ),
+              letterSpacing: 8,
+              fontWeight: FontWeight.bold,
+            ),
             decoration: InputDecoration(
               hintText: '000000',
               counterText: '',
@@ -210,7 +208,11 @@ class _JoinTripScreenState extends ConsumerState<JoinTripScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.check_circle, size: 64, color: Colors.green),
+              Icon(
+                Icons.check_circle,
+                size: 64,
+                color: Theme.of(context).colorScheme.primary,
+              ),
               const SizedBox(height: 16),
               Text(
                 l10n.alreadyMemberOf,
@@ -220,8 +222,8 @@ class _JoinTripScreenState extends ConsumerState<JoinTripScreen> {
               Text(
                 _trip!.title,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 24),
               FilledButton(
@@ -258,10 +260,8 @@ class _JoinTripScreenState extends ConsumerState<JoinTripScreen> {
                     const SizedBox(height: 8),
                     Text(
                       _trip!.title,
-                      style:
-                          Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -309,10 +309,7 @@ class _JoinTripScreenState extends ConsumerState<JoinTripScreen> {
       final repository = ref.read(firestoreRepositoryProvider);
 
       // Add member with uid only - name comes from profile
-      await repository.addMember(
-        tripId: _trip!.id,
-        uid: uid,
-      );
+      await repository.addMember(tripId: _trip!.id, uid: uid);
 
       // Invalidate the trips provider so the home screen shows this trip
       ref.invalidate(userTripsProvider);
@@ -330,7 +327,7 @@ class _JoinTripScreenState extends ConsumerState<JoinTripScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.failedToJoinTrip(e.toString())),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }

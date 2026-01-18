@@ -10,7 +10,7 @@ class FirestoreRepository {
   final Random _random = Random();
 
   FirestoreRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   // ============================================================
   // USER PROFILES
@@ -53,9 +53,9 @@ class FirestoreRepository {
   /// Returns a map of uid -> UserProfile.
   Future<Map<String, UserProfile>> getUserProfiles(List<String> uids) async {
     if (uids.isEmpty) return {};
-    
+
     final profiles = <String, UserProfile>{};
-    
+
     // Firestore 'in' queries support max 10 items, so batch if needed
     for (var i = 0; i < uids.length; i += 10) {
       final batch = uids.skip(i).take(10).toList();
@@ -63,12 +63,12 @@ class FirestoreRepository {
           .collection('users')
           .where(FieldPath.documentId, whereIn: batch)
           .get();
-      
+
       for (final doc in snapshot.docs) {
         profiles[doc.id] = UserProfile.fromFirestore(doc);
       }
     }
-    
+
     return profiles;
   }
 
@@ -80,18 +80,18 @@ class FirestoreRepository {
   /// Checks for uniqueness among active, non-expired codes.
   Future<String> _generateUniqueInviteCode() async {
     const maxAttempts = 10;
-    
+
     for (var attempt = 0; attempt < maxAttempts; attempt++) {
       // Generate 6-digit code
       final code = (_random.nextInt(900000) + 100000).toString();
-      
+
       // Check if code is already in use (active and not expired)
       final existing = await _firestore
           .collection('trips')
           .where('inviteCode', isEqualTo: code)
           .where('inviteCodeActive', isEqualTo: true)
           .get();
-      
+
       // Check expiration for any matches
       bool codeInUse = false;
       for (final doc in existing.docs) {
@@ -101,14 +101,16 @@ class FirestoreRepository {
           break;
         }
       }
-      
+
       if (!codeInUse) {
         return code;
       }
     }
-    
+
     // Extremely unlikely to reach here with 900,000 possible codes
-    throw Exception('Failed to generate unique invite code after $maxAttempts attempts');
+    throw Exception(
+      'Failed to generate unique invite code after $maxAttempts attempts',
+    );
   }
 
   /// Creates a new trip and adds the creator as the first member.
@@ -136,10 +138,7 @@ class FirestoreRepository {
     await tripRef.set(trip.toFirestore());
 
     // Add owner as first member (name comes from their profile)
-    await addMember(
-      tripId: trip.id,
-      uid: ownerUid,
-    );
+    await addMember(tripId: trip.id, uid: ownerUid);
 
     return trip;
   }
@@ -165,7 +164,7 @@ class FirestoreRepository {
     if (snapshot.docs.isEmpty) return null;
 
     final trip = Trip.fromFirestore(snapshot.docs.first);
-    
+
     // Check if code has expired
     if (!trip.isInviteCodeValid) return null;
 
@@ -181,7 +180,9 @@ class FirestoreRepository {
       'inviteCode': newCode,
       'inviteCodeActive': true,
       'inviteCodeCreatedAt': Timestamp.fromDate(now),
-      'inviteCodeExpiresAt': Timestamp.fromDate(now.add(const Duration(days: 7))),
+      'inviteCodeExpiresAt': Timestamp.fromDate(
+        now.add(const Duration(days: 7)),
+      ),
     });
 
     final doc = await _firestore.collection('trips').doc(tripId).get();
@@ -198,23 +199,23 @@ class FirestoreRepository {
   /// Gets all trips where user is a member (non-streaming, for refresh).
   Future<List<Trip>> getUserTrips(String uid) async {
     final trips = <Trip>[];
-    
+
     // Get trips where user is owner
     final ownerTrips = await _firestore
         .collection('trips')
         .where('ownerUid', isEqualTo: uid)
         .orderBy('createdAt', descending: true)
         .get();
-    
+
     for (final doc in ownerTrips.docs) {
       trips.add(Trip.fromFirestore(doc));
     }
-    
+
     // Also check all trips for membership
     final allTrips = await _firestore.collection('trips').get();
     for (final tripDoc in allTrips.docs) {
       if (trips.any((t) => t.id == tripDoc.id)) continue;
-      
+
       final memberQuery = await _firestore
           .collection('trips')
           .doc(tripDoc.id)
@@ -222,12 +223,12 @@ class FirestoreRepository {
           .where('uid', isEqualTo: uid)
           .limit(1)
           .get();
-      
+
       if (memberQuery.docs.isNotEmpty) {
         trips.add(Trip.fromFirestore(tripDoc));
       }
     }
-    
+
     trips.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return trips;
   }
@@ -270,18 +271,21 @@ class FirestoreRepository {
   // ============================================================
 
   /// Adds a member to a trip.
-  /// 
+  ///
   /// For linked members (with uid), don't pass manualName - their name
   /// comes from their UserProfile.
-  /// 
+  ///
   /// For manual members (without uid), pass manualName.
   Future<Member> addMember({
     required String tripId,
     String? uid,
     String? manualName,
   }) async {
-    final memberRef =
-        _firestore.collection('trips').doc(tripId).collection('members').doc();
+    final memberRef = _firestore
+        .collection('trips')
+        .doc(tripId)
+        .collection('members')
+        .doc();
     final now = DateTime.now();
 
     final member = Member(
@@ -334,7 +338,10 @@ class FirestoreRepository {
 
   /// Updates a member's name.
   Future<void> updateMemberName(
-      String tripId, String memberId, String name) async {
+    String tripId,
+    String memberId,
+    String name,
+  ) async {
     await _firestore
         .collection('trips')
         .doc(tripId)
@@ -372,8 +379,11 @@ class FirestoreRepository {
     required List<String> participantMemberIds,
     required String createdByUid,
   }) async {
-    final expenseRef =
-        _firestore.collection('trips').doc(tripId).collection('expenses').doc();
+    final expenseRef = _firestore
+        .collection('trips')
+        .doc(tripId)
+        .collection('expenses')
+        .doc();
     final now = DateTime.now();
 
     final expense = Expense(

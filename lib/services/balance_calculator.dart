@@ -29,9 +29,7 @@ class BalanceCalculator {
   /// Calculates balances and suggested transfers from a list of expenses.
   BalanceResult calculate(List<Expense> expenses, List<Member> members) {
     // Initialize balances for all members
-    final balances = <String, int>{
-      for (final member in members) member.id: 0,
-    };
+    final balances = <String, int>{for (final member in members) member.id: 0};
 
     int totalSpent = 0;
 
@@ -121,15 +119,18 @@ class BalanceCalculator {
       final debtorAmount = debtorBalances[debtorId]!;
 
       // Transfer the minimum of the two amounts
-      final transferAmount =
-          creditorAmount < debtorAmount ? creditorAmount : debtorAmount;
+      final transferAmount = creditorAmount < debtorAmount
+          ? creditorAmount
+          : debtorAmount;
 
       if (transferAmount > 0) {
-        transfers.add(Transfer(
-          fromMemberId: debtorId,
-          toMemberId: creditorId,
-          amountCents: transferAmount,
-        ));
+        transfers.add(
+          Transfer(
+            fromMemberId: debtorId,
+            toMemberId: creditorId,
+            amountCents: transferAmount,
+          ),
+        );
       }
 
       // Update balances

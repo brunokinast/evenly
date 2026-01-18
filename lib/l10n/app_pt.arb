@@ -177,5 +177,12 @@
       "error": {"type": "String"}
     }
   },
-  "tripNotFound": "Viagem não encontrada"
+  "tripNotFound": "Viagem não encontrada",
+  
+  "pdfCreated": "Criado: {date}",
+  "pdfCurrency": "Moeda: {currency}",
+  "pdfDescription": "Descrição",
+  "pdfPaidBy": "Pago por",
+  "pdfAmount": "Valor",
+  "pdfFinalBalances": "Saldos Finais"
 }

@@ -8,6 +8,39 @@ import 'package:printing/printing.dart';
 import '../models/models.dart';
 import 'balance_calculator.dart';
 
+/// Localized strings for PDF generation.
+/// Since PDF generation happens outside of widget context,
+/// we need to pass localized strings explicitly.
+class PdfStrings {
+  final String membersCount;
+  final String expensesCount;
+  final String created;
+  final String currency;
+  final String description;
+  final String paidBy;
+  final String amount;
+  final String totalSpent;
+  final String finalBalances;
+  final String suggestedSettlements;
+  final String allSettled;
+  final String unknown;
+
+  const PdfStrings({
+    required this.membersCount,
+    required this.expensesCount,
+    required this.created,
+    required this.currency,
+    required this.description,
+    required this.paidBy,
+    required this.amount,
+    required this.totalSpent,
+    required this.finalBalances,
+    required this.suggestedSettlements,
+    required this.allSettled,
+    required this.unknown,
+  });
+}
+
 /// Service for generating and exporting PDF summaries.
 class PdfExporter {
   const PdfExporter();
@@ -19,6 +52,7 @@ class PdfExporter {
     required Map<String, String> memberNames,
     required List<Expense> expenses,
     required BalanceResult balanceResult,
+    required PdfStrings strings,
   }) async {
     final pdf = pw.Document();
     final dateFormat = DateFormat('MMM d, yyyy');
@@ -29,28 +63,37 @@ class PdfExporter {
         margin: const pw.EdgeInsets.all(40),
         build: (context) => [
           // Header
-          _buildHeader(trip, dateFormat),
+          _buildHeader(trip, dateFormat, strings),
           pw.SizedBox(height: 20),
 
           // Members Section
-          _buildMembersSection(members, memberNames),
+          _buildMembersSection(members, memberNames, strings),
           pw.SizedBox(height: 20),
 
           // Expenses Section
-          _buildExpensesSection(expenses, memberNames, trip.currency),
+          _buildExpensesSection(expenses, memberNames, trip.currency, strings),
           pw.SizedBox(height: 20),
 
           // Summary Section
-          _buildSummarySection(balanceResult, trip.currency),
+          _buildSummarySection(balanceResult, trip.currency, strings),
           pw.SizedBox(height: 20),
 
           // Balances Section
-          _buildBalancesSection(balanceResult, memberNames, trip.currency),
+          _buildBalancesSection(
+            balanceResult,
+            memberNames,
+            trip.currency,
+            strings,
+          ),
           pw.SizedBox(height: 20),
 
           // Settlements Section
           _buildSettlementsSection(
-              balanceResult.transfers, memberNames, trip.currency),
+            balanceResult.transfers,
+            memberNames,
+            trip.currency,
+            strings,
+          ),
         ],
       ),
     );
@@ -58,64 +101,61 @@ class PdfExporter {
     return pdf.save();
   }
 
-  pw.Widget _buildHeader(Trip trip, DateFormat dateFormat) {
+  pw.Widget _buildHeader(Trip trip, DateFormat dateFormat, PdfStrings strings) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(
           trip.title,
-          style: pw.TextStyle(
-            fontSize: 28,
-            fontWeight: pw.FontWeight.bold,
-          ),
+          style: pw.TextStyle(fontSize: 28, fontWeight: pw.FontWeight.bold),
         ),
         pw.SizedBox(height: 8),
         pw.Text(
-          'Created: ${dateFormat.format(trip.createdAt)}',
-          style: const pw.TextStyle(
-            fontSize: 12,
-            color: PdfColors.grey700,
+          strings.created.replaceAll(
+            '{date}',
+            dateFormat.format(trip.createdAt),
           ),
+          style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
         ),
         pw.Text(
-          'Currency: ${trip.currency}',
-          style: const pw.TextStyle(
-            fontSize: 12,
-            color: PdfColors.grey700,
-          ),
+          strings.currency.replaceAll('{currency}', trip.currency),
+          style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
         ),
         pw.Divider(thickness: 2),
       ],
     );
   }
 
-  pw.Widget _buildMembersSection(List<Member> members, Map<String, String> memberNames) {
+  pw.Widget _buildMembersSection(
+    List<Member> members,
+    Map<String, String> memberNames,
+    PdfStrings strings,
+  ) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(
-          'Members (${members.length})',
-          style: pw.TextStyle(
-            fontSize: 18,
-            fontWeight: pw.FontWeight.bold,
-          ),
+          strings.membersCount.replaceAll('{count}', members.length.toString()),
+          style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
         ),
         pw.SizedBox(height: 8),
         pw.Wrap(
           spacing: 16,
           runSpacing: 4,
           children: members
-              .map((m) => pw.Container(
-                    padding: const pw.EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
-                    ),
-                    decoration: pw.BoxDecoration(
-                      color: PdfColors.grey200,
-                      borderRadius: pw.BorderRadius.circular(4),
-                    ),
-                    child: pw.Text(memberNames[m.id] ?? 'Unknown'),
-                  ))
+              .map(
+                (m) => pw.Container(
+                  padding: const pw.EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  decoration: pw.BoxDecoration(
+                    color: PdfColors.grey200,
+                    borderRadius: pw.BorderRadius.circular(4),
+                  ),
+                  child: pw.Text(memberNames[m.id] ?? strings.unknown),
+                ),
+              )
               .toList(),
         ),
       ],
@@ -126,16 +166,17 @@ class PdfExporter {
     List<Expense> expenses,
     Map<String, String> memberNames,
     String currency,
+    PdfStrings strings,
   ) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(
-          'Expenses (${expenses.length})',
-          style: pw.TextStyle(
-            fontSize: 18,
-            fontWeight: pw.FontWeight.bold,
+          strings.expensesCount.replaceAll(
+            '{count}',
+            expenses.length.toString(),
           ),
+          style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
         ),
         pw.SizedBox(height: 8),
         pw.Table(
@@ -150,27 +191,34 @@ class PdfExporter {
             pw.TableRow(
               decoration: const pw.BoxDecoration(color: PdfColors.grey200),
               children: [
-                _tableCell('Description', isHeader: true),
-                _tableCell('Paid by', isHeader: true),
-                _tableCell('Amount', isHeader: true),
+                _tableCell(strings.description, isHeader: true),
+                _tableCell(strings.paidBy, isHeader: true),
+                _tableCell(strings.amount, isHeader: true),
               ],
             ),
             // Data rows
-            ...expenses.map((e) => pw.TableRow(
-                  children: [
-                    _tableCell(e.description),
-                    _tableCell(memberNames[e.payerMemberId] ?? 'Unknown'),
-                    _tableCell(
-                        BalanceCalculator.formatAmount(e.amountCents, currency)),
-                  ],
-                )),
+            ...expenses.map(
+              (e) => pw.TableRow(
+                children: [
+                  _tableCell(e.description),
+                  _tableCell(memberNames[e.payerMemberId] ?? strings.unknown),
+                  _tableCell(
+                    BalanceCalculator.formatAmount(e.amountCents, currency),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ],
     );
   }
 
-  pw.Widget _buildSummarySection(BalanceResult result, String currency) {
+  pw.Widget _buildSummarySection(
+    BalanceResult result,
+    String currency,
+    PdfStrings strings,
+  ) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(16),
       decoration: pw.BoxDecoration(
@@ -181,11 +229,8 @@ class PdfExporter {
         mainAxisAlignment: pw.MainAxisAlignment.center,
         children: [
           pw.Text(
-            'Total Spent: ',
-            style: pw.TextStyle(
-              fontSize: 16,
-              fontWeight: pw.FontWeight.bold,
-            ),
+            '${strings.totalSpent}: ',
+            style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
           ),
           pw.Text(
             BalanceCalculator.formatAmount(result.totalSpentCents, currency),
@@ -204,6 +249,7 @@ class PdfExporter {
     BalanceResult result,
     Map<String, String> memberNames,
     String currency,
+    PdfStrings strings,
   ) {
     final sortedBalances = result.balances.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
@@ -212,15 +258,12 @@ class PdfExporter {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(
-          'Final Balances',
-          style: pw.TextStyle(
-            fontSize: 18,
-            fontWeight: pw.FontWeight.bold,
-          ),
+          strings.finalBalances,
+          style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
         ),
         pw.SizedBox(height: 8),
         ...sortedBalances.map((entry) {
-          final memberName = memberNames[entry.key] ?? 'Unknown';
+          final memberName = memberNames[entry.key] ?? strings.unknown;
           final balance = entry.value;
           final color = balance > 0
               ? PdfColors.green700
@@ -251,6 +294,7 @@ class PdfExporter {
     List<Transfer> transfers,
     Map<String, String> memberNames,
     String currency,
+    PdfStrings strings,
   ) {
     if (transfers.isEmpty) {
       return pw.Container(
@@ -261,7 +305,7 @@ class PdfExporter {
         ),
         child: pw.Center(
           child: pw.Text(
-            'All settled! No payments needed.',
+            strings.allSettled,
             style: pw.TextStyle(
               fontWeight: pw.FontWeight.bold,
               color: PdfColors.green700,
@@ -275,16 +319,13 @@ class PdfExporter {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(
-          'Suggested Settlements',
-          style: pw.TextStyle(
-            fontSize: 18,
-            fontWeight: pw.FontWeight.bold,
-          ),
+          strings.suggestedSettlements,
+          style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
         ),
         pw.SizedBox(height: 8),
         ...transfers.map((t) {
-          final from = memberNames[t.fromMemberId] ?? 'Unknown';
-          final to = memberNames[t.toMemberId] ?? 'Unknown';
+          final from = memberNames[t.fromMemberId] ?? strings.unknown;
+          final to = memberNames[t.toMemberId] ?? strings.unknown;
 
           return pw.Container(
             margin: const pw.EdgeInsets.symmetric(vertical: 4),
@@ -296,9 +337,43 @@ class PdfExporter {
             child: pw.Row(
               children: [
                 pw.Expanded(
-                  child: pw.Text(
-                    '$from  -->  $to',
-                    style: const pw.TextStyle(fontSize: 14),
+                  child: pw.Row(
+                    children: [
+                      pw.Expanded(
+                        flex: 2,
+                        child: pw.Text(from, style: const pw.TextStyle(fontSize: 14)),
+                      ),
+                      pw.Container(
+                        width: 40,
+                        alignment: pw.Alignment.center,
+                        child: pw.CustomPaint(
+                          size: const PdfPoint(30, 12),
+                          painter: (canvas, size) {
+                            final paint = PdfColor.fromInt(0xFF666666);
+                            final y = size.y / 2;
+                            // Draw line
+                            canvas
+                              ..setStrokeColor(paint)
+                              ..setLineWidth(1.5)
+                              ..moveTo(0, y)
+                              ..lineTo(size.x - 6, y)
+                              ..strokePath();
+                            // Draw arrowhead
+                            canvas
+                              ..setFillColor(paint)
+                              ..moveTo(size.x, y)
+                              ..lineTo(size.x - 8, y - 4)
+                              ..lineTo(size.x - 8, y + 4)
+                              ..closePath()
+                              ..fillPath();
+                          },
+                        ),
+                      ),
+                      pw.Expanded(
+                        flex: 2,
+                        child: pw.Text(to, style: const pw.TextStyle(fontSize: 14)),
+                      ),
+                    ],
                   ),
                 ),
                 pw.Text(
@@ -321,9 +396,7 @@ class PdfExporter {
       padding: const pw.EdgeInsets.all(8),
       child: pw.Text(
         text,
-        style: pw.TextStyle(
-          fontWeight: isHeader ? pw.FontWeight.bold : null,
-        ),
+        style: pw.TextStyle(fontWeight: isHeader ? pw.FontWeight.bold : null),
       ),
     );
   }

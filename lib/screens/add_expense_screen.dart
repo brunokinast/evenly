@@ -10,11 +10,7 @@ class AddExpenseScreen extends ConsumerStatefulWidget {
   final String tripId;
   final Expense? expense; // If provided, we're editing
 
-  const AddExpenseScreen({
-    super.key,
-    required this.tripId,
-    this.expense,
-  });
+  const AddExpenseScreen({super.key, required this.tripId, this.expense});
 
   @override
   ConsumerState<AddExpenseScreen> createState() => _AddExpenseScreenState();
@@ -70,7 +66,10 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.delete, color: Colors.red),
+                  : Icon(
+                      Icons.delete,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
               onPressed: _isDeleting ? null : () => _confirmDelete(l10n),
             ),
         ],
@@ -84,7 +83,17 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
           }
 
           final currency = tripAsync.valueOrNull?.currency ?? '';
-          final memberNames = memberNamesAsync.valueOrNull ?? {};
+          final rawMemberNames = memberNamesAsync.valueOrNull ?? {};
+
+          // Localize member names (replace markers with translated strings)
+          final memberNames = <String, String>{};
+          for (final entry in rawMemberNames.entries) {
+            memberNames[entry.key] = localizeMemberName(
+              entry.value,
+              l10n.youIndicator,
+              l10n.manualIndicator,
+            );
+          }
 
           // Initialize payer and participants if not set
           if (_selectedPayerId == null && members.isNotEmpty) {
@@ -136,8 +145,13 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                     suffixText: currency,
                     border: const OutlineInputBorder(),
                   ),
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  onChanged: (_) {
+                    // Trigger rebuild to update the split preview
+                    setState(() {});
+                  },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return l10n.pleaseEnterAmount;
@@ -192,11 +206,13 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                     TextButton(
                       onPressed: () {
                         setState(() {
-                          if (_selectedParticipantIds.length == members.length) {
+                          if (_selectedParticipantIds.length ==
+                              members.length) {
                             _selectedParticipantIds.clear();
                           } else {
-                            _selectedParticipantIds =
-                                members.map((m) => m.id).toSet();
+                            _selectedParticipantIds = members
+                                .map((m) => m.id)
+                                .toSet();
                           }
                         });
                       },
@@ -247,9 +263,11 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : Icon(_isEditing ? Icons.save : Icons.check),
-                  label: Text(_isLoading
-                      ? l10n.saving
-                      : (_isEditing ? l10n.updateExpense : l10n.addExpense)),
+                  label: Text(
+                    _isLoading
+                        ? l10n.saving
+                        : (_isEditing ? l10n.updateExpense : l10n.addExpense),
+                  ),
                 ),
               ],
             ),
@@ -283,9 +301,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
           ),
           Text(
             '$currency ${splitAmount.toStringAsFixed(2)}',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -296,16 +314,16 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedPayerId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.pleaseSelectWhoPaid)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.pleaseSelectWhoPaid)));
       return;
     }
 
     if (_selectedParticipantIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.selectAtLeastOne)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.selectAtLeastOne)));
       return;
     }
 
@@ -345,8 +363,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-                _isEditing ? l10n.expenseUpdated : l10n.expenseAdded),
+            content: Text(_isEditing ? l10n.expenseUpdated : l10n.expenseAdded),
           ),
         );
       }
@@ -355,7 +372,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.failedToSaveExpense(e.toString())),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -378,7 +395,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
             child: Text(l10n.cancel),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
             onPressed: () {
               Navigator.pop(context);
               _deleteExpense(l10n);
@@ -399,16 +418,16 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.expenseDeleted)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.expenseDeleted)));
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.failedToSaveExpense(e.toString())),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }

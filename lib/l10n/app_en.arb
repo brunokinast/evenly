@@ -257,5 +257,22 @@
       "error": {"type": "String"}
     }
   },
-  "tripNotFound": "Trip not found"
+  "tripNotFound": "Trip not found",
+  
+  "pdfCreated": "Created: {date}",
+  "@pdfCreated": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "pdfCurrency": "Currency: {currency}",
+  "@pdfCurrency": {
+    "placeholders": {
+      "currency": {"type": "String"}
+    }
+  },
+  "pdfDescription": "Description",
+  "pdfPaidBy": "Paid by",
+  "pdfAmount": "Amount",
+  "pdfFinalBalances": "Final Balances"
 }

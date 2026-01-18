@@ -484,4 +484,26 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get tripNotFound => 'Viagem não encontrada';
+
+  @override
+  String pdfCreated(String date) {
+    return 'Criado: $date';
+  }
+
+  @override
+  String pdfCurrency(String currency) {
+    return 'Moeda: $currency';
+  }
+
+  @override
+  String get pdfDescription => 'Descrição';
+
+  @override
+  String get pdfPaidBy => 'Pago por';
+
+  @override
+  String get pdfAmount => 'Valor';
+
+  @override
+  String get pdfFinalBalances => 'Saldos Finais';
 }

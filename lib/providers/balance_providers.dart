@@ -9,8 +9,10 @@ final balanceCalculatorProvider = Provider<BalanceCalculator>((ref) {
 });
 
 /// Provider for calculated balances of a trip.
-final balanceResultProvider =
-    Provider.family<BalanceResult?, String>((ref, tripId) {
+final balanceResultProvider = Provider.family<BalanceResult?, String>((
+  ref,
+  tripId,
+) {
   final expenses = ref.watch(expensesProvider(tripId)).valueOrNull;
   final members = ref.watch(membersProvider(tripId)).valueOrNull;
 
@@ -23,6 +25,6 @@ final balanceResultProvider =
 /// Provider for getting a member's balance in a trip.
 final memberBalanceProvider =
     Provider.family<int, ({String tripId, String memberId})>((ref, params) {
-  final result = ref.watch(balanceResultProvider(params.tripId));
-  return result?.balances[params.memberId] ?? 0;
-});
+      final result = ref.watch(balanceResultProvider(params.tripId));
+      return result?.balances[params.memberId] ?? 0;
+    });

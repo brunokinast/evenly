@@ -42,9 +42,8 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
     final isOwner = ref.watch(isTripOwnerProvider(widget.tripId));
 
     return tripAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (error, stack) => Scaffold(
         appBar: AppBar(title: Text(l10n.error)),
         body: Center(child: Text('${l10n.error}: $error')),
@@ -67,7 +66,8 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
                 onPressed: () => _showInviteCodeDialog(trip, l10n),
               ),
               PopupMenuButton<String>(
-                onSelected: (value) => _handleMenuAction(value, trip, isOwner, l10n),
+                onSelected: (value) =>
+                    _handleMenuAction(value, trip, isOwner, l10n),
                 itemBuilder: (context) => [
                   PopupMenuItem(
                     value: 'show_code',
@@ -99,9 +99,16 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
                     PopupMenuItem(
                       value: 'delete_trip',
                       child: ListTile(
-                        leading: const Icon(Icons.delete, color: Colors.red),
-                        title: Text(l10n.deleteTrip,
-                            style: const TextStyle(color: Colors.red)),
+                        leading: Icon(
+                          Icons.delete,
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                        title: Text(
+                          l10n.deleteTrip,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
                         contentPadding: EdgeInsets.zero,
                       ),
                     ),
@@ -126,7 +133,7 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
           floatingActionButton: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              FloatingActionButton.small(
+              FloatingActionButton.extended(
                 heroTag: 'balance',
                 onPressed: () => Navigator.push(
                   context,
@@ -134,7 +141,8 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
                     builder: (_) => BalanceScreen(tripId: widget.tripId),
                   ),
                 ),
-                child: const Icon(Icons.account_balance_wallet),
+                icon: const Icon(Icons.account_balance_wallet),
+                label: Text(l10n.balances),
               ),
               const SizedBox(height: 8),
               FloatingActionButton.extended(
@@ -178,9 +186,9 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
               child: SelectableText(
                 trip.inviteCode,
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      letterSpacing: 8,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  letterSpacing: 8,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -188,8 +196,8 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
               Text(
                 l10n.codeExpiresIn(_formatExpiry(trip.inviteCodeExpiresAt!)),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
           ],
         ),
@@ -201,9 +209,9 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
           FilledButton.icon(
             onPressed: () {
               Clipboard.setData(ClipboardData(text: trip.inviteCode));
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.codeCopied)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(l10n.codeCopied)));
               Navigator.pop(dialogContext);
             },
             icon: const Icon(Icons.copy),
@@ -227,7 +235,12 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
     }
   }
 
-  void _handleMenuAction(String action, Trip trip, bool isOwner, AppLocalizations l10n) {
+  void _handleMenuAction(
+    String action,
+    Trip trip,
+    bool isOwner,
+    AppLocalizations l10n,
+  ) {
     switch (action) {
       case 'show_code':
         _showInviteCodeDialog(trip, l10n);
@@ -263,9 +276,9 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
                 Navigator.pop(dialogContext);
               }
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.codeRegenerated)),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(l10n.codeRegenerated)));
               }
             },
             child: Text(l10n.regenerate),
@@ -318,12 +331,13 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
                 }
 
                 // Check for duplicate manual names
-                final members = ref.read(membersProvider(widget.tripId)).valueOrNull ?? [];
+                final members =
+                    ref.read(membersProvider(widget.tripId)).valueOrNull ?? [];
                 final existingManualNames = members
                     .where((m) => m.manualName != null)
                     .map((m) => m.manualName!.toLowerCase())
                     .toSet();
-                
+
                 if (existingManualNames.contains(name.toLowerCase())) {
                   setDialogState(() => errorText = l10n.memberNameExists);
                   return;
@@ -411,10 +425,9 @@ class _ExpensesTab extends ConsumerWidget {
                   Icon(
                     Icons.receipt_long,
                     size: 80,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -426,8 +439,8 @@ class _ExpensesTab extends ConsumerWidget {
                     l10n.addFirstExpense,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -435,7 +448,17 @@ class _ExpensesTab extends ConsumerWidget {
           );
         }
 
-        final memberNames = memberNamesAsync.valueOrNull ?? {};
+        final rawMemberNames = memberNamesAsync.valueOrNull ?? {};
+
+        // Localize member names (replace markers with translated strings)
+        final memberNames = <String, String>{};
+        for (final entry in rawMemberNames.entries) {
+          memberNames[entry.key] = localizeMemberName(
+            entry.value,
+            l10n.youIndicator,
+            l10n.manualIndicator,
+          );
+        }
 
         return Column(
           children: [
@@ -454,14 +477,16 @@ class _ExpensesTab extends ConsumerWidget {
                     Text(l10n.totalExpenses),
                     Text(
                       BalanceCalculator.formatAmount(
-                          balanceResult.totalSpentCents, currency),
-                      style:
-                          Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onPrimaryContainer,
-                              ),
+                        balanceResult.totalSpentCents,
+                        currency,
+                      ),
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onPrimaryContainer,
+                          ),
                     ),
                   ],
                 ),
@@ -474,7 +499,8 @@ class _ExpensesTab extends ConsumerWidget {
                 itemCount: expenses.length,
                 itemBuilder: (context, index) {
                   final expense = expenses[index];
-                  final payerName = memberNames[expense.payerMemberId] ?? l10n.unknown;
+                  final payerName =
+                      memberNames[expense.payerMemberId] ?? l10n.unknown;
 
                   return _ExpenseCard(
                     expense: expense,
@@ -483,10 +509,8 @@ class _ExpensesTab extends ConsumerWidget {
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => AddExpenseScreen(
-                          tripId: tripId,
-                          expense: expense,
-                        ),
+                        builder: (_) =>
+                            AddExpenseScreen(tripId: tripId, expense: expense),
                       ),
                     ),
                   );
@@ -513,9 +537,26 @@ class _ExpenseCard extends StatelessWidget {
     required this.onTap,
   });
 
+  String _formatDate(BuildContext context, DateTime date) {
+    // Use locale-aware date formatting
+    final locale = Localizations.localeOf(context);
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final year = date.year;
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+
+    if (locale.languageCode == 'pt') {
+      return '$day/$month/$year $hour:$minute';
+    }
+    return '$month/$day/$year $hour:$minute';
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
@@ -524,12 +565,17 @@ class _ExpenseCard extends StatelessWidget {
           child: Text(payerName.isNotEmpty ? payerName[0].toUpperCase() : '?'),
         ),
         title: Text(expense.description),
-        subtitle: Text(l10n.paidBy(payerName)),
+        subtitle: Text(
+          '${l10n.paidBy(payerName)} • ${_formatDate(context, expense.createdAt)}',
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+        ),
         trailing: Text(
           BalanceCalculator.formatAmount(expense.amountCents, currency),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -563,7 +609,17 @@ class _MembersTab extends ConsumerWidget {
 
         final trip = tripAsync.valueOrNull;
         final currency = trip?.currency ?? '';
-        final memberNames = memberNamesAsync.valueOrNull ?? {};
+        final rawMemberNames = memberNamesAsync.valueOrNull ?? {};
+
+        // Localize member names (replace markers with translated strings)
+        final memberNames = <String, String>{};
+        for (final entry in rawMemberNames.entries) {
+          memberNames[entry.key] = localizeMemberName(
+            entry.value,
+            l10n.youIndicator,
+            l10n.manualIndicator,
+          );
+        }
 
         return ListView.builder(
           padding: const EdgeInsets.all(16),
@@ -574,8 +630,7 @@ class _MembersTab extends ConsumerWidget {
             final isOwner = trip?.ownerUid == member.uid;
             final isCurrentUser = member.uid == currentUid;
             final balance = ref.watch(
-              memberBalanceProvider(
-                  (tripId: tripId, memberId: member.id)),
+              memberBalanceProvider((tripId: tripId, memberId: member.id)),
             );
 
             return Card(
@@ -585,9 +640,9 @@ class _MembersTab extends ConsumerWidget {
                   backgroundColor: isCurrentUser
                       ? Theme.of(context).colorScheme.primaryContainer
                       : null,
-                  child: Text(memberName.isNotEmpty
-                      ? memberName[0].toUpperCase()
-                      : '?'),
+                  child: Text(
+                    memberName.isNotEmpty ? memberName[0].toUpperCase() : '?',
+                  ),
                 ),
                 title: Row(
                   children: [
@@ -604,7 +659,9 @@ class _MembersTab extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          l10n.youIndicator.replaceAll('(', '').replaceAll(')', ''),
+                          l10n.youIndicator
+                              .replaceAll('(', '')
+                              .replaceAll(')', ''),
                           style: const TextStyle(fontSize: 12),
                         ),
                       ),
@@ -616,14 +673,18 @@ class _MembersTab extends ConsumerWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.tertiaryContainer,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.tertiaryContainer,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           l10n.owner,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Theme.of(context).colorScheme.onTertiaryContainer,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onTertiaryContainer,
                           ),
                         ),
                       ),
@@ -634,8 +695,10 @@ class _MembersTab extends ConsumerWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: balance > 0
-                        ? Colors.green
-                        : (balance < 0 ? Colors.red : Colors.grey),
+                        ? Theme.of(context).colorScheme.primary
+                        : (balance < 0
+                              ? Theme.of(context).colorScheme.error
+                              : Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
                 ),
               ),

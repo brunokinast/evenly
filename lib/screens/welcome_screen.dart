@@ -28,7 +28,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -51,8 +51,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 Text(
                   l10n.welcomeTitle,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
@@ -60,9 +60,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 // Subtitle
                 Text(
                   l10n.welcomeSubtitle,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 48),
@@ -107,9 +107,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 // Privacy note
                 Text(
                   'Your name is stored locally and shared only with trip members.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey),
                   textAlign: TextAlign.center,
                 ),
               ],

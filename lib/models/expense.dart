@@ -31,8 +31,9 @@ class Expense {
       amountCents: data['amount_cents'] as int,
       description: data['description'] as String,
       payerMemberId: data['payer_member_id'] as String,
-      participantMemberIds:
-          List<String>.from(data['participant_member_ids'] as List),
+      participantMemberIds: List<String>.from(
+        data['participant_member_ids'] as List,
+      ),
       createdByUid: data['createdByUid'] as String,
       createdAt: (data['createdAt'] as Timestamp).toDate(),
     );

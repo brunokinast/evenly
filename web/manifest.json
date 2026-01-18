@@ -1,11 +1,11 @@
 {
-    "name": "evenly",
-    "short_name": "evenly",
+    "name": "Evenly",
+    "short_name": "Evenly",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Split expenses fairly with friends and family",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

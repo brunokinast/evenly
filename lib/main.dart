@@ -12,9 +12,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   runApp(const ProviderScope(child: EvenlyApp()));
 }
@@ -30,7 +28,7 @@ class EvenlyApp extends ConsumerWidget {
     return MaterialApp(
       title: 'Evenly',
       debugShowCheckedModeBanner: false,
-      
+
       // Localization
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -38,11 +36,8 @@ class EvenlyApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('en'),
-        Locale('pt'),
-      ],
-      
+      supportedLocales: const [Locale('en'), Locale('pt')],
+
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF6750A4),
@@ -59,14 +54,9 @@ class EvenlyApp extends ConsumerWidget {
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: Colors.grey.shade50,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        appBarTheme: const AppBarTheme(
-          centerTitle: true,
-          elevation: 0,
-        ),
+        appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -83,14 +73,9 @@ class EvenlyApp extends ConsumerWidget {
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        appBarTheme: const AppBarTheme(
-          centerTitle: true,
-          elevation: 0,
-        ),
+        appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
       ),
       themeMode: ThemeMode.system,
       home: const _AuthWrapper(),
@@ -112,6 +97,7 @@ class _AuthWrapperState extends ConsumerState<_AuthWrapper> {
   @override
   Widget build(BuildContext context) {
     final authAsync = ref.watch(ensureSignedInProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return authAsync.when(
       loading: () => const Scaffold(
@@ -131,7 +117,7 @@ class _AuthWrapperState extends ConsumerState<_AuthWrapper> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              Icon(Icons.error_outline, size: 64, color: colorScheme.error),
               const SizedBox(height: 16),
               Text('Failed to initialize: $error'),
               const SizedBox(height: 16),
@@ -149,17 +135,17 @@ class _AuthWrapperState extends ConsumerState<_AuthWrapper> {
 
   Widget _buildProfileCheck() {
     final profileAsync = ref.watch(userProfileProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return profileAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (error, stack) => Scaffold(
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              Icon(Icons.error_outline, size: 64, color: colorScheme.error),
               const SizedBox(height: 16),
               Text('Error loading profile: $error'),
               const SizedBox(height: 16),
@@ -187,4 +173,3 @@ class _AuthWrapperState extends ConsumerState<_AuthWrapper> {
     );
   }
 }
-

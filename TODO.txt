@@ -1,0 +1,4 @@
+Join trip should be a floating button just like new trip.
+Expenses "profile picture" are not centered vertically anymore after adding the date.
+Wallet icon to show balance screen should have text, not just icon.
+The PDF is not translated

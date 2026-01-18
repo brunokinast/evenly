@@ -22,14 +22,6 @@ class TripListScreen extends ConsumerWidget {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.pin),
-            tooltip: l10n.joinTrip,
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const JoinTripScreen()),
-            ),
-          ),
-          IconButton(
             icon: const Icon(Icons.info_outline),
             onPressed: () => _showAboutDialog(context, l10n),
           ),
@@ -41,7 +33,11 @@ class TripListScreen extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Theme.of(context).colorScheme.error,
+              ),
               const SizedBox(height: 16),
               Text('${l10n.error}: $error'),
               const SizedBox(height: 16),
@@ -82,13 +78,29 @@ class TripListScreen extends ConsumerWidget {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const CreateTripScreen()),
-        ),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.newTrip),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton.extended(
+            heroTag: 'join_trip',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const JoinTripScreen()),
+            ),
+            icon: const Icon(Icons.pin),
+            label: Text(l10n.joinTrip),
+          ),
+          const SizedBox(height: 8),
+          FloatingActionButton.extended(
+            heroTag: 'new_trip',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CreateTripScreen()),
+            ),
+            icon: const Icon(Icons.add),
+            label: Text(l10n.newTrip),
+          ),
+        ],
       ),
     );
   }
@@ -103,7 +115,9 @@ class TripListScreen extends ConsumerWidget {
             Icon(
               Icons.card_travel,
               size: 100,
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 24),
             Text(
@@ -115,8 +129,8 @@ class TripListScreen extends ConsumerWidget {
               l10n.createFirstTrip,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 32),
             FilledButton.icon(
@@ -172,6 +186,19 @@ class _TripCard extends StatelessWidget {
     required this.onTap,
   });
 
+  String _formatDate(BuildContext context, DateTime date) {
+    // Use locale-aware date formatting
+    final locale = Localizations.localeOf(context);
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final year = date.year;
+
+    if (locale.languageCode == 'pt') {
+      return '$day/$month/$year';
+    }
+    return '$month/$day/$year';
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -205,23 +232,35 @@ class _TripCard extends StatelessWidget {
                     Text(
                       title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      currency,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+                    Row(
+                      children: [
+                        Text(
+                          currency,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: colorScheme.onSurfaceVariant),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '•',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: colorScheme.onSurfaceVariant),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _formatDate(context, createdAt),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: colorScheme.onSurfaceVariant),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-              Icon(
-                Icons.chevron_right,
-                color: Colors.grey[400],
-              ),
+              Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
             ],
           ),
         ),

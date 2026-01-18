@@ -1,15 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Represents a member of a trip.
-/// 
+///
 /// Members with a [uid] are linked to user accounts - their display name
 /// comes from their UserProfile, not stored here.
-/// 
+///
 /// Members without a [uid] are manually added (for people without the app)
 /// and their name is stored in [manualName].
 class Member {
   final String id;
   final String? uid;
+
   /// Name for manually-added members only (those without uid).
   /// For members with uid, look up their name from UserProfile.
   final String? manualName;

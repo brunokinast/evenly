@@ -961,6 +961,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Trip not found'**
   String get tripNotFound;
+
+  /// No description provided for @pdfCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Created: {date}'**
+  String pdfCreated(String date);
+
+  /// No description provided for @pdfCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency: {currency}'**
+  String pdfCurrency(String currency);
+
+  /// No description provided for @pdfDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get pdfDescription;
+
+  /// No description provided for @pdfPaidBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid by'**
+  String get pdfPaidBy;
+
+  /// No description provided for @pdfAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get pdfAmount;
+
+  /// No description provided for @pdfFinalBalances.
+  ///
+  /// In en, this message translates to:
+  /// **'Final Balances'**
+  String get pdfFinalBalances;
 }
 
 class _AppLocalizationsDelegate

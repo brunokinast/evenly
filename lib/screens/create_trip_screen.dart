@@ -41,11 +41,9 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.createTrip),
-      ),
+      appBar: AppBar(title: Text(l10n.createTrip)),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -79,10 +77,12 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                 border: const OutlineInputBorder(),
               ),
               items: _currencies
-                  .map((c) => DropdownMenuItem(
-                        value: c.$1,
-                        child: Text('${c.$1} - ${c.$2}'),
-                      ))
+                  .map(
+                    (c) => DropdownMenuItem(
+                      value: c.$1,
+                      child: Text('${c.$1} - ${c.$2}'),
+                    ),
+                  )
                   .toList(),
               onChanged: (value) {
                 if (value != null) {
@@ -135,9 +135,7 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
         // Replace this screen with the trip detail
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (_) => TripDetailScreen(tripId: trip.id),
-          ),
+          MaterialPageRoute(builder: (_) => TripDetailScreen(tripId: trip.id)),
         );
       }
     } catch (e) {

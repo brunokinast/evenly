@@ -481,4 +481,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripNotFound => 'Trip not found';
+
+  @override
+  String pdfCreated(String date) {
+    return 'Created: $date';
+  }
+
+  @override
+  String pdfCurrency(String currency) {
+    return 'Currency: $currency';
+  }
+
+  @override
+  String get pdfDescription => 'Description';
+
+  @override
+  String get pdfPaidBy => 'Paid by';
+
+  @override
+  String get pdfAmount => 'Amount';
+
+  @override
+  String get pdfFinalBalances => 'Final Balances';
 }

@@ -43,7 +43,17 @@ class BalanceScreen extends ConsumerWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final memberNames = memberNamesAsync.valueOrNull ?? {};
+          final rawMemberNames = memberNamesAsync.valueOrNull ?? {};
+
+          // Localize member names (replace markers with translated strings)
+          final memberNames = <String, String>{};
+          for (final entry in rawMemberNames.entries) {
+            memberNames[entry.key] = localizeMemberName(
+              entry.value,
+              l10n.youIndicator,
+              l10n.manualIndicator,
+            );
+          }
 
           return ListView(
             padding: const EdgeInsets.all(16),
@@ -85,26 +95,56 @@ class BalanceScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _exportPdf(BuildContext context, WidgetRef ref, AppLocalizations l10n) async {
+  Future<void> _exportPdf(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+  ) async {
     try {
       final trip = ref.read(tripProvider(tripId)).valueOrNull;
       final members = ref.read(membersProvider(tripId)).valueOrNull;
-      final memberNames = ref.read(memberNamesProvider(tripId)).valueOrNull;
+      final rawMemberNames = ref.read(memberNamesProvider(tripId)).valueOrNull;
       final expenses = ref.read(expensesProvider(tripId)).valueOrNull;
       final balanceResult = ref.read(balanceResultProvider(tripId));
 
       if (trip == null ||
           members == null ||
-          memberNames == null ||
+          rawMemberNames == null ||
           expenses == null ||
           balanceResult == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.dataNotReady)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.dataNotReady)));
         return;
       }
 
+      // Localize member names for the PDF
+      final memberNames = <String, String>{};
+      for (final entry in rawMemberNames.entries) {
+        memberNames[entry.key] = localizeMemberName(
+          entry.value,
+          l10n.youIndicator,
+          l10n.manualIndicator,
+        );
+      }
+
       final pdfExporter = ref.read(pdfExporterProvider);
+
+      // Build PDF strings from localization
+      final pdfStrings = PdfStrings(
+        membersCount: l10n.membersCount(0).replaceAll('0', '{count}'),
+        expensesCount: l10n.expensesCount(0).replaceAll('0', '{count}'),
+        created: l10n.pdfCreated('{date}'),
+        currency: l10n.pdfCurrency('{currency}'),
+        description: l10n.pdfDescription,
+        paidBy: l10n.pdfPaidBy,
+        amount: l10n.pdfAmount,
+        totalSpent: l10n.totalSpent,
+        finalBalances: l10n.pdfFinalBalances,
+        suggestedSettlements: l10n.suggestedSettlements,
+        allSettled: l10n.allSettled,
+        unknown: l10n.unknown,
+      );
 
       // Show loading indicator
       showDialog(
@@ -119,6 +159,7 @@ class BalanceScreen extends ConsumerWidget {
         memberNames: memberNames,
         expenses: expenses,
         balanceResult: balanceResult,
+        strings: pdfStrings,
       );
 
       // Hide loading indicator
@@ -136,7 +177,7 @@ class BalanceScreen extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.failedToExportPdf(e.toString())),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -172,16 +213,16 @@ class _TotalCard extends StatelessWidget {
             Text(
               l10n.totalSpent,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: colorScheme.onPrimaryContainer,
-                  ),
+                color: colorScheme.onPrimaryContainer,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               BalanceCalculator.formatAmount(totalCents, currency),
               style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onPrimaryContainer,
-                  ),
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onPrimaryContainer,
+              ),
             ),
             const SizedBox(height: 16),
             Row(
@@ -215,13 +256,17 @@ class _StatChip extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: Theme.of(context).colorScheme.onPrimaryContainer),
+        Icon(
+          icon,
+          size: 16,
+          color: Theme.of(context).colorScheme.onPrimaryContainer,
+        ),
         const SizedBox(width: 4),
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onPrimaryContainer,
-              ),
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
+          ),
         ),
       ],
     );
@@ -237,9 +282,9 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+      style: Theme.of(
+        context,
+      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
     );
   }
 }
@@ -371,17 +416,22 @@ class _SettlementsList extends StatelessWidget {
                               Text(
                                 from,
                                 style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               const Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 8),
-                                child: Icon(Icons.arrow_forward,
-                                    size: 16, color: Colors.grey),
+                                child: Icon(
+                                  Icons.arrow_forward,
+                                  size: 16,
+                                  color: Colors.grey,
+                                ),
                               ),
                               Text(
                                 to,
                                 style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ],
                           ),
@@ -399,11 +449,14 @@ class _SettlementsList extends StatelessWidget {
                       ),
                       child: Text(
                         BalanceCalculator.formatAmount(
-                            transfer.amountCents, currency),
+                          transfer.amountCents,
+                          currency,
+                        ),
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color:
-                              Theme.of(context).colorScheme.onPrimaryContainer,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onPrimaryContainer,
                         ),
                       ),
                     ),
