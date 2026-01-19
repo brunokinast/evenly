@@ -149,16 +149,80 @@ class BalanceCalculator {
     return transfers;
   }
 
-  /// Formats an amount in cents as a currency string.
+  /// Currency symbol mapping.
+  static const _currencySymbols = {
+    'BRL': 'R\$',
+    'USD': '\$',
+    'EUR': '€',
+    'GBP': '£',
+  };
+
+  /// Currency locale mapping for number formatting.
+  static const _currencyLocales = {
+    'BRL': 'pt_BR',
+    'USD': 'en_US',
+    'EUR': 'de_DE',
+    'GBP': 'en_GB',
+  };
+
+  /// Gets the currency symbol for a currency code.
+  static String getCurrencySymbol(String currency) {
+    return _currencySymbols[currency] ?? currency;
+  }
+
+  /// Formats an amount in cents as a currency string with proper locale formatting.
   static String formatAmount(int cents, String currency) {
     final amount = cents / 100;
-    return '$currency ${amount.toStringAsFixed(2)}';
+    final symbol = _currencySymbols[currency] ?? currency;
+    final locale = _currencyLocales[currency] ?? 'en_US';
+    
+    // Format number according to locale
+    final formatted = _formatNumber(amount, locale);
+    return '$symbol $formatted';
+  }
+
+  /// Formats a number according to the given locale.
+  static String _formatNumber(double value, String locale) {
+    // Brazilian Portuguese uses dot for thousands, comma for decimals
+    if (locale == 'pt_BR') {
+      final parts = value.toStringAsFixed(2).split('.');
+      final intPart = parts[0];
+      final decPart = parts[1];
+      
+      // Add thousand separators (dots)
+      final buffer = StringBuffer();
+      for (var i = 0; i < intPart.length; i++) {
+        if (i > 0 && (intPart.length - i) % 3 == 0) {
+          buffer.write('.');
+        }
+        buffer.write(intPart[i]);
+      }
+      return '${buffer.toString()},$decPart';
+    }
+    
+    // Default: US/UK format (comma for thousands, dot for decimals)
+    final parts = value.toStringAsFixed(2).split('.');
+    final intPart = parts[0];
+    final decPart = parts[1];
+    
+    // Add thousand separators (commas)
+    final buffer = StringBuffer();
+    for (var i = 0; i < intPart.length; i++) {
+      if (i > 0 && (intPart.length - i) % 3 == 0) {
+        buffer.write(',');
+      }
+      buffer.write(intPart[i]);
+    }
+    return '${buffer.toString()}.$decPart';
   }
 
   /// Formats an amount in cents with sign (+ or -).
   static String formatBalanceWithSign(int cents, String currency) {
     final amount = cents.abs() / 100;
+    final symbol = _currencySymbols[currency] ?? currency;
+    final locale = _currencyLocales[currency] ?? 'en_US';
     final sign = cents >= 0 ? '+' : '-';
-    return '$sign $currency ${amount.toStringAsFixed(2)}';
+    final formatted = _formatNumber(amount, locale);
+    return '$sign $symbol $formatted';
   }
 }

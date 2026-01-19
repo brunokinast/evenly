@@ -392,6 +392,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get failedToUpdateProfile => 'Failed to update profile';
 
   @override
+  String failedToSaveProfile(String error) {
+    return 'Failed to save profile: $error';
+  }
+
+  @override
   String get close => 'Close';
 
   @override
@@ -405,6 +410,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unknown => 'Unknown';
+
+  @override
+  String get lightMode => 'Light Mode';
+
+  @override
+  String get darkMode => 'Dark Mode';
+
+  @override
+  String get switchToLightTheme => 'Switch to light theme';
+
+  @override
+  String get switchToDarkTheme => 'Switch to dark theme';
 
   @override
   String get editExpense => 'Edit Expense';
@@ -481,6 +498,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripNotFound => 'Trip not found';
+
+  @override
+  String get inviteFriendsHint =>
+      'You\'ll be able to invite friends after creating the trip.';
+
+  @override
+  String get privacyNote =>
+      'Your name is stored locally and shared only with trip members.';
+
+  @override
+  String peopleCount(int count) {
+    return '$count people';
+  }
+
+  @override
+  String get tripIcon => 'Trip Icon';
+
+  @override
+  String get chooseIcon => 'Choose an icon';
+
+  @override
+  String get addMemberManually => 'Add someone who doesn\'t use the app';
+
+  @override
+  String get regenerateCodeHint =>
+      'Generate a new code if the old one was compromised';
+
+  @override
+  String get deleteTripHint => 'Permanently delete this trip and all its data';
 
   @override
   String pdfCreated(String date) {

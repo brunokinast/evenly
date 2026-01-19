@@ -118,6 +118,7 @@ class FirestoreRepository {
     required String title,
     required String currency,
     required String ownerUid,
+    String iconName = 'luggage',
   }) async {
     final tripRef = _firestore.collection('trips').doc();
     final inviteCode = await _generateUniqueInviteCode();
@@ -128,6 +129,7 @@ class FirestoreRepository {
       title: title,
       currency: currency,
       ownerUid: ownerUid,
+      iconName: iconName,
       inviteCode: inviteCode,
       inviteCodeActive: true,
       inviteCodeCreatedAt: now,
@@ -231,6 +233,16 @@ class FirestoreRepository {
 
     trips.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return trips;
+  }
+
+  /// Stream of trips where user is owner (for real-time updates).
+  Stream<List<Trip>> watchUserOwnedTrips(String uid) {
+    return _firestore
+        .collection('trips')
+        .where('ownerUid', isEqualTo: uid)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map(Trip.fromFirestore).toList());
   }
 
   /// Stream of a single trip.

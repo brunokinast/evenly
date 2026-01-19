@@ -118,7 +118,7 @@ class PdfExporter {
           style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
         ),
         pw.Text(
-          strings.currency.replaceAll('{currency}', trip.currency),
+          strings.currency.replaceAll('{currency}', BalanceCalculator.getCurrencySymbol(trip.currency)),
           style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
         ),
         pw.Divider(thickness: 2),
@@ -339,40 +339,37 @@ class PdfExporter {
                 pw.Expanded(
                   child: pw.Row(
                     children: [
-                      pw.Expanded(
-                        flex: 2,
-                        child: pw.Text(from, style: const pw.TextStyle(fontSize: 14)),
-                      ),
-                      pw.Container(
-                        width: 40,
-                        alignment: pw.Alignment.center,
-                        child: pw.CustomPaint(
-                          size: const PdfPoint(30, 12),
-                          painter: (canvas, size) {
-                            final paint = PdfColor.fromInt(0xFF666666);
-                            final y = size.y / 2;
-                            // Draw line
-                            canvas
-                              ..setStrokeColor(paint)
-                              ..setLineWidth(1.5)
-                              ..moveTo(0, y)
-                              ..lineTo(size.x - 6, y)
-                              ..strokePath();
-                            // Draw arrowhead
-                            canvas
-                              ..setFillColor(paint)
-                              ..moveTo(size.x, y)
-                              ..lineTo(size.x - 8, y - 4)
-                              ..lineTo(size.x - 8, y + 4)
-                              ..closePath()
-                              ..fillPath();
-                          },
+                      pw.Text(from, style: const pw.TextStyle(fontSize: 14)),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.symmetric(horizontal: 10),
+                        child: pw.Container(
+                          width: 24,
+                          height: 10,
+                          child: pw.CustomPaint(
+                            size: const PdfPoint(24, 10),
+                            painter: (canvas, size) {
+                              final paint = PdfColor.fromInt(0xFF666666);
+                              final y = size.y / 2;
+                              // Draw line
+                              canvas
+                                ..setStrokeColor(paint)
+                                ..setLineWidth(1.2)
+                                ..moveTo(0, y)
+                                ..lineTo(size.x - 5, y)
+                                ..strokePath();
+                              // Draw arrowhead
+                              canvas
+                                ..setFillColor(paint)
+                                ..moveTo(size.x, y)
+                                ..lineTo(size.x - 6, y - 3)
+                                ..lineTo(size.x - 6, y + 3)
+                                ..closePath()
+                                ..fillPath();
+                            },
+                          ),
                         ),
                       ),
-                      pw.Expanded(
-                        flex: 2,
-                        child: pw.Text(to, style: const pw.TextStyle(fontSize: 14)),
-                      ),
+                      pw.Text(to, style: const pw.TextStyle(fontSize: 14)),
                     ],
                   ),
                 ),

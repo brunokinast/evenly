@@ -794,6 +794,12 @@ abstract class AppLocalizations {
   /// **'Failed to update profile'**
   String get failedToUpdateProfile;
 
+  /// No description provided for @failedToSaveProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save profile: {error}'**
+  String failedToSaveProfile(String error);
+
   /// No description provided for @close.
   ///
   /// In en, this message translates to:
@@ -823,6 +829,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unknown'**
   String get unknown;
+
+  /// No description provided for @lightMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Light Mode'**
+  String get lightMode;
+
+  /// No description provided for @darkMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark Mode'**
+  String get darkMode;
+
+  /// No description provided for @switchToLightTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to light theme'**
+  String get switchToLightTheme;
+
+  /// No description provided for @switchToDarkTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to dark theme'**
+  String get switchToDarkTheme;
 
   /// No description provided for @editExpense.
   ///
@@ -961,6 +991,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Trip not found'**
   String get tripNotFound;
+
+  /// No description provided for @inviteFriendsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll be able to invite friends after creating the trip.'**
+  String get inviteFriendsHint;
+
+  /// No description provided for @privacyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name is stored locally and shared only with trip members.'**
+  String get privacyNote;
+
+  /// No description provided for @peopleCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} people'**
+  String peopleCount(int count);
+
+  /// No description provided for @tripIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip Icon'**
+  String get tripIcon;
+
+  /// No description provided for @chooseIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an icon'**
+  String get chooseIcon;
+
+  /// No description provided for @addMemberManually.
+  ///
+  /// In en, this message translates to:
+  /// **'Add someone who doesn\'t use the app'**
+  String get addMemberManually;
+
+  /// No description provided for @regenerateCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate a new code if the old one was compromised'**
+  String get regenerateCodeHint;
+
+  /// No description provided for @deleteTripHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete this trip and all its data'**
+  String get deleteTripHint;
 
   /// No description provided for @pdfCreated.
   ///

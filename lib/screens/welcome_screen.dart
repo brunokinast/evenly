@@ -28,6 +28,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       body: SafeArea(
@@ -36,82 +37,113 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
           child: Form(
             key: _formKey,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Logo/Icon
-                Icon(
-                  Icons.wallet,
-                  size: 80,
-                  color: Theme.of(context).colorScheme.primary,
+                const Spacer(flex: 2),
+
+                // Icon
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                  child: Icon(
+                    Icons.wallet_rounded,
+                    size: 48,
+                    color: colorScheme.primary,
+                  ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
 
                 // Title
                 Text(
                   l10n.welcomeTitle,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.w700,
+                      ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
 
                 // Subtitle
                 Text(
                   l10n.welcomeSubtitle,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 48),
+
+                const Spacer(),
 
                 // Name Input
-                TextFormField(
-                  controller: _nameController,
-                  decoration: InputDecoration(
-                    labelText: l10n.whatsYourName,
-                    hintText: l10n.enterYourName,
-                    prefixIcon: const Icon(Icons.person),
-                    border: const OutlineInputBorder(),
+                Container(
+                  decoration: BoxDecoration(
+                    color: colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                    ),
                   ),
-                  textCapitalization: TextCapitalization.words,
-                  autofocus: true,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return l10n.pleaseEnterName;
-                    }
-                    if (value.trim().length < 2) {
-                      return l10n.pleaseEnterName;
-                    }
-                    return null;
-                  },
+                  child: TextFormField(
+                    controller: _nameController,
+                    decoration: InputDecoration(
+                      labelText: l10n.whatsYourName,
+                      hintText: l10n.enterYourName,
+                      prefixIcon: const Icon(Icons.person_rounded),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                    ),
+                    textCapitalization: TextCapitalization.words,
+                    autofocus: true,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return l10n.pleaseEnterName;
+                      }
+                      if (value.trim().length < 2) {
+                        return l10n.pleaseEnterName;
+                      }
+                      return null;
+                    },
+                  ),
                 ),
                 const SizedBox(height: 24),
 
                 // Continue Button
-                FilledButton.icon(
-                  onPressed: _isLoading ? null : _saveProfile,
-                  icon: _isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.arrow_forward),
-                  label: Text(_isLoading ? l10n.settingUp : l10n.getStarted),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: _isLoading ? null : _saveProfile,
+                    icon: _isLoading
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: colorScheme.onPrimary,
+                            ),
+                          )
+                        : const Icon(Icons.arrow_forward_rounded),
+                    label: Text(_isLoading ? l10n.settingUp : l10n.getStarted),
+                  ),
                 ),
+
                 const SizedBox(height: 16),
 
                 // Privacy note
                 Text(
-                  'Your name is stored locally and shared only with trip members.',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                  l10n.privacyNote,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                   textAlign: TextAlign.center,
                 ),
+
+                const Spacer(flex: 2),
               ],
             ),
           ),
@@ -135,16 +167,15 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         displayName: _nameController.text.trim(),
       );
 
-      // Refresh the profile provider
       ref.invalidate(userProfileProvider);
-
       widget.onComplete();
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save profile: $e'),
-            backgroundColor: Colors.red,
+            content: Text(l10n.failedToSaveProfile(e.toString())),
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }

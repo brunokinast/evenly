@@ -395,6 +395,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get failedToUpdateProfile => 'Falha ao atualizar perfil';
 
   @override
+  String failedToSaveProfile(String error) {
+    return 'Falha ao salvar perfil: $error';
+  }
+
+  @override
   String get close => 'Fechar';
 
   @override
@@ -408,6 +413,18 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get unknown => 'Desconhecido';
+
+  @override
+  String get lightMode => 'Modo Claro';
+
+  @override
+  String get darkMode => 'Modo Escuro';
+
+  @override
+  String get switchToLightTheme => 'Mudar para tema claro';
+
+  @override
+  String get switchToDarkTheme => 'Mudar para tema escuro';
 
   @override
   String get editExpense => 'Editar Despesa';
@@ -484,6 +501,36 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get tripNotFound => 'Viagem não encontrada';
+
+  @override
+  String get inviteFriendsHint =>
+      'Você poderá convidar amigos após criar a viagem.';
+
+  @override
+  String get privacyNote =>
+      'Seu nome é armazenado localmente e compartilhado apenas com os membros da viagem.';
+
+  @override
+  String peopleCount(int count) {
+    return '$count pessoas';
+  }
+
+  @override
+  String get tripIcon => 'Ícone da Viagem';
+
+  @override
+  String get chooseIcon => 'Escolha um ícone';
+
+  @override
+  String get addMemberManually => 'Adicionar alguém que não usa o app';
+
+  @override
+  String get regenerateCodeHint =>
+      'Gerar um novo código se o antigo foi comprometido';
+
+  @override
+  String get deleteTripHint =>
+      'Excluir permanentemente esta viagem e todos os dados';
 
   @override
   String pdfCreated(String date) {

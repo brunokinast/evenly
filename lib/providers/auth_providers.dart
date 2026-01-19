@@ -1,9 +1,47 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/models.dart';
 import '../services/services.dart';
 import 'trip_providers.dart';
+
+/// Provider for SharedPreferences instance.
+final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
+  throw UnimplementedError('SharedPreferences not initialized');
+});
+
+/// Provider for the app theme mode (light/dark/system) with persistence.
+final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, ThemeMode>((ref) {
+  final prefs = ref.watch(sharedPreferencesProvider);
+  return ThemeModeNotifier(prefs);
+});
+
+/// Notifier that persists theme mode to SharedPreferences.
+class ThemeModeNotifier extends StateNotifier<ThemeMode> {
+  final SharedPreferences _prefs;
+  static const _key = 'theme_mode';
+
+  ThemeModeNotifier(this._prefs) : super(_loadThemeMode(_prefs));
+
+  static ThemeMode _loadThemeMode(SharedPreferences prefs) {
+    final value = prefs.getString(_key);
+    switch (value) {
+      case 'light':
+        return ThemeMode.light;
+      case 'dark':
+        return ThemeMode.dark;
+      default:
+        return ThemeMode.system;
+    }
+  }
+
+  void setThemeMode(ThemeMode mode) {
+    state = mode;
+    _prefs.setString(_key, mode.name);
+  }
+}
 
 /// Provider for the AuthService.
 final authServiceProvider = Provider<AuthService>((ref) {

@@ -4,11 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../models/models.dart';
 import '../providers/providers.dart';
+import '../services/balance_calculator.dart';
+import '../theme/widgets.dart';
 
 /// Screen for adding or editing an expense.
 class AddExpenseScreen extends ConsumerStatefulWidget {
   final String tripId;
-  final Expense? expense; // If provided, we're editing
+  final Expense? expense;
 
   const AddExpenseScreen({super.key, required this.tripId, this.expense});
 
@@ -55,231 +57,239 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     final tripAsync = ref.watch(tripProvider(widget.tripId));
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_isEditing ? l10n.saveExpense : l10n.addExpense),
-        actions: [
-          if (_isEditing)
-            IconButton(
-              icon: _isDeleting
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Icon(
-                      Icons.delete,
-                      color: Theme.of(context).colorScheme.error,
+      body: SafeArea(
+        child: membersAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => Center(child: Text('${l10n.error}: $error')),
+          data: (members) {
+            if (members.isEmpty) {
+              return EmptyState(
+                icon: Icons.people_rounded,
+                title: l10n.noMembers,
+                subtitle: '',
+              );
+            }
+
+            final currency = tripAsync.valueOrNull?.currency ?? '';
+            final rawMemberNames = memberNamesAsync.valueOrNull ?? {};
+
+            final memberNames = <String, String>{};
+            for (final entry in rawMemberNames.entries) {
+              memberNames[entry.key] = localizeMemberName(
+                entry.value,
+                l10n.youIndicator,
+                l10n.manualIndicator,
+              );
+            }
+
+            // Initialize payer and participants if not set
+            if (_selectedPayerId == null && members.isNotEmpty) {
+              final currentUid = ref.read(currentUidProvider);
+              final currentMember = members.firstWhere(
+                (m) => m.uid == currentUid,
+                orElse: () => members.first,
+              );
+              _selectedPayerId = currentMember.id;
+            }
+
+            if (_selectedParticipantIds.isEmpty && !_isEditing) {
+              _selectedParticipantIds = members.map((m) => m.id).toSet();
+            }
+
+            return Form(
+              key: _formKey,
+              child: CustomScrollView(
+                slivers: [
+                  // Header
+                  SliverToBoxAdapter(
+                    child: _buildHeader(context, l10n),
+                  ),
+
+                  // Form Content
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate([
+                        // Description Input
+                        InputCard(
+                          child: TextFormField(
+                            controller: _descriptionController,
+                            decoration: InputDecoration(
+                              labelText: l10n.description,
+                              hintText: l10n.whatWasItFor,
+                              prefixIcon: const Icon(Icons.description_rounded),
+                              border: InputBorder.none,
+                            ),
+                            textCapitalization: TextCapitalization.sentences,
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return l10n.pleaseEnterDescription;
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Amount Input
+                        InputCard(
+                          child: TextFormField(
+                            controller: _amountController,
+                            decoration: InputDecoration(
+                              labelText: l10n.amount,
+                              hintText: '0.00',
+                              prefixIcon: const Icon(Icons.attach_money_rounded),
+                              suffixText: currency,
+                              border: InputBorder.none,
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            onChanged: (_) => setState(() {}),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return l10n.pleaseEnterAmount;
+                              }
+                              final amount = double.tryParse(value.replaceAll(',', '.'));
+                              if (amount == null || amount <= 0) {
+                                return l10n.invalidAmount;
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Payer Selection
+                        SectionHeader(title: l10n.whoPaid.toUpperCase()),
+                        const SizedBox(height: 8),
+                        _SelectionCard(
+                          children: members.map((member) {
+                            final isSelected = _selectedPayerId == member.id;
+                            final name = memberNames[member.id] ?? l10n.unknown;
+                            return _SelectionTile(
+                              name: name,
+                              isSelected: isSelected,
+                              isRadio: true,
+                              onTap: () => setState(() => _selectedPayerId = member.id),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Participants Selection
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            SectionHeader(title: l10n.splitBetweenLabel.toUpperCase()),
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  if (_selectedParticipantIds.length == members.length) {
+                                    _selectedParticipantIds.clear();
+                                  } else {
+                                    _selectedParticipantIds = members.map((m) => m.id).toSet();
+                                  }
+                                });
+                              },
+                              child: Text(
+                                _selectedParticipantIds.length == members.length
+                                    ? l10n.deselectAll
+                                    : l10n.selectAll,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        _SelectionCard(
+                          children: members.map((member) {
+                            final name = memberNames[member.id] ?? l10n.unknown;
+                            return _SelectionTile(
+                              name: name,
+                              isSelected: _selectedParticipantIds.contains(member.id),
+                              isRadio: false,
+                              onTap: () {
+                                setState(() {
+                                  if (_selectedParticipantIds.contains(member.id)) {
+                                    _selectedParticipantIds.remove(member.id);
+                                  } else {
+                                    _selectedParticipantIds.add(member.id);
+                                  }
+                                });
+                              },
+                            );
+                          }).toList(),
+                        ),
+
+                        // Split Preview
+                        if (_selectedParticipantIds.isNotEmpty) ...[
+                          const SizedBox(height: 24),
+                          _buildSplitPreview(currency, l10n),
+                        ],
+
+                        // Save Button
+                        const SizedBox(height: 32),
+                        SizedBox(
+                          width: double.infinity,
+                          child: LoadingButton(
+                            isLoading: _isLoading,
+                            onPressed: () => _saveExpense(l10n),
+                            icon: _isEditing ? Icons.save_rounded : Icons.check_rounded,
+                            label: _isEditing ? l10n.updateExpense : l10n.addExpense,
+                            loadingLabel: l10n.saving,
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                      ]),
                     ),
-              onPressed: _isDeleting ? null : () => _confirmDelete(l10n),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, AppLocalizations l10n) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 16, 16, 8),
+      child: Row(
+        children: [
+          HeaderIconButton(
+            icon: Icons.close_rounded,
+            onTap: () => Navigator.pop(context),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              _isEditing ? l10n.saveExpense : l10n.addExpense,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ),
+          if (_isEditing)
+            HeaderIconButton(
+              icon: Icons.delete_outline_rounded,
+              onTap: () => _confirmDelete(l10n),
+              backgroundColor: colorScheme.error.withValues(alpha: 0.1),
+              iconColor: colorScheme.error,
+              isLoading: _isDeleting,
             ),
         ],
-      ),
-      body: membersAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('${l10n.error}: $error')),
-        data: (members) {
-          if (members.isEmpty) {
-            return Center(child: Text(l10n.noMembers));
-          }
-
-          final currency = tripAsync.valueOrNull?.currency ?? '';
-          final rawMemberNames = memberNamesAsync.valueOrNull ?? {};
-
-          // Localize member names (replace markers with translated strings)
-          final memberNames = <String, String>{};
-          for (final entry in rawMemberNames.entries) {
-            memberNames[entry.key] = localizeMemberName(
-              entry.value,
-              l10n.youIndicator,
-              l10n.manualIndicator,
-            );
-          }
-
-          // Initialize payer and participants if not set
-          if (_selectedPayerId == null && members.isNotEmpty) {
-            // Try to select current user as default payer
-            final currentUid = ref.read(currentUidProvider);
-            final currentMember = members.firstWhere(
-              (m) => m.uid == currentUid,
-              orElse: () => members.first,
-            );
-            _selectedPayerId = currentMember.id;
-          }
-
-          if (_selectedParticipantIds.isEmpty && !_isEditing) {
-            // Default: all members are participants
-            _selectedParticipantIds = members.map((m) => m.id).toSet();
-          }
-
-          return Form(
-            key: _formKey,
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                // Description
-                TextFormField(
-                  controller: _descriptionController,
-                  decoration: InputDecoration(
-                    labelText: l10n.description,
-                    hintText: l10n.whatWasItFor,
-                    prefixIcon: const Icon(Icons.description),
-                    border: const OutlineInputBorder(),
-                  ),
-                  textCapitalization: TextCapitalization.sentences,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return l10n.pleaseEnterDescription;
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Amount
-                TextFormField(
-                  controller: _amountController,
-                  decoration: InputDecoration(
-                    labelText: l10n.amount,
-                    hintText: '0.00',
-                    prefixIcon: const Icon(Icons.attach_money),
-                    suffixText: currency,
-                    border: const OutlineInputBorder(),
-                  ),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  onChanged: (_) {
-                    // Trigger rebuild to update the split preview
-                    setState(() {});
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return l10n.pleaseEnterAmount;
-                    }
-                    final amount = double.tryParse(value.replaceAll(',', '.'));
-                    if (amount == null || amount <= 0) {
-                      return l10n.invalidAmount;
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-
-                // Payer Selection
-                Text(
-                  l10n.whoPaid,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 8),
-                Card(
-                  child: Column(
-                    children: members.map((member) {
-                      final isSelected = _selectedPayerId == member.id;
-                      final name = memberNames[member.id] ?? l10n.unknown;
-                      return ListTile(
-                        leading: Radio<String>(
-                          value: member.id,
-                          groupValue: _selectedPayerId,
-                          onChanged: (value) {
-                            setState(() => _selectedPayerId = value);
-                          },
-                        ),
-                        title: Text(name),
-                        onTap: () {
-                          setState(() => _selectedPayerId = member.id);
-                        },
-                        selected: isSelected,
-                      );
-                    }).toList(),
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Participants Selection
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      l10n.splitBetweenLabel,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          if (_selectedParticipantIds.length ==
-                              members.length) {
-                            _selectedParticipantIds.clear();
-                          } else {
-                            _selectedParticipantIds = members
-                                .map((m) => m.id)
-                                .toSet();
-                          }
-                        });
-                      },
-                      child: Text(
-                        _selectedParticipantIds.length == members.length
-                            ? l10n.deselectAll
-                            : l10n.selectAll,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Card(
-                  child: Column(
-                    children: members.map((member) {
-                      final name = memberNames[member.id] ?? l10n.unknown;
-                      return CheckboxListTile(
-                        title: Text(name),
-                        value: _selectedParticipantIds.contains(member.id),
-                        onChanged: (checked) {
-                          setState(() {
-                            if (checked == true) {
-                              _selectedParticipantIds.add(member.id);
-                            } else {
-                              _selectedParticipantIds.remove(member.id);
-                            }
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Preview Split
-                if (_selectedParticipantIds.isNotEmpty) ...[
-                  _buildSplitPreview(currency, l10n),
-                  const SizedBox(height: 24),
-                ],
-
-                // Save Button
-                FilledButton.icon(
-                  onPressed: _isLoading ? null : () => _saveExpense(l10n),
-                  icon: _isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Icon(_isEditing ? Icons.save : Icons.check),
-                  label: Text(
-                    _isLoading
-                        ? l10n.saving
-                        : (_isEditing ? l10n.updateExpense : l10n.addExpense),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
       ),
     );
   }
 
   Widget _buildSplitPreview(String currency, AppLocalizations l10n) {
+    final colorScheme = Theme.of(context).colorScheme;
     final amountText = _amountController.text.replaceAll(',', '.');
     final amount = double.tryParse(amountText);
+
     if (amount == null || amount <= 0) {
       return const SizedBox.shrink();
     }
@@ -287,23 +297,41 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     final splitAmount = amount / _selectedParticipantIds.length;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
+        color: colorScheme.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: colorScheme.primary.withValues(alpha: 0.3),
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            l10n.eachPersonPays,
-            style: Theme.of(context).textTheme.bodyLarge,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.eachPersonPays,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                l10n.peopleCount(_selectedParticipantIds.length),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+              ),
+            ],
           ),
           Text(
-            '$currency ${splitAmount.toStringAsFixed(2)}',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            BalanceCalculator.formatAmount((splitAmount * 100).round(), currency),
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: colorScheme.primary,
+                ),
           ),
         ],
       ),
@@ -314,16 +342,16 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedPayerId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.pleaseSelectWhoPaid)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.pleaseSelectWhoPaid)),
+      );
       return;
     }
 
     if (_selectedParticipantIds.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.selectAtLeastOne)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.selectAtLeastOne)),
+      );
       return;
     }
 
@@ -384,22 +412,22 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   }
 
   void _confirmDelete(AppLocalizations l10n) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text(l10n.deleteExpenseQuestion),
         content: Text(l10n.deleteExpenseWarning),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text(l10n.cancel),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: colorScheme.error),
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               _deleteExpense(l10n);
             },
             child: Text(l10n.delete),
@@ -418,9 +446,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.expenseDeleted)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.expenseDeleted)),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -436,5 +464,132 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
         setState(() => _isDeleting = false);
       }
     }
+  }
+}
+
+class _SelectionCard extends StatelessWidget {
+  final List<Widget> children;
+
+  const _SelectionCard({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Column(
+        children: children.asMap().entries.map((entry) {
+          final index = entry.key;
+          final child = entry.value;
+          final isLast = index == children.length - 1;
+
+          return Column(
+            children: [
+              child,
+              if (!isLast)
+                Divider(
+                  height: 1,
+                  indent: 60,
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                ),
+            ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+class _SelectionTile extends StatelessWidget {
+  final String name;
+  final bool isSelected;
+  final bool isRadio;
+  final VoidCallback onTap;
+
+  const _SelectionTile({
+    required this.name,
+    required this.isSelected,
+    required this.isRadio,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              UserAvatar(
+                name: name,
+                size: 40,
+                backgroundColor: isSelected ? colorScheme.primaryContainer : null,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  name,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                      ),
+                ),
+              ),
+              if (isRadio)
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isSelected ? colorScheme.primary : colorScheme.outline,
+                      width: 2,
+                    ),
+                    color: isSelected ? colorScheme.primary : Colors.transparent,
+                  ),
+                  child: isSelected
+                      ? Icon(
+                          Icons.check_rounded,
+                          size: 16,
+                          color: colorScheme.onPrimary,
+                        )
+                      : null,
+                )
+              else
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: isSelected ? colorScheme.primary : colorScheme.outline,
+                      width: 2,
+                    ),
+                    color: isSelected ? colorScheme.primary : Colors.transparent,
+                  ),
+                  child: isSelected
+                      ? Icon(
+                          Icons.check_rounded,
+                          size: 16,
+                          color: colorScheme.onPrimary,
+                        )
+                      : null,
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

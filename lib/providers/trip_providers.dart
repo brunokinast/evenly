@@ -9,13 +9,13 @@ final firestoreRepositoryProvider = Provider<FirestoreRepository>((ref) {
   return FirestoreRepository();
 });
 
-/// Provider for the user's trips - uses FutureProvider for better refresh support.
-final userTripsProvider = FutureProvider<List<Trip>>((ref) async {
+/// Provider for the user's trips - uses StreamProvider for real-time updates.
+final userTripsProvider = StreamProvider<List<Trip>>((ref) {
   final uid = ref.watch(currentUidProvider);
-  if (uid == null) return [];
+  if (uid == null) return Stream.value([]);
 
   final repository = ref.watch(firestoreRepositoryProvider);
-  return repository.getUserTrips(uid);
+  return repository.watchUserOwnedTrips(uid);
 });
 
 /// Provider for a single trip.

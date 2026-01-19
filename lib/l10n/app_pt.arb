@@ -132,12 +132,18 @@
   "updateProfile": "Atualizar Perfil",
   "profileUpdated": "Perfil atualizado!",
   "failedToUpdateProfile": "Falha ao atualizar perfil",
+  "failedToSaveProfile": "Falha ao salvar perfil: {error}",
   
   "close": "Fechar",
   "ok": "OK",
   "error": "Erro",
   "loading": "Carregando...",
   "unknown": "Desconhecido",
+  
+  "lightMode": "Modo Claro",
+  "darkMode": "Modo Escuro",
+  "switchToLightTheme": "Mudar para tema claro",
+  "switchToDarkTheme": "Mudar para tema escuro",
   
   "editExpense": "Editar Despesa",
   "updateExpense": "Atualizar Despesa",
@@ -178,6 +184,21 @@
     }
   },
   "tripNotFound": "Viagem não encontrada",
+  
+  "inviteFriendsHint": "Você poderá convidar amigos após criar a viagem.",
+  "privacyNote": "Seu nome é armazenado localmente e compartilhado apenas com os membros da viagem.",
+  "peopleCount": "{count} pessoas",
+  "@peopleCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "tripIcon": "Ícone da Viagem",
+  "chooseIcon": "Escolha um ícone",
+  
+  "addMemberManually": "Adicionar alguém que não usa o app",
+  "regenerateCodeHint": "Gerar um novo código se o antigo foi comprometido",
+  "deleteTripHint": "Excluir permanentemente esta viagem e todos os dados",
   
   "pdfCreated": "Criado: {date}",
   "pdfCurrency": "Moeda: {currency}",

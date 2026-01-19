@@ -6,6 +6,9 @@ import '../l10n/app_localizations.dart';
 import '../models/models.dart';
 import '../providers/providers.dart';
 import '../services/services.dart';
+import '../theme/widgets.dart';
+import '../utils/formatters.dart';
+import '../utils/trip_icons.dart';
 import 'add_expense_screen.dart';
 import 'balance_screen.dart';
 
@@ -40,6 +43,7 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
     final l10n = AppLocalizations.of(context)!;
     final tripAsync = ref.watch(tripProvider(widget.tripId));
     final isOwner = ref.watch(isTripOwnerProvider(widget.tripId));
+    final colorScheme = Theme.of(context).colorScheme;
 
     return tripAsync.when(
       loading: () =>
@@ -57,109 +61,153 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
         }
 
         return Scaffold(
-          appBar: AppBar(
-            title: Text(trip.title),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.pin),
-                tooltip: l10n.inviteCode,
-                onPressed: () => _showInviteCodeDialog(trip, l10n),
-              ),
-              PopupMenuButton<String>(
-                onSelected: (value) =>
-                    _handleMenuAction(value, trip, isOwner, l10n),
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'show_code',
-                    child: ListTile(
-                      leading: const Icon(Icons.pin),
-                      title: Text(l10n.showInviteCode),
-                      contentPadding: EdgeInsets.zero,
-                    ),
+          body: SafeArea(
+            child: Column(
+              children: [
+                // Custom Header
+                _TripHeader(
+                  trip: trip,
+                  isOwner: isOwner,
+                  onBack: () => Navigator.pop(context),
+                  onInviteCode: () => _showInviteCodeDialog(trip, l10n),
+                  onMenu: () => _showTripOptionsSheet(trip, isOwner, l10n),
+                ),
+
+                // Tab Selector
+                Container(
+                  margin: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  if (isOwner)
-                    PopupMenuItem(
-                      value: 'add_member',
-                      child: ListTile(
-                        leading: const Icon(Icons.person_add),
-                        title: Text(l10n.addMember),
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ),
-                  if (isOwner)
-                    PopupMenuItem(
-                      value: 'regenerate_code',
-                      child: ListTile(
-                        leading: const Icon(Icons.refresh),
-                        title: Text(l10n.regenerateCode),
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ),
-                  if (isOwner)
-                    PopupMenuItem(
-                      value: 'delete_trip',
-                      child: ListTile(
-                        leading: Icon(
-                          Icons.delete,
-                          color: Theme.of(context).colorScheme.error,
+                  padding: const EdgeInsets.all(4),
+                  child: TabBar(
+                    controller: _tabController,
+                    indicator: BoxDecoration(
+                      color: colorScheme.surface,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
                         ),
-                        title: Text(
-                          l10n.deleteTrip,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                        ),
-                        contentPadding: EdgeInsets.zero,
-                      ),
+                      ],
                     ),
-                ],
-              ),
-            ],
-            bottom: TabBar(
-              controller: _tabController,
-              tabs: [
-                Tab(icon: const Icon(Icons.receipt_long), text: l10n.expenses),
-                Tab(icon: const Icon(Icons.people), text: l10n.members),
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    dividerColor: Colors.transparent,
+                    labelColor: colorScheme.onSurface,
+                    unselectedLabelColor: colorScheme.onSurfaceVariant,
+                    labelStyle: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                    unselectedLabelStyle: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
+                    ),
+                    tabs: [
+                      Tab(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.receipt_long_rounded, size: 18),
+                            const SizedBox(width: 8),
+                            Text(l10n.expenses),
+                          ],
+                        ),
+                      ),
+                      Tab(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.people_rounded, size: 18),
+                            const SizedBox(width: 8),
+                            Text(l10n.members),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Tab Content
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _ExpensesTab(tripId: widget.tripId, currency: trip.currency),
+                      _MembersTab(tripId: widget.tripId),
+                    ],
+                  ),
+                ),
+
+                // Bottom Action Bar
+                _BottomActionBar(
+                  tripId: widget.tripId,
+                  l10n: l10n,
+                ),
               ],
             ),
           ),
-          body: TabBarView(
-            controller: _tabController,
-            children: [
-              _ExpensesTab(tripId: widget.tripId, currency: trip.currency),
-              _MembersTab(tripId: widget.tripId),
-            ],
-          ),
-          floatingActionButton: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              FloatingActionButton.extended(
-                heroTag: 'balance',
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => BalanceScreen(tripId: widget.tripId),
-                  ),
-                ),
-                icon: const Icon(Icons.account_balance_wallet),
-                label: Text(l10n.balances),
-              ),
-              const SizedBox(height: 8),
-              FloatingActionButton.extended(
-                heroTag: 'add_expense',
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => AddExpenseScreen(tripId: widget.tripId),
-                  ),
-                ),
-                icon: const Icon(Icons.add),
-                label: Text(l10n.addExpense),
-              ),
-            ],
-          ),
         );
       },
+    );
+  }
+
+  void _showTripOptionsSheet(Trip trip, bool isOwner, AppLocalizations l10n) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    showAppBottomSheet(
+      context: context,
+      builder: (context) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ActionTile(
+              icon: Icons.pin_rounded,
+              title: l10n.showInviteCode,
+              subtitle: trip.inviteCode,
+              onTap: () {
+                Navigator.pop(context);
+                _showInviteCodeDialog(trip, l10n);
+              },
+            ),
+            if (isOwner) ...[
+              ActionTile(
+                icon: Icons.person_add_rounded,
+                title: l10n.addMember,
+                subtitle: l10n.addMemberManually,
+                onTap: () {
+                  Navigator.pop(context);
+                  _showAddMemberDialog(l10n);
+                },
+              ),
+              ActionTile(
+                icon: Icons.refresh_rounded,
+                title: l10n.regenerateCode,
+                subtitle: l10n.regenerateCodeHint,
+                onTap: () {
+                  Navigator.pop(context);
+                  _confirmRegenerateCode(trip, l10n);
+                },
+              ),
+              ActionTile(
+                icon: Icons.delete_rounded,
+                iconColor: colorScheme.error,
+                title: l10n.deleteTrip,
+                titleColor: colorScheme.error,
+                subtitle: l10n.deleteTripHint,
+                onTap: () {
+                  Navigator.pop(context);
+                  _confirmDeleteTrip(trip, l10n);
+                },
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -235,28 +283,6 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
     }
   }
 
-  void _handleMenuAction(
-    String action,
-    Trip trip,
-    bool isOwner,
-    AppLocalizations l10n,
-  ) {
-    switch (action) {
-      case 'show_code':
-        _showInviteCodeDialog(trip, l10n);
-        break;
-      case 'add_member':
-        _showAddMemberDialog(l10n);
-        break;
-      case 'regenerate_code':
-        if (isOwner) _confirmRegenerateCode(trip, l10n);
-        break;
-      case 'delete_trip':
-        if (isOwner) _confirmDeleteTrip(trip, l10n);
-        break;
-    }
-  }
-
   void _confirmRegenerateCode(Trip trip, AppLocalizations l10n) {
     showDialog(
       context: context,
@@ -271,15 +297,12 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
           FilledButton(
             onPressed: () async {
               final repository = ref.read(firestoreRepositoryProvider);
+              final messenger = ScaffoldMessenger.of(context);
               await repository.regenerateInviteCode(trip.id);
               if (dialogContext.mounted) {
                 Navigator.pop(dialogContext);
               }
-              if (context.mounted) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(l10n.codeRegenerated)));
-              }
+              messenger.showSnackBar(SnackBar(content: Text(l10n.codeRegenerated)));
             },
             child: Text(l10n.regenerate),
           ),
@@ -377,14 +400,13 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
               final repository = ref.read(firestoreRepositoryProvider);
+              final navigator = Navigator.of(context);
               await repository.deleteTrip(trip.id);
 
               if (dialogContext.mounted) {
                 Navigator.pop(dialogContext); // Close dialog
               }
-              if (context.mounted) {
-                Navigator.pop(context); // Go back to list
-              }
+              navigator.pop(); // Go back to list
             },
             child: Text(l10n.delete),
           ),
@@ -460,33 +482,64 @@ class _ExpensesTab extends ConsumerWidget {
           );
         }
 
+        final colorScheme = Theme.of(context).colorScheme;
+
         return Column(
           children: [
             // Total Summary Card
             if (balanceResult != null)
               Container(
                 width: double.infinity,
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      colorScheme.primary,
+                      colorScheme.primary.withValues(alpha: 0.85),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Column(
                   children: [
-                    Text(l10n.totalExpenses),
+                    Text(
+                      l10n.totalExpenses,
+                      style: TextStyle(
+                        color: colorScheme.onPrimary.withValues(alpha: 0.9),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
                     Text(
                       BalanceCalculator.formatAmount(
                         balanceResult.totalSpentCents,
                         currency,
                       ),
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onPrimaryContainer,
-                          ),
+                      style: TextStyle(
+                        color: colorScheme.onPrimary,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: colorScheme.onPrimary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '${expenses.length} ${l10n.expenses.toLowerCase()}',
+                        style: TextStyle(
+                          color: colorScheme.onPrimary.withValues(alpha: 0.9),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -495,7 +548,7 @@ class _ExpensesTab extends ConsumerWidget {
             // Expenses List
             Expanded(
               child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
                 itemCount: expenses.length,
                 itemBuilder: (context, index) {
                   final expense = expenses[index];
@@ -537,45 +590,69 @@ class _ExpenseCard extends StatelessWidget {
     required this.onTap,
   });
 
-  String _formatDate(BuildContext context, DateTime date) {
-    // Use locale-aware date formatting
-    final locale = Localizations.localeOf(context);
-    final day = date.day.toString().padLeft(2, '0');
-    final month = date.month.toString().padLeft(2, '0');
-    final year = date.year;
-    final hour = date.hour.toString().padLeft(2, '0');
-    final minute = date.minute.toString().padLeft(2, '0');
-
-    if (locale.languageCode == 'pt') {
-      return '$day/$month/$year $hour:$minute';
-    }
-    return '$month/$day/$year $hour:$minute';
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        onTap: onTap,
-        leading: CircleAvatar(
-          child: Text(payerName.isNotEmpty ? payerName[0].toUpperCase() : '?'),
-        ),
-        title: Text(expense.description),
-        subtitle: Text(
-          '${l10n.paidBy(payerName)} • ${_formatDate(context, expense.createdAt)}',
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
-        ),
-        trailing: Text(
-          BalanceCalculator.formatAmount(expense.amountCents, currency),
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+              ),
+            ),
+            child: Row(
+              children: [
+                UserAvatar(
+                  name: payerName,
+                  size: 44,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        expense.description,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${l10n.paidBy(payerName)} • ${formatDate(context, expense.createdAt, includeTime: true)}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  BalanceCalculator.formatAmount(expense.amountCents, currency),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -636,13 +713,9 @@ class _MembersTab extends ConsumerWidget {
             return Card(
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: isCurrentUser
-                      ? Theme.of(context).colorScheme.primaryContainer
-                      : null,
-                  child: Text(
-                    memberName.isNotEmpty ? memberName[0].toUpperCase() : '?',
-                  ),
+                leading: UserAvatar(
+                  name: memberName,
+                  isHighlighted: isCurrentUser,
                 ),
                 title: Row(
                   children: [
@@ -706,6 +779,219 @@ class _MembersTab extends ConsumerWidget {
           },
         );
       },
+    );
+  }
+}
+
+// ============================================================
+// TRIP HEADER
+// ============================================================
+
+class _TripHeader extends StatelessWidget {
+  final Trip trip;
+  final bool isOwner;
+  final VoidCallback onBack;
+  final VoidCallback onInviteCode;
+  final VoidCallback onMenu;
+
+  const _TripHeader({
+    required this.trip,
+    required this.isOwner,
+    required this.onBack,
+    required this.onInviteCode,
+    required this.onMenu,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    // Generate trip color from title
+    final tripColor = getColorFromString(trip.title);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+      child: Row(
+        children: [
+          // Back Button
+          HeaderIconButton(
+            icon: Icons.arrow_back_rounded,
+            onTap: onBack,
+          ),
+          const SizedBox(width: 16),
+
+          // Trip Icon & Title
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: tripColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              getTripIcon(trip.iconName),
+              color: tripColor,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 14),
+
+          // Title
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  trip.title,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  BalanceCalculator.getCurrencySymbol(trip.currency),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Invite Code Button
+          HeaderIconButton(
+            icon: Icons.group_add_rounded,
+            onTap: onInviteCode,
+            backgroundColor: colorScheme.primaryContainer,
+            iconColor: colorScheme.primary,
+          ),
+          const SizedBox(width: 10),
+
+          // Menu Button
+          HeaderIconButton(
+            icon: Icons.more_horiz_rounded,
+            onTap: onMenu,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================
+// BOTTOM ACTION BAR
+// ============================================================
+
+class _BottomActionBar extends StatelessWidget {
+  final String tripId;
+  final AppLocalizations l10n;
+
+  const _BottomActionBar({
+    required this.tripId,
+    required this.l10n,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // View Balances Button
+          Expanded(
+            child: Material(
+              color: colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(16),
+              child: InkWell(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => BalanceScreen(tripId: tripId),
+                  ),
+                ),
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.account_balance_wallet_rounded,
+                        color: colorScheme.onSurface,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        l10n.balances,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // Add Expense Button
+          Expanded(
+            child: Material(
+              color: colorScheme.primary,
+              borderRadius: BorderRadius.circular(16),
+              child: InkWell(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => AddExpenseScreen(tripId: tripId),
+                  ),
+                ),
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.add_rounded,
+                        color: colorScheme.onPrimary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        l10n.addExpense,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onPrimary,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

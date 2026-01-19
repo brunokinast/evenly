@@ -6,6 +6,7 @@ class Trip {
   final String title;
   final String currency;
   final String ownerUid;
+  final String iconName; // Icon name from predefined set
   final String inviteCode;
   final bool inviteCodeActive;
   final DateTime inviteCodeCreatedAt;
@@ -17,6 +18,7 @@ class Trip {
     required this.title,
     required this.currency,
     required this.ownerUid,
+    this.iconName = 'luggage',
     required this.inviteCode,
     required this.inviteCodeActive,
     required this.inviteCodeCreatedAt,
@@ -31,6 +33,7 @@ class Trip {
       title: data['title'] as String,
       currency: data['currency'] as String,
       ownerUid: data['ownerUid'] as String,
+      iconName: data['iconName'] as String? ?? 'luggage',
       inviteCode: data['inviteCode'] as String,
       inviteCodeActive: data['inviteCodeActive'] as bool? ?? true,
       inviteCodeCreatedAt: (data['inviteCodeCreatedAt'] as Timestamp).toDate(),
@@ -46,6 +49,7 @@ class Trip {
       'title': title,
       'currency': currency,
       'ownerUid': ownerUid,
+      'iconName': iconName,
       'inviteCode': inviteCode,
       'inviteCodeActive': inviteCodeActive,
       'inviteCodeCreatedAt': Timestamp.fromDate(inviteCodeCreatedAt),
@@ -61,6 +65,7 @@ class Trip {
     String? title,
     String? currency,
     String? ownerUid,
+    String? iconName,
     String? inviteCode,
     bool? inviteCodeActive,
     DateTime? inviteCodeCreatedAt,
@@ -72,6 +77,7 @@ class Trip {
       title: title ?? this.title,
       currency: currency ?? this.currency,
       ownerUid: ownerUid ?? this.ownerUid,
+      iconName: iconName ?? this.iconName,
       inviteCode: inviteCode ?? this.inviteCode,
       inviteCodeActive: inviteCodeActive ?? this.inviteCodeActive,
       inviteCodeCreatedAt: inviteCodeCreatedAt ?? this.inviteCodeCreatedAt,

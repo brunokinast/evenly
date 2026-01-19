@@ -212,12 +212,23 @@
   "updateProfile": "Update Profile",
   "profileUpdated": "Profile updated!",
   "failedToUpdateProfile": "Failed to update profile",
+  "failedToSaveProfile": "Failed to save profile: {error}",
+  "@failedToSaveProfile": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
   
   "close": "Close",
   "ok": "OK",
   "error": "Error",
   "loading": "Loading...",
   "unknown": "Unknown",
+  
+  "lightMode": "Light Mode",
+  "darkMode": "Dark Mode",
+  "switchToLightTheme": "Switch to light theme",
+  "switchToDarkTheme": "Switch to dark theme",
   
   "editExpense": "Edit Expense",
   "updateExpense": "Update Expense",
@@ -258,6 +269,21 @@
     }
   },
   "tripNotFound": "Trip not found",
+  
+  "inviteFriendsHint": "You'll be able to invite friends after creating the trip.",
+  "privacyNote": "Your name is stored locally and shared only with trip members.",
+  "peopleCount": "{count} people",
+  "@peopleCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "tripIcon": "Trip Icon",
+  "chooseIcon": "Choose an icon",
+  
+  "addMemberManually": "Add someone who doesn't use the app",
+  "regenerateCodeHint": "Generate a new code if the old one was compromised",
+  "deleteTripHint": "Permanently delete this trip and all its data",
   
   "pdfCreated": "Created: {date}",
   "@pdfCreated": {
