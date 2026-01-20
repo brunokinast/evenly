@@ -62,7 +62,7 @@ final memberNamesProvider = FutureProvider.family<Map<String, String>, String>((
 ) async {
   // Watch the members stream - this will trigger recomputation when members change
   final membersAsync = ref.watch(membersProvider(tripId));
-  final members = membersAsync.valueOrNull ?? [];
+  final members = membersAsync.value ?? [];
 
   // If members are still loading, return empty map
   if (membersAsync.isLoading || members.isEmpty) return {};
@@ -175,7 +175,7 @@ final currentMemberProvider = FutureProvider.family<Member?, String>((
 /// Provider for checking if the current user is the trip owner.
 final isTripOwnerProvider = Provider.family<bool, String>((ref, tripId) {
   final uid = ref.watch(currentUidProvider);
-  final trip = ref.watch(tripProvider(tripId)).valueOrNull;
+  final trip = ref.watch(tripProvider(tripId)).value;
 
   if (uid == null || trip == null) return false;
   return trip.ownerUid == uid;

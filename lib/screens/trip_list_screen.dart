@@ -248,14 +248,22 @@ class TripListScreen extends ConsumerWidget {
               },
             ),
             // Show Install App option on web when available
-            if (kIsWeb && PwaService.instance.canInstall)
-              ActionTile(
-                icon: Icons.install_mobile_rounded,
-                title: l10n.installApp,
-                subtitle: l10n.installAppSubtitle,
-                onTap: () async {
-                  Navigator.pop(context);
-                  await PwaService.instance.promptInstall();
+            if (kIsWeb)
+              ListenableBuilder(
+                listenable: PwaService.instance,
+                builder: (context, _) {
+                  if (!PwaService.instance.canInstall) {
+                    return const SizedBox.shrink();
+                  }
+                  return ActionTile(
+                    icon: Icons.install_mobile_rounded,
+                    title: l10n.installApp,
+                    subtitle: l10n.installAppSubtitle,
+                    onTap: () async {
+                      Navigator.pop(context);
+                      await PwaService.instance.promptInstall();
+                    },
+                  );
                 },
               ),
           ],

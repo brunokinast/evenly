@@ -13,19 +13,19 @@ final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
 });
 
 /// Provider for the app theme mode (light/dark/system) with persistence.
-final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, ThemeMode>((
-  ref,
-) {
-  final prefs = ref.watch(sharedPreferencesProvider);
-  return ThemeModeNotifier(prefs);
-});
+final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(
+  ThemeModeNotifier.new,
+);
 
 /// Notifier that persists theme mode to SharedPreferences.
-class ThemeModeNotifier extends StateNotifier<ThemeMode> {
-  final SharedPreferences _prefs;
+class ThemeModeNotifier extends Notifier<ThemeMode> {
   static const _key = 'theme_mode';
 
-  ThemeModeNotifier(this._prefs) : super(_loadThemeMode(_prefs));
+  @override
+  ThemeMode build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    return _loadThemeMode(prefs);
+  }
 
   static ThemeMode _loadThemeMode(SharedPreferences prefs) {
     final value = prefs.getString(_key);
@@ -41,7 +41,7 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
 
   void setThemeMode(ThemeMode mode) {
     state = mode;
-    _prefs.setString(_key, mode.name);
+    ref.read(sharedPreferencesProvider).setString(_key, mode.name);
   }
 }
 
@@ -59,7 +59,7 @@ final authStateProvider = StreamProvider<User?>((ref) {
 /// Provider for the current user's UID.
 final currentUidProvider = Provider<String?>((ref) {
   final authState = ref.watch(authStateProvider);
-  return authState.valueOrNull?.uid;
+  return authState.value?.uid;
 });
 
 /// Provider that ensures the user is signed in anonymously.

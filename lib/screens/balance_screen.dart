@@ -41,7 +41,7 @@ class BalanceScreen extends ConsumerWidget {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              final rawMemberNames = memberNamesAsync.valueOrNull ?? {};
+              final rawMemberNames = memberNamesAsync.value ?? {};
               final memberNames = <String, String>{};
               for (final entry in rawMemberNames.entries) {
                 memberNames[entry.key] = localizeMemberName(
@@ -63,7 +63,7 @@ class BalanceScreen extends ConsumerWidget {
                       child: _TotalCard(
                         totalCents: balanceResult.totalSpentCents,
                         currency: trip.currency,
-                        expenseCount: expensesAsync.valueOrNull?.length ?? 0,
+                        expenseCount: expensesAsync.value?.length ?? 0,
                         memberCount: memberNames.length,
                         l10n: l10n,
                       ),
@@ -153,10 +153,10 @@ class BalanceScreen extends ConsumerWidget {
     AppLocalizations l10n,
   ) async {
     try {
-      final trip = ref.read(tripProvider(tripId)).valueOrNull;
-      final members = ref.read(membersProvider(tripId)).valueOrNull;
-      final rawMemberNames = ref.read(memberNamesProvider(tripId)).valueOrNull;
-      final expenses = ref.read(expensesProvider(tripId)).valueOrNull;
+      final trip = ref.read(tripProvider(tripId)).value;
+      final members = ref.read(membersProvider(tripId)).value;
+      final rawMemberNames = ref.read(memberNamesProvider(tripId)).value;
+      final expenses = ref.read(expensesProvider(tripId)).value;
       final balanceResult = ref.read(balanceResultProvider(tripId));
 
       if (trip == null ||

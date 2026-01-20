@@ -443,6 +443,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get installAppSubtitle => 'Add Evenly to your home screen';
 
   @override
+  String get installAppDialogBody => 'Install Evenly for a better experience!';
+
+  @override
+  String get installAppDialogFinePrint =>
+      'You can install later from the options menu (⋮)';
+
+  @override
+  String get maybeLater => 'Maybe later';
+
+  @override
+  String get installNow => 'Install now';
+
+  @override
   String get editExpense => 'Edit Expense';
 
   @override

@@ -115,8 +115,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                 );
               }
 
-              final currency = tripAsync.valueOrNull?.currency ?? '';
-              final rawMemberNames = memberNamesAsync.valueOrNull ?? {};
+              final currency = tripAsync.value?.currency ?? '';
+              final rawMemberNames = memberNamesAsync.value ?? {};
 
               final memberNames = <String, String>{};
               for (final entry in rawMemberNames.entries) {

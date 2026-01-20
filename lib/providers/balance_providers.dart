@@ -13,8 +13,8 @@ final balanceResultProvider = Provider.family<BalanceResult?, String>((
   ref,
   tripId,
 ) {
-  final expenses = ref.watch(expensesProvider(tripId)).valueOrNull;
-  final members = ref.watch(membersProvider(tripId)).valueOrNull;
+  final expenses = ref.watch(expensesProvider(tripId)).value;
+  final members = ref.watch(membersProvider(tripId)).value;
 
   if (expenses == null || members == null) return null;
 

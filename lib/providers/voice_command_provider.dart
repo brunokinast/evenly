@@ -96,21 +96,22 @@ class VoiceCommandState {
 }
 
 /// Notifier for managing voice command state.
-class VoiceCommandNotifier extends StateNotifier<VoiceCommandState> {
-  final VoiceCommandService _service;
-  final Ref _ref;
+class VoiceCommandNotifier extends Notifier<VoiceCommandState> {
+  late final VoiceCommandService _service;
 
-  VoiceCommandNotifier(this._service, this._ref)
-    : super(const VoiceCommandState()) {
+  @override
+  VoiceCommandState build() {
+    _service = ref.watch(voiceCommandServiceProvider);
     // Initialize the service and listen for commands
     _service.initialize();
     _service.onVoiceCommand = _handleIncomingCommand;
-  }
 
-  @override
-  void dispose() {
-    _service.dispose();
-    super.dispose();
+    // Cleanup on dispose
+    ref.onDispose(() {
+      _service.dispose();
+    });
+
+    return const VoiceCommandState();
   }
 
   /// Handles an incoming voice command from Android.
@@ -128,7 +129,7 @@ class VoiceCommandNotifier extends StateNotifier<VoiceCommandState> {
     final command = state.pendingCommand;
     if (command == null) return;
 
-    final currentUserId = _ref.read(currentUidProvider);
+    final currentUserId = ref.read(currentUidProvider);
     if (currentUserId == null) {
       state = state.copyWith(
         isProcessing: false,
@@ -230,7 +231,6 @@ class VoiceCommandNotifier extends StateNotifier<VoiceCommandState> {
 
 /// Provider for voice command state and notifier.
 final voiceCommandProvider =
-    StateNotifierProvider<VoiceCommandNotifier, VoiceCommandState>((ref) {
-      final service = ref.watch(voiceCommandServiceProvider);
-      return VoiceCommandNotifier(service, ref);
-    });
+    NotifierProvider<VoiceCommandNotifier, VoiceCommandState>(
+      VoiceCommandNotifier.new,
+    );

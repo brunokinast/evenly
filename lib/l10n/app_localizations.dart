@@ -890,6 +890,30 @@ abstract class AppLocalizations {
   /// **'Add Evenly to your home screen'**
   String get installAppSubtitle;
 
+  /// No description provided for @installAppDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Install Evenly for a better experience!'**
+  String get installAppDialogBody;
+
+  /// No description provided for @installAppDialogFinePrint.
+  ///
+  /// In en, this message translates to:
+  /// **'You can install later from the options menu (⋮)'**
+  String get installAppDialogFinePrint;
+
+  /// No description provided for @maybeLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Maybe later'**
+  String get maybeLater;
+
+  /// No description provided for @installNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Install now'**
+  String get installNow;
+
   /// No description provided for @editExpense.
   ///
   /// In en, this message translates to:

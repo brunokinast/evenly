@@ -11,15 +11,9 @@ import 'package:flutter/foundation.dart';
 ///   final installed = await PwaService.instance.promptInstall();
 /// }
 /// ```
-class PwaService {
+class PwaService extends ChangeNotifier {
   PwaService._();
   static final PwaService instance = PwaService._();
-
-  final _installAvailableController = StreamController<bool>.broadcast();
-
-  /// Stream that emits when install availability changes.
-  Stream<bool> get onInstallAvailableChanged =>
-      _installAvailableController.stream;
 
   bool _canInstall = false;
   bool _isInstalled = false;
@@ -36,24 +30,29 @@ class PwaService {
     if (_initialized || !kIsWeb) return;
     _initialized = true;
 
-    // Check initial state
+    // Check initial state - the beforeinstallprompt might have already fired
     _isInstalled = _jsIsPwaInstalled();
     _canInstall = _jsIsPwaInstallAvailable();
 
     // Set up callbacks for JS to call when events happen
     _setupCallbacks();
+
+    // Notify listeners of initial state
+    if (_canInstall) {
+      notifyListeners();
+    }
   }
 
   void _setupCallbacks() {
     _onPwaInstallAvailable = () {
       _canInstall = true;
-      _installAvailableController.add(true);
+      notifyListeners();
     }.toJS;
 
     _onPwaInstalled = () {
       _isInstalled = true;
       _canInstall = false;
-      _installAvailableController.add(false);
+      notifyListeners();
     }.toJS;
   }
 
@@ -66,13 +65,9 @@ class PwaService {
     final result = jsResult.toDart;
     if (result) {
       _canInstall = false;
-      _installAvailableController.add(false);
+      notifyListeners();
     }
     return result;
-  }
-
-  void dispose() {
-    _installAvailableController.close();
   }
 }
 

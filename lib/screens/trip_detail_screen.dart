@@ -358,7 +358,7 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
 
                 // Check for duplicate manual names
                 final members =
-                    ref.read(membersProvider(widget.tripId)).valueOrNull ?? [];
+                    ref.read(membersProvider(widget.tripId)).value ?? [];
                 final existingManualNames = members
                     .where((m) => m.manualName != null)
                     .map((m) => m.manualName!.toLowerCase())
@@ -473,7 +473,7 @@ class _ExpensesTab extends ConsumerWidget {
           );
         }
 
-        final rawMemberNames = memberNamesAsync.valueOrNull ?? {};
+        final rawMemberNames = memberNamesAsync.value ?? {};
 
         // Localize member names (replace markers with translated strings)
         final memberNames = <String, String>{};
@@ -687,9 +687,9 @@ class _MembersTab extends ConsumerWidget {
           return Center(child: Text(l10n.noMembers));
         }
 
-        final trip = tripAsync.valueOrNull;
+        final trip = tripAsync.value;
         final currency = trip?.currency ?? '';
-        final rawMemberNames = memberNamesAsync.valueOrNull ?? {};
+        final rawMemberNames = memberNamesAsync.value ?? {};
 
         // Localize member names (replace markers with translated strings)
         final memberNames = <String, String>{};

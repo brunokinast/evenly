@@ -135,12 +135,15 @@
     
     // Called from Dart to check if install is available
     function isPwaInstallAvailable() {
-      return deferredPrompt !== null;
+      const available = deferredPrompt !== null;
+      return available;
     }
     
     // Called from Dart to trigger the install prompt
     async function triggerPwaInstall() {
-      if (!deferredPrompt) return false;
+      if (!deferredPrompt) {
+        return false;
+      }
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       deferredPrompt = null;
@@ -149,8 +152,9 @@
     
     // Check if already installed as PWA
     function isPwaInstalled() {
-      return window.matchMedia('(display-mode: standalone)').matches ||
+      const standalone = window.matchMedia('(display-mode: standalone)').matches ||
              window.navigator.standalone === true;
+      return standalone;
     }
   </script>
 </head>
