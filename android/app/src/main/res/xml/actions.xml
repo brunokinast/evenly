@@ -3,20 +3,19 @@
   Google Assistant App Actions configuration for Evenly.
   
   This enables voice commands like:
-  - "Adicione 180 reais de gasolina na minha viagem de Porto de Galinhas"
-  - "Add 180 reais of gasoline to my Porto de Galinhas trip"
-  - "Adicione 180 reais de gasolina pagos por Bruno e divididos entre João e Eduarda na viagem de Porto de Galinhas"
+  - "Adicione 180 reais de gasolina na viagem Porto de Galinhas no Evenly"
+  - "Add 50 dollars for dinner in Beach Trip on Evenly"
 -->
 <actions>
     <!--
       Custom action for creating expenses via voice.
       Uses the custom intent scheme since expense tracking isn't a built-in App Actions capability.
     -->
-    <action intentName="br.com.kinast.evenly.CREATE_EXPENSE">
+    <action intentName="br.com.kinast.evenly.CREATE_EXPENSE"
+        queryPatterns="@array/CreateExpenseQueries">
         <!--
           Parameter: amount
           Represents the expense amount. Can be a decimal number.
-          Google Assistant extracts monetary amounts intelligently.
         -->
         <parameter name="amount">
             <entity-set-reference
@@ -37,7 +36,6 @@
         <!--
           Parameter: tripName
           The name of the trip to add the expense to.
-          Fuzzy matching is handled in the Flutter layer.
         -->
         <parameter name="tripName">
             <entity-set-reference

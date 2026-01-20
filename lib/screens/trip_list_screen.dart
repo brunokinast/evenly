@@ -294,6 +294,29 @@ class TripListScreen extends ConsumerWidget {
                   ),
               textAlign: TextAlign.center,
             ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Created with ',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                ),
+                Icon(
+                  Icons.favorite,
+                  size: 14,
+                  color: colorScheme.error,
+                ),
+                Text(
+                  ' by Bruno Kinast',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                ),
+              ],
+            ),
           ],
         ),
         actions: [

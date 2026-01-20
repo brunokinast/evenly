@@ -160,6 +160,10 @@
   "save": "Save",
   "saveExpense": "Save Expense",
   "failedToSaveExpense": "Failed to save expense: {error}",
+  "discardChanges": "Discard changes?",
+  "discardChangesMessage": "You have unsaved changes. Are you sure you want to discard them?",
+  "discard": "Discard",
+  "keepEditing": "Keep Editing",
   "@failedToSaveExpense": {
     "placeholders": {
       "error": {"type": "String"}

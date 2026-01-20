@@ -318,6 +318,19 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get discardChanges => 'Descartar alterações?';
+
+  @override
+  String get discardChangesMessage =>
+      'Você tem alterações não salvas. Deseja descartá-las?';
+
+  @override
+  String get discard => 'Descartar';
+
+  @override
+  String get keepEditing => 'Continuar Editando';
+
+  @override
   String get totalExpenses => 'Total de Despesas';
 
   @override

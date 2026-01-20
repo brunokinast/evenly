@@ -105,6 +105,10 @@
   "save": "Salvar",
   "saveExpense": "Salvar Despesa",
   "failedToSaveExpense": "Falha ao salvar despesa: {error}",
+  "discardChanges": "Descartar alterações?",
+  "discardChangesMessage": "Você tem alterações não salvas. Deseja descartá-las?",
+  "discard": "Descartar",
+  "keepEditing": "Continuar Editando",
   
   "totalExpenses": "Total de Despesas",
   "perPerson": "Por Pessoa (média)",

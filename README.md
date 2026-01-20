@@ -2,6 +2,8 @@
 
 A simple, low-friction, friend-focused trip expense splitting app built with Flutter.
 
+> 🤖 **Vibe coded** with AI assistance (GitHub Copilot + Claude)
+
 ## Features
 
 - **No Account Required** - Anonymous authentication means zero signup friction

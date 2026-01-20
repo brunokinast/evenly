@@ -47,6 +47,12 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   bool get _isEditing => widget.expense != null;
   bool _errorMessageShown = false;
 
+  // Track original values to detect changes
+  String _originalDescription = '';
+  String _originalAmount = '';
+  String? _originalPayerId;
+  Set<String> _originalParticipantIds = {};
+
   @override
   void initState() {
     super.initState();
@@ -56,6 +62,12 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       _amountController.text = (expense.amountCents / 100).toStringAsFixed(2);
       _selectedPayerId = expense.payerMemberId;
       _selectedParticipantIds = expense.participantMemberIds.toSet();
+      
+      // Store original values
+      _originalDescription = expense.description;
+      _originalAmount = (expense.amountCents / 100).toStringAsFixed(2);
+      _originalPayerId = expense.payerMemberId;
+      _originalParticipantIds = expense.participantMemberIds.toSet();
     } else {
       // Check for pre-filled data from voice command
       if (widget.prefillTitle != null) {
@@ -308,7 +320,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
         children: [
           HeaderIconButton(
             icon: Icons.close_rounded,
-            onTap: () => Navigator.pop(context),
+            onTap: () => _handleClose(l10n),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -455,6 +467,47 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  bool get _hasChanges {
+    if (!_isEditing) return false;
+    
+    return _descriptionController.text != _originalDescription ||
+           _amountController.text != _originalAmount ||
+           _selectedPayerId != _originalPayerId ||
+           !_setEquals(_selectedParticipantIds, _originalParticipantIds);
+  }
+  
+  bool _setEquals(Set<String> a, Set<String> b) {
+    if (a.length != b.length) return false;
+    return a.containsAll(b);
+  }
+
+  void _handleClose(AppLocalizations l10n) {
+    if (_hasChanges) {
+      showDialog(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l10n.discardChanges),
+          content: Text(l10n.discardChangesMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l10n.keepEditing),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                Navigator.pop(context);
+              },
+              child: Text(l10n.discard),
+            ),
+          ],
+        ),
+      );
+    } else {
+      Navigator.pop(context);
     }
   }
 

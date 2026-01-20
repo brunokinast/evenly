@@ -13,4 +13,35 @@
     <!-- Shortcut labels -->
     <string name="shortcut_add_expense_short">Add expense</string>
     <string name="shortcut_add_expense_long">Add expense to trip</string>
+    
+    <!-- App Actions query patterns -->
+    <string-array name="CreateExpenseQueries">
+        <!-- Basic: amount, title, trip -->
+        <item>add $amount for $title in $tripName</item>
+        <item>add $amount of $title to $tripName trip</item>
+        <item>add expense $amount $title $tripName</item>
+        <item>log $amount for $title in $tripName</item>
+        <item>adicionar $amount de $title na viagem $tripName</item>
+        <item>adicione $amount de $title em $tripName</item>
+        <item>registrar $amount de $title na $tripName</item>
+        
+        <!-- With payer -->
+        <item>add $amount for $title in $tripName paid by $payerName</item>
+        <item>add $amount of $title to $tripName paid by $payerName</item>
+        <item>adicionar $amount de $title em $tripName pago por $payerName</item>
+        <item>adicione $amount de $title na $tripName pago por $payerName</item>
+        
+        <!-- With participants (split between) -->
+        <item>add $amount for $title in $tripName split between $participantNames</item>
+        <item>add $amount of $title to $tripName split between $participantNames</item>
+        <item>add $amount for $title in $tripName between $participantNames</item>
+        <item>adicionar $amount de $title em $tripName dividido entre $participantNames</item>
+        <item>adicione $amount de $title na $tripName entre $participantNames</item>
+        
+        <!-- With payer AND participants -->
+        <item>add $amount for $title in $tripName paid by $payerName split between $participantNames</item>
+        <item>add $amount of $title to $tripName paid by $payerName between $participantNames</item>
+        <item>adicionar $amount de $title em $tripName pago por $payerName dividido entre $participantNames</item>
+        <item>adicione $amount de $title na $tripName pago por $payerName entre $participantNames</item>
+    </string-array>
 </resources>
