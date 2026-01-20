@@ -8,7 +8,6 @@ import '../providers/providers.dart';
 import '../services/services.dart';
 import '../theme/widgets.dart';
 import '../utils/formatters.dart';
-import '../utils/trip_icons.dart';
 import 'add_expense_screen.dart';
 import 'balance_screen.dart';
 
@@ -806,9 +805,6 @@ class _TripHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    // Generate trip color from title
-    final tripColor = getColorFromString(trip.title);
-
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
       child: Row(
@@ -819,22 +815,6 @@ class _TripHeader extends StatelessWidget {
             onTap: onBack,
           ),
           const SizedBox(width: 16),
-
-          // Trip Icon & Title
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: tripColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(
-              getTripIcon(trip.iconName),
-              color: tripColor,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 14),
 
           // Title
           Expanded(

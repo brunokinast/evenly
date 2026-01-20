@@ -1,8 +1,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="evenly"
+        android:label="@string/app_name"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        
+        <!-- Google Assistant App Actions metadata -->
+        <meta-data
+            android:name="com.google.android.actions"
+            android:resource="@xml/actions" />
+        
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -20,9 +26,31 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            
+            <!-- Shortcuts configuration for App Actions -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
+            
+            <!-- Main launcher intent filter -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            
+            <!-- App Actions: CREATE_EXPENSE intent filter -->
+            <intent-filter>
+                <action android:name="br.com.kinast.evenly.CREATE_EXPENSE"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.VOICE"/>
+            </intent-filter>
+            
+            <!-- Deep link handler for evenly:// scheme -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="evenly" android:host="expense"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

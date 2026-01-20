@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Google Assistant App Actions configuration for Evenly.
+  
+  This enables voice commands like:
+  - "Adicione 180 reais de gasolina na minha viagem de Porto de Galinhas"
+  - "Add 180 reais of gasoline to my Porto de Galinhas trip"
+  - "Adicione 180 reais de gasolina pagos por Bruno e divididos entre João e Eduarda na viagem de Porto de Galinhas"
+-->
+<actions>
+    <!--
+      Custom action for creating expenses via voice.
+      Uses the custom intent scheme since expense tracking isn't a built-in App Actions capability.
+    -->
+    <action intentName="br.com.kinast.evenly.CREATE_EXPENSE">
+        <!--
+          Parameter: amount
+          Represents the expense amount. Can be a decimal number.
+          Google Assistant extracts monetary amounts intelligently.
+        -->
+        <parameter name="amount">
+            <entity-set-reference
+                entitySetId="amountEntity"
+                urlTemplate="evenly://expense?amount={amount}" />
+        </parameter>
+
+        <!--
+          Parameter: title
+          The expense description/category (e.g., "gasolina", "almoço", "uber")
+        -->
+        <parameter name="title">
+            <entity-set-reference
+                entitySetId="titleEntity"
+                urlTemplate="evenly://expense?title={title}" />
+        </parameter>
+
+        <!--
+          Parameter: tripName
+          The name of the trip to add the expense to.
+          Fuzzy matching is handled in the Flutter layer.
+        -->
+        <parameter name="tripName">
+            <entity-set-reference
+                entitySetId="tripNameEntity"
+                urlTemplate="evenly://expense?tripName={tripName}" />
+        </parameter>
+
+        <!--
+          Parameter: payerName (optional)
+          Who paid for the expense. Defaults to current user if not specified.
+        -->
+        <parameter name="payerName">
+            <entity-set-reference
+                entitySetId="payerNameEntity"
+                urlTemplate="evenly://expense?payerName={payerName}" />
+        </parameter>
+
+        <!--
+          Parameter: participantNames (optional)
+          Comma-separated list of participants. Defaults to all trip members if not specified.
+        -->
+        <parameter name="participantNames">
+            <entity-set-reference
+                entitySetId="participantNamesEntity"
+                urlTemplate="evenly://expense?participantNames={participantNames}" />
+        </parameter>
+
+        <!-- Define the fulfillment for this action -->
+        <fulfillment urlTemplate="evenly://expense?amount={amount}&amp;title={title}&amp;tripName={tripName}&amp;payerName={payerName}&amp;participantNames={participantNames}" />
+    </action>
+
+    <!-- Entity sets for parameter extraction -->
+    <entity-set entitySetId="amountEntity">
+        <entity identifier="amount" name="@string/amount_entity_name" />
+    </entity-set>
+
+    <entity-set entitySetId="titleEntity">
+        <entity identifier="title" name="@string/title_entity_name" />
+    </entity-set>
+
+    <entity-set entitySetId="tripNameEntity">
+        <entity identifier="tripName" name="@string/trip_name_entity_name" />
+    </entity-set>
+
+    <entity-set entitySetId="payerNameEntity">
+        <entity identifier="payerName" name="@string/payer_name_entity_name" />
+    </entity-set>
+
+    <entity-set entitySetId="participantNamesEntity">
+        <entity identifier="participantNames" name="@string/participant_names_entity_name" />
+    </entity-set>
+</actions>

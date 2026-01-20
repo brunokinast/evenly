@@ -3,3 +3,4 @@ export 'auth_providers.dart';
 export 'balance_providers.dart';
 export 'pdf_providers.dart';
 export 'trip_providers.dart';
+export 'voice_command_provider.dart';

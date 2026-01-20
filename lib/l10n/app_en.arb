@@ -25,7 +25,7 @@
   "pleaseEnterName": "Please enter your name",
   "getStarted": "Get Started",
   
-  "myTrips": "My Trips",
+  "myTrips": "Evenly",
   "noTripsYet": "No trips yet",
   "createFirstTrip": "Create your first trip to start splitting expenses with friends!",
   "newTrip": "New Trip",
@@ -300,5 +300,31 @@
   "pdfDescription": "Description",
   "pdfPaidBy": "Paid by",
   "pdfAmount": "Amount",
-  "pdfFinalBalances": "Final Balances"
+  "pdfFinalBalances": "Final Balances",
+  
+  "viewTrip": "View",
+  "voiceCommandExpenseCreated": "Added {amount} {currency} for \"{description}\" to {trip}",
+  "@voiceCommandExpenseCreated": {
+    "placeholders": {
+      "amount": {"type": "String"},
+      "currency": {"type": "String"},
+      "description": {"type": "String"},
+      "trip": {"type": "String"}
+    }
+  },
+  "voiceCommandNoTrips": "You have no trips. Create a trip first.",
+  "voiceCommandTripNotFound": "Trip not found.",
+  "voiceCommandMemberNotFound": "Member not found.",
+  "voiceCommandPayerNotFound": "Member \"{name}\" was not found in this trip. Please select the correct person.",
+  "@voiceCommandPayerNotFound": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "voiceCommandMissingParameter": "Missing required information.",
+  "voiceCommandNotAuthenticated": "Not signed in.",
+  "voiceCommandSelectTrip": "Select Trip",
+  "voiceCommandSelectPayer": "Who paid?",
+  "voiceCommandSelectParticipant": "Select participant",
+  "voiceCommandAddingExpense": "Adding"
 }

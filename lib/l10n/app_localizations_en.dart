@@ -46,7 +46,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get getStarted => 'Get Started';
 
   @override
-  String get myTrips => 'My Trips';
+  String get myTrips => 'Evenly';
 
   @override
   String get noTripsYet => 'No trips yet';
@@ -549,4 +549,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pdfFinalBalances => 'Final Balances';
+
+  @override
+  String get viewTrip => 'View';
+
+  @override
+  String voiceCommandExpenseCreated(
+    String amount,
+    String currency,
+    String description,
+    String trip,
+  ) {
+    return 'Added $amount $currency for \"$description\" to $trip';
+  }
+
+  @override
+  String get voiceCommandNoTrips => 'You have no trips. Create a trip first.';
+
+  @override
+  String get voiceCommandTripNotFound => 'Trip not found.';
+
+  @override
+  String get voiceCommandMemberNotFound => 'Member not found.';
+
+  @override
+  String voiceCommandPayerNotFound(String name) {
+    return 'Member \"$name\" was not found in this trip. Please select the correct person.';
+  }
+
+  @override
+  String get voiceCommandMissingParameter => 'Missing required information.';
+
+  @override
+  String get voiceCommandNotAuthenticated => 'Not signed in.';
+
+  @override
+  String get voiceCommandSelectTrip => 'Select Trip';
+
+  @override
+  String get voiceCommandSelectPayer => 'Who paid?';
+
+  @override
+  String get voiceCommandSelectParticipant => 'Select participant';
+
+  @override
+  String get voiceCommandAddingExpense => 'Adding';
 }

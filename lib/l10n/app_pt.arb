@@ -15,7 +15,7 @@
   "pleaseEnterName": "Por favor, digite seu nome",
   "getStarted": "Começar",
   
-  "myTrips": "Minhas Viagens",
+  "myTrips": "Evenly",
   "noTripsYet": "Nenhuma viagem ainda",
   "createFirstTrip": "Crie sua primeira viagem para começar a dividir despesas com amigos!",
   "newTrip": "Nova Viagem",
@@ -205,5 +205,31 @@
   "pdfDescription": "Descrição",
   "pdfPaidBy": "Pago por",
   "pdfAmount": "Valor",
-  "pdfFinalBalances": "Saldos Finais"
+  "pdfFinalBalances": "Saldos Finais",
+  
+  "viewTrip": "Ver",
+  "voiceCommandExpenseCreated": "Adicionado {amount} {currency} de \"{description}\" em {trip}",
+  "@voiceCommandExpenseCreated": {
+    "placeholders": {
+      "amount": {"type": "String"},
+      "currency": {"type": "String"},
+      "description": {"type": "String"},
+      "trip": {"type": "String"}
+    }
+  },
+  "voiceCommandNoTrips": "Você não tem viagens. Crie uma viagem primeiro.",
+  "voiceCommandTripNotFound": "Viagem não encontrada.",
+  "voiceCommandMemberNotFound": "Membro não encontrado.",
+  "voiceCommandPayerNotFound": "Membro \"{name}\" não foi encontrado nesta viagem. Por favor, selecione a pessoa correta.",
+  "@voiceCommandPayerNotFound": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "voiceCommandMissingParameter": "Informação obrigatória não fornecida.",
+  "voiceCommandNotAuthenticated": "Não está conectado.",
+  "voiceCommandSelectTrip": "Selecione a Viagem",
+  "voiceCommandSelectPayer": "Quem pagou?",
+  "voiceCommandSelectParticipant": "Selecione o participante",
+  "voiceCommandAddingExpense": "Adicionando"
 }

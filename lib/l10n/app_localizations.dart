@@ -167,7 +167,7 @@ abstract class AppLocalizations {
   /// No description provided for @myTrips.
   ///
   /// In en, this message translates to:
-  /// **'My Trips'**
+  /// **'Evenly'**
   String get myTrips;
 
   /// No description provided for @noTripsYet.
@@ -1075,6 +1075,83 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Final Balances'**
   String get pdfFinalBalances;
+
+  /// No description provided for @viewTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get viewTrip;
+
+  /// No description provided for @voiceCommandExpenseCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {amount} {currency} for \"{description}\" to {trip}'**
+  String voiceCommandExpenseCreated(
+    String amount,
+    String currency,
+    String description,
+    String trip,
+  );
+
+  /// No description provided for @voiceCommandNoTrips.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no trips. Create a trip first.'**
+  String get voiceCommandNoTrips;
+
+  /// No description provided for @voiceCommandTripNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip not found.'**
+  String get voiceCommandTripNotFound;
+
+  /// No description provided for @voiceCommandMemberNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Member not found.'**
+  String get voiceCommandMemberNotFound;
+
+  /// No description provided for @voiceCommandPayerNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Member \"{name}\" was not found in this trip. Please select the correct person.'**
+  String voiceCommandPayerNotFound(String name);
+
+  /// No description provided for @voiceCommandMissingParameter.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing required information.'**
+  String get voiceCommandMissingParameter;
+
+  /// No description provided for @voiceCommandNotAuthenticated.
+  ///
+  /// In en, this message translates to:
+  /// **'Not signed in.'**
+  String get voiceCommandNotAuthenticated;
+
+  /// No description provided for @voiceCommandSelectTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Trip'**
+  String get voiceCommandSelectTrip;
+
+  /// No description provided for @voiceCommandSelectPayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Who paid?'**
+  String get voiceCommandSelectPayer;
+
+  /// No description provided for @voiceCommandSelectParticipant.
+  ///
+  /// In en, this message translates to:
+  /// **'Select participant'**
+  String get voiceCommandSelectParticipant;
+
+  /// No description provided for @voiceCommandAddingExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'Adding'**
+  String get voiceCommandAddingExpense;
 }
 
 class _AppLocalizationsDelegate

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Shortcuts and capabilities for Google Assistant App Actions.
+  
+  Defines voice command patterns that trigger the CREATE_EXPENSE action.
+-->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+      Capability for creating expenses via voice command.
+      Maps natural language to the CREATE_EXPENSE intent.
+    -->
+    <capability android:name="actions.intent.CREATE_EXPENSE">
+        <!--
+          Intent to launch when this capability is triggered.
+          Parameters are passed as extras.
+        -->
+        <intent
+            android:action="br.com.kinast.evenly.CREATE_EXPENSE"
+            android:targetPackage="br.com.kinast.evenly"
+            android:targetClass="br.com.kinast.evenly.MainActivity">
+            
+            <!-- Amount parameter (required) -->
+            <parameter
+                android:name="expense.amount"
+                android:key="amount" />
+            
+            <!-- Title/description parameter (required) -->
+            <parameter
+                android:name="expense.name"
+                android:key="title" />
+            
+            <!-- Trip name parameter (required) -->
+            <parameter
+                android:name="expense.trip"
+                android:key="tripName" />
+            
+            <!-- Payer name parameter (optional, defaults to current user) -->
+            <parameter
+                android:name="expense.payer"
+                android:key="payerName" />
+            
+            <!-- Participant names parameter (optional, defaults to all members) -->
+            <parameter
+                android:name="expense.participants"
+                android:key="participantNames" />
+        </intent>
+    </capability>
+
+    <!--
+      Shortcut for quick expense creation command.
+      This allows simpler voice commands like "Add expense on Evenly".
+    -->
+    <shortcut
+        android:shortcutId="add_expense"
+        android:shortcutShortLabel="@string/shortcut_add_expense_short"
+        android:shortcutLongLabel="@string/shortcut_add_expense_long"
+        android:icon="@mipmap/ic_launcher"
+        android:enabled="true">
+        
+        <intent
+            android:action="br.com.kinast.evenly.CREATE_EXPENSE"
+            android:targetPackage="br.com.kinast.evenly"
+            android:targetClass="br.com.kinast.evenly.MainActivity" />
+        
+        <capability-binding android:key="actions.intent.CREATE_EXPENSE" />
+    </shortcut>
+</shortcuts>

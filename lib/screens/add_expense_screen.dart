@@ -11,8 +11,24 @@ import '../theme/widgets.dart';
 class AddExpenseScreen extends ConsumerStatefulWidget {
   final String tripId;
   final Expense? expense;
+  
+  /// Pre-filled data from voice command (optional)
+  final double? prefillAmount;
+  final String? prefillTitle;
+  final String? prefillPayerId;
+  final List<String>? prefillParticipantIds;
+  final String? errorMessage;
 
-  const AddExpenseScreen({super.key, required this.tripId, this.expense});
+  const AddExpenseScreen({
+    super.key, 
+    required this.tripId, 
+    this.expense,
+    this.prefillAmount,
+    this.prefillTitle,
+    this.prefillPayerId,
+    this.prefillParticipantIds,
+    this.errorMessage,
+  });
 
   @override
   ConsumerState<AddExpenseScreen> createState() => _AddExpenseScreenState();
@@ -29,6 +45,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   bool _isDeleting = false;
 
   bool get _isEditing => widget.expense != null;
+  bool _errorMessageShown = false;
 
   @override
   void initState() {
@@ -39,6 +56,20 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       _amountController.text = (expense.amountCents / 100).toStringAsFixed(2);
       _selectedPayerId = expense.payerMemberId;
       _selectedParticipantIds = expense.participantMemberIds.toSet();
+    } else {
+      // Check for pre-filled data from voice command
+      if (widget.prefillTitle != null) {
+        _descriptionController.text = widget.prefillTitle!;
+      }
+      if (widget.prefillAmount != null) {
+        _amountController.text = widget.prefillAmount!.toStringAsFixed(2);
+      }
+      if (widget.prefillPayerId != null) {
+        _selectedPayerId = widget.prefillPayerId;
+      }
+      if (widget.prefillParticipantIds != null) {
+        _selectedParticipantIds = widget.prefillParticipantIds!.toSet();
+      }
     }
   }
 
@@ -92,8 +123,24 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
               _selectedPayerId = currentMember.id;
             }
 
-            if (_selectedParticipantIds.isEmpty && !_isEditing) {
+            if (_selectedParticipantIds.isEmpty && !_isEditing && widget.prefillParticipantIds == null) {
               _selectedParticipantIds = members.map((m) => m.id).toSet();
+            }
+            
+            // Show error message from voice command if any
+            if (widget.errorMessage != null && !_errorMessageShown) {
+              _errorMessageShown = true;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(widget.errorMessage!),
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                    behavior: SnackBarBehavior.floating,
+                    duration: const Duration(seconds: 5),
+                  ),
+                );
+              });
             }
 
             return Form(
@@ -535,7 +582,7 @@ class _SelectionTile extends StatelessWidget {
               UserAvatar(
                 name: name,
                 size: 40,
-                backgroundColor: isSelected ? colorScheme.primaryContainer : null,
+                isHighlighted: isSelected,
               ),
               const SizedBox(width: 14),
               Expanded(

@@ -113,11 +113,14 @@ Evenly is a trip expense splitting app. Users create trips, add members, log exp
 
 ```
 lib/
-├── main.dart              # App entry, Firebase init, deep links
+├── main.dart              # App entry, Firebase init, voice commands
+├── firebase_options.dart  # Firebase configuration (generated)
 ├── models/                # Data classes with Firestore serialization
 ├── providers/             # Riverpod providers
 ├── screens/               # Full-page widgets
 ├── services/              # Business logic (no UI)
+├── theme/                 # App theming
+├── utils/                 # Utility functions
 └── l10n/                  # Localization (generated)
 ```
 
@@ -213,6 +216,34 @@ inviteCodeExpiresAt: timestamp (nullable, 7 days from creation)
 5. Joiner is added as member
 
 **Code regeneration:** Owner can regenerate a new code at any time. Old code stops working immediately.
+
+### Voice Commands (Google Assistant)
+
+Android App Actions allow users to add expenses via Google Assistant.
+
+**Intent:** `br.com.kinast.evenly.CREATE_EXPENSE`
+
+**Parameters:**
+- `amount` (required): Expense amount as string (e.g., "50")
+- `title` (required): Expense description
+- `tripName` (required): Fuzzy-matched to user's trips
+- `payerName` (optional): Fuzzy-matched to trip members
+- `participantNames` (optional): Comma-separated, fuzzy-matched to members
+
+**Flow:**
+1. Voice command received via MethodChannel in `main.dart`
+2. `VoiceCommandService` processes command with fuzzy matching
+3. On success: Expense created automatically
+4. On partial success (payer/participant not found): Opens `AddExpenseScreen` with pre-filled data
+5. On error: Shows toast with error message
+
+**Currency:** Always uses the trip's configured currency (not specified in voice command).
+
+**Key files:**
+- `android/app/src/main/res/xml/actions.xml` — App Actions definition
+- `android/app/src/main/kotlin/.../MainActivity.kt` — Intent handling
+- `lib/services/voice_command_service.dart` — Command processing
+- `lib/providers/voice_command_provider.dart` — State management
 
 ---
 
@@ -335,7 +366,7 @@ Do not implement or suggest these unless the user explicitly requests:
 - Social sharing beyond invite codes
 - Receipt scanning / OCR
 - Integration with payment apps
-- Deep links / Universal Links
+- Deep links / Universal Links (note: Android App Actions for voice commands ARE implemented)
 
 ---
 
@@ -348,10 +379,13 @@ Do not implement or suggest these unless the user explicitly requests:
 | App entry | `lib/main.dart` |
 | Balance logic | `lib/services/balance_calculator.dart` |
 | Firestore ops | `lib/services/firestore_repository.dart` |
+| Voice commands | `lib/services/voice_command_service.dart` |
+| Voice provider | `lib/providers/voice_command_provider.dart` |
 | Join flow | `lib/screens/join_trip_screen.dart` |
 | All providers | `lib/providers/` |
 | Firestore rules | `firestore.rules` |
 | Localization | `lib/l10n/app_en.arb`, `lib/l10n/app_pt.arb` |
+| App Actions | `android/app/src/main/res/xml/actions.xml` |
 
 ### Key Commands
 

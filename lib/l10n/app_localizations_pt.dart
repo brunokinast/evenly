@@ -47,7 +47,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get getStarted => 'Começar';
 
   @override
-  String get myTrips => 'Minhas Viagens';
+  String get myTrips => 'Evenly';
 
   @override
   String get noTripsYet => 'Nenhuma viagem ainda';
@@ -553,4 +553,51 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get pdfFinalBalances => 'Saldos Finais';
+
+  @override
+  String get viewTrip => 'Ver';
+
+  @override
+  String voiceCommandExpenseCreated(
+    String amount,
+    String currency,
+    String description,
+    String trip,
+  ) {
+    return 'Adicionado $amount $currency de \"$description\" em $trip';
+  }
+
+  @override
+  String get voiceCommandNoTrips =>
+      'Você não tem viagens. Crie uma viagem primeiro.';
+
+  @override
+  String get voiceCommandTripNotFound => 'Viagem não encontrada.';
+
+  @override
+  String get voiceCommandMemberNotFound => 'Membro não encontrado.';
+
+  @override
+  String voiceCommandPayerNotFound(String name) {
+    return 'Membro \"$name\" não foi encontrado nesta viagem. Por favor, selecione a pessoa correta.';
+  }
+
+  @override
+  String get voiceCommandMissingParameter =>
+      'Informação obrigatória não fornecida.';
+
+  @override
+  String get voiceCommandNotAuthenticated => 'Não está conectado.';
+
+  @override
+  String get voiceCommandSelectTrip => 'Selecione a Viagem';
+
+  @override
+  String get voiceCommandSelectPayer => 'Quem pagou?';
+
+  @override
+  String get voiceCommandSelectParticipant => 'Selecione o participante';
+
+  @override
+  String get voiceCommandAddingExpense => 'Adicionando';
 }

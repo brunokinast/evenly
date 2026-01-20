@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App name -->
+    <string name="app_name">Evenly</string>
+    
+    <!-- App Actions entity names -->
+    <string name="amount_entity_name">Amount</string>
+    <string name="title_entity_name">Description</string>
+    <string name="trip_name_entity_name">Trip Name</string>
+    <string name="payer_name_entity_name">Payer</string>
+    <string name="participant_names_entity_name">Participants</string>
+    
+    <!-- Shortcut labels -->
+    <string name="shortcut_add_expense_short">Add expense</string>
+    <string name="shortcut_add_expense_long">Add expense to trip</string>
+</resources>

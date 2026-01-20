@@ -12,6 +12,7 @@ A simple, low-friction, friend-focused trip expense splitting app built with Flu
 - **Balance Summary** - See who owes whom at a glance
 - **Smart Settlements** - Get optimized payment suggestions to minimize transfers
 - **PDF Export** - Export trip summaries for records
+- **Voice Commands** - Add expenses via Google Assistant (Android)
 - **Localization** - English and Portuguese (Brazil) support
 
 ## Getting Started
@@ -62,18 +63,23 @@ A simple, low-friction, friend-focused trip expense splitting app built with Flu
 ```
 lib/
 ├── main.dart              # App entry point with Firebase init
+├── firebase_options.dart  # Firebase configuration (generated)
 ├── models/                # Data models
+│   ├── models.dart        # Barrel export
 │   ├── expense.dart
 │   ├── member.dart
 │   ├── transfer.dart
 │   ├── trip.dart
 │   └── user_profile.dart
 ├── providers/             # Riverpod providers
+│   ├── providers.dart     # Barrel export
 │   ├── auth_providers.dart
 │   ├── balance_providers.dart
 │   ├── pdf_providers.dart
-│   └── trip_providers.dart
+│   ├── trip_providers.dart
+│   └── voice_command_provider.dart
 ├── screens/               # UI screens
+│   ├── screens.dart       # Barrel export
 │   ├── add_expense_screen.dart
 │   ├── balance_screen.dart
 │   ├── create_trip_screen.dart
@@ -82,10 +88,14 @@ lib/
 │   ├── trip_list_screen.dart
 │   └── welcome_screen.dart
 ├── services/              # Business logic
+│   ├── services.dart      # Barrel export
 │   ├── auth_service.dart
 │   ├── balance_calculator.dart
 │   ├── firestore_repository.dart
-│   └── pdf_exporter.dart
+│   ├── pdf_exporter.dart
+│   └── voice_command_service.dart
+├── theme/                 # App theming
+├── utils/                 # Utility functions
 └── l10n/                  # Localization
     ├── app_en.arb
     └── app_pt.arb
