@@ -3,4 +3,5 @@ export 'auth_service.dart';
 export 'balance_calculator.dart';
 export 'firestore_repository.dart';
 export 'pdf_exporter.dart';
+export 'pwa_service.dart';
 export 'voice_command_service.dart';

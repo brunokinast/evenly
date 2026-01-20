@@ -1,8 +1,33 @@
 import 'package:flutter/material.dart';
 
+import '../utils/formatters.dart';
+
 /// Custom UI components for a modern, refined look.
 ///
 /// These widgets provide a consistent design language across the app.
+
+// ============================================================
+// CONTENT CONTAINER
+// ============================================================
+
+/// A centered, max-width constrained container for responsive layouts.
+/// Used to keep content readable on wide screens (tablets, web).
+class ContentContainer extends StatelessWidget {
+  final Widget child;
+  final double maxWidth;
+
+  const ContentContainer({super.key, required this.child, this.maxWidth = 600});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: child,
+      ),
+    );
+  }
+}
 
 // ============================================================
 // HEADER ICON BUTTON
@@ -119,6 +144,65 @@ class LoadingButton extends StatelessWidget {
             )
           : Icon(icon),
       label: Text(isLoading ? (loadingLabel ?? label) : label),
+    );
+  }
+}
+
+// ============================================================
+// ACTION BUTTON
+// ============================================================
+
+/// A styled action button used for primary/secondary actions.
+/// Used in quick action bars and bottom action bars.
+class ActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isPrimary;
+  final VoidCallback onTap;
+
+  const ActionButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.isPrimary,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final backgroundColor = isPrimary
+        ? colorScheme.primary
+        : colorScheme.surfaceContainerHighest;
+    final foregroundColor = isPrimary
+        ? colorScheme.onPrimary
+        : colorScheme.onSurface;
+
+    return Material(
+      color: backgroundColor,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 20, color: foregroundColor),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: foregroundColor,
+                  fontSize: 15,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -328,9 +412,9 @@ class EmptyState extends StatelessWidget {
             const SizedBox(height: 28),
             Text(
               title,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
             ),
             if (subtitle != null) ...[
@@ -338,8 +422,8 @@ class EmptyState extends StatelessWidget {
               Text(
                 subtitle!,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
+                  color: colorScheme.onSurfaceVariant,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -391,21 +475,16 @@ class UserAvatar extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
 
-    // Generate consistent color from name with better saturation
-    final hue = (name.hashCode % 360).abs().toDouble();
-    final generatedColor = HSLColor.fromAHSL(
-      1,
-      hue,
-      isDark ? 0.6 : 0.55, // Good saturation
-      isDark ? 0.55 : 0.45, // Medium lightness for good contrast
-    ).toColor();
+    // Use shared color generation function
+    final generatedColor = getColorFromString(name, isDark: isDark);
 
-    final bgColor = backgroundColor ??
+    final bgColor =
+        backgroundColor ??
         (isHighlighted
             ? colorScheme.primary
             : generatedColor.withValues(alpha: isDark ? 0.25 : 0.18));
-    final fgColor = textColor ??
-        (isHighlighted ? colorScheme.onPrimary : generatedColor);
+    final fgColor =
+        textColor ?? (isHighlighted ? colorScheme.onPrimary : generatedColor);
 
     return Container(
       width: size,
@@ -481,58 +560,6 @@ class AmountBadge extends StatelessWidget {
 }
 
 // ============================================================
-// PILL BADGE
-// ============================================================
-
-class PillBadge extends StatelessWidget {
-  final String label;
-  final Color? color;
-  final Color? backgroundColor;
-  final IconData? icon;
-
-  const PillBadge({
-    super.key,
-    required this.label,
-    this.color,
-    this.backgroundColor,
-    this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final effectiveColor = color ?? colorScheme.primary;
-    final effectiveBgColor =
-        backgroundColor ?? effectiveColor.withValues(alpha: 0.1);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: effectiveBgColor,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 14, color: effectiveColor),
-            const SizedBox(width: 4),
-          ],
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: effectiveColor,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ============================================================
 // BOTTOM SHEET HELPERS
 // ============================================================
 
@@ -552,49 +579,4 @@ Future<T?> showAppBottomSheet<T>({
       child: builder(context),
     ),
   );
-}
-
-// ============================================================
-// LOADING OVERLAY
-// ============================================================
-
-class LoadingOverlay extends StatelessWidget {
-  final bool isLoading;
-  final Widget child;
-  final String? message;
-
-  const LoadingOverlay({
-    super.key,
-    required this.isLoading,
-    required this.child,
-    this.message,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        child,
-        if (isLoading)
-          Container(
-            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const CircularProgressIndicator(),
-                  if (message != null) ...[
-                    const SizedBox(height: 16),
-                    Text(
-                      message!,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-      ],
-    );
-  }
 }

@@ -23,99 +23,104 @@ class BalanceScreen extends ConsumerWidget {
 
     return Scaffold(
       body: SafeArea(
-        child: tripAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(child: Text('${l10n.error}: $error')),
-          data: (trip) {
-            if (trip == null) {
-              return EmptyState(
-                icon: Icons.error_outline_rounded,
-                title: l10n.error,
-                subtitle: l10n.tripNotFound,
+        child: ContentContainer(
+          child: tripAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, stack) =>
+                Center(child: Text('${l10n.error}: $error')),
+            data: (trip) {
+              if (trip == null) {
+                return EmptyState(
+                  icon: Icons.error_outline_rounded,
+                  title: l10n.error,
+                  subtitle: l10n.tripNotFound,
+                );
+              }
+
+              if (balanceResult == null) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final rawMemberNames = memberNamesAsync.valueOrNull ?? {};
+              final memberNames = <String, String>{};
+              for (final entry in rawMemberNames.entries) {
+                memberNames[entry.key] = localizeMemberName(
+                  entry.value,
+                  l10n.youIndicator,
+                  l10n.manualIndicator,
+                );
+              }
+
+              return CustomScrollView(
+                slivers: [
+                  // Header
+                  SliverToBoxAdapter(child: _buildHeader(context, l10n, ref)),
+
+                  // Total Summary Card
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                      child: _TotalCard(
+                        totalCents: balanceResult.totalSpentCents,
+                        currency: trip.currency,
+                        expenseCount: expensesAsync.valueOrNull?.length ?? 0,
+                        memberCount: memberNames.length,
+                        l10n: l10n,
+                      ),
+                    ),
+                  ),
+
+                  // Individual Balances Section
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                      child: SectionHeader(title: l10n.individualBalances),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                      child: _BalancesList(
+                        balances: balanceResult.balances,
+                        memberNames: memberNames,
+                        currency: trip.currency,
+                        l10n: l10n,
+                      ),
+                    ),
+                  ),
+
+                  // Settlements Section
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                      child: SectionHeader(title: l10n.suggestedSettlements),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+                      child: _SettlementsList(
+                        transfers: balanceResult.transfers,
+                        memberNames: memberNames,
+                        currency: trip.currency,
+                        l10n: l10n,
+                      ),
+                    ),
+                  ),
+                ],
               );
-            }
-
-            if (balanceResult == null) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            final rawMemberNames = memberNamesAsync.valueOrNull ?? {};
-            final memberNames = <String, String>{};
-            for (final entry in rawMemberNames.entries) {
-              memberNames[entry.key] = localizeMemberName(
-                entry.value,
-                l10n.youIndicator,
-                l10n.manualIndicator,
-              );
-            }
-
-            return CustomScrollView(
-              slivers: [
-                // Header
-                SliverToBoxAdapter(
-                  child: _buildHeader(context, l10n, ref),
-                ),
-
-                // Total Summary Card
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                    child: _TotalCard(
-                      totalCents: balanceResult.totalSpentCents,
-                      currency: trip.currency,
-                      expenseCount: expensesAsync.valueOrNull?.length ?? 0,
-                      memberCount: memberNames.length,
-                      l10n: l10n,
-                    ),
-                  ),
-                ),
-
-                // Individual Balances Section
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-                    child: SectionHeader(title: l10n.individualBalances),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                    child: _BalancesList(
-                      balances: balanceResult.balances,
-                      memberNames: memberNames,
-                      currency: trip.currency,
-                      l10n: l10n,
-                    ),
-                  ),
-                ),
-
-                // Settlements Section
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-                    child: SectionHeader(title: l10n.suggestedSettlements),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-                    child: _SettlementsList(
-                      transfers: balanceResult.transfers,
-                      memberNames: memberNames,
-                      currency: trip.currency,
-                      l10n: l10n,
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
+            },
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context, AppLocalizations l10n, WidgetRef ref) {
+  Widget _buildHeader(
+    BuildContext context,
+    AppLocalizations l10n,
+    WidgetRef ref,
+  ) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 16, 8),
       child: Row(
@@ -128,9 +133,9 @@ class BalanceScreen extends ConsumerWidget {
           Expanded(
             child: Text(
               l10n.balanceSummary,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
           HeaderIconButton(
@@ -159,9 +164,9 @@ class BalanceScreen extends ConsumerWidget {
           rawMemberNames == null ||
           expenses == null ||
           balanceResult == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.dataNotReady)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.dataNotReady)));
         return;
       }
 
@@ -418,27 +423,27 @@ class _BalancesList extends StatelessWidget {
                         children: [
                           Text(
                             memberName,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall
+                            style: Theme.of(context).textTheme.titleSmall
                                 ?.copyWith(fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             statusText,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: colorScheme.onSurfaceVariant),
                           ),
                         ],
                       ),
                     ),
                     Text(
-                      BalanceCalculator.formatBalanceWithSign(balance, currency),
+                      BalanceCalculator.formatBalanceWithSign(
+                        balance,
+                        currency,
+                      ),
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: statusColor,
-                          ),
+                        fontWeight: FontWeight.w700,
+                        color: statusColor,
+                      ),
                     ),
                   ],
                 ),
@@ -501,12 +506,14 @@ class _SettlementsList extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 16),
-            Text(
-              l10n.allSettled,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF10B981),
-                  ),
+            Flexible(
+              child: Text(
+                l10n.allSettled,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF10B981),
+                ),
+              ),
             ),
           ],
         ),
@@ -543,9 +550,7 @@ class _SettlementsList extends StatelessWidget {
                           Flexible(
                             child: Text(
                               from,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
+                              style: Theme.of(context).textTheme.titleSmall
                                   ?.copyWith(fontWeight: FontWeight.w600),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -561,9 +566,7 @@ class _SettlementsList extends StatelessWidget {
                           Flexible(
                             child: Text(
                               to,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
+                              style: Theme.of(context).textTheme.titleSmall
                                   ?.copyWith(fontWeight: FontWeight.w600),
                               overflow: TextOverflow.ellipsis,
                             ),

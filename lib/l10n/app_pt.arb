@@ -148,6 +148,8 @@
   "darkMode": "Modo Escuro",
   "switchToLightTheme": "Mudar para tema claro",
   "switchToDarkTheme": "Mudar para tema escuro",
+  "installApp": "Instalar App",
+  "installAppSubtitle": "Adicionar Evenly à tela inicial",
   
   "editExpense": "Editar Despesa",
   "updateExpense": "Atualizar Despesa",

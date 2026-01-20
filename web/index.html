@@ -20,9 +20,13 @@
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Evenly">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  
+  <!-- Theme color for browser chrome - supports dark mode -->
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1C1B1F" media="(prefers-color-scheme: dark)">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png">
@@ -40,7 +44,7 @@
     body {
       margin: 0;
       min-height: 100%;
-      background-color: #10B981;
+      background-color: #ffffff;
           background-size: 100% 100%;
     }
 
@@ -92,7 +96,7 @@
 
     @media (prefers-color-scheme: dark) {
       body {
-        background-color: #064E3B;
+        background-color: #1C1B1F;
           }
     }
   </style>
@@ -101,6 +105,52 @@
       document.getElementById("splash")?.remove();
       document.getElementById("splash-branding")?.remove();
       document.body.style.background = "transparent";
+    }
+  </script>
+  
+  <!-- PWA Install Prompt -->
+  <script>
+    let deferredPrompt = null;
+    
+    // Callbacks set by Dart
+    window.onPwaInstallAvailable = null;
+    window.onPwaInstalled = null;
+    
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      // Notify Dart if callback is set
+      if (window.onPwaInstallAvailable) {
+        window.onPwaInstallAvailable();
+      }
+    });
+    
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      // Notify Dart if callback is set
+      if (window.onPwaInstalled) {
+        window.onPwaInstalled();
+      }
+    });
+    
+    // Called from Dart to check if install is available
+    function isPwaInstallAvailable() {
+      return deferredPrompt !== null;
+    }
+    
+    // Called from Dart to trigger the install prompt
+    async function triggerPwaInstall() {
+      if (!deferredPrompt) return false;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      return outcome === 'accepted';
+    }
+    
+    // Check if already installed as PWA
+    function isPwaInstalled() {
+      return window.matchMedia('(display-mode: standalone)').matches ||
+             window.navigator.standalone === true;
     }
   </script>
 </head>

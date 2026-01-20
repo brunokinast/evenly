@@ -118,7 +118,10 @@ class PdfExporter {
           style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
         ),
         pw.Text(
-          strings.currency.replaceAll('{currency}', BalanceCalculator.getCurrencySymbol(trip.currency)),
+          strings.currency.replaceAll(
+            '{currency}',
+            BalanceCalculator.getCurrencySymbol(trip.currency),
+          ),
           style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
         ),
         pw.Divider(thickness: 2),

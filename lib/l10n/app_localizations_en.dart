@@ -437,6 +437,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get switchToDarkTheme => 'Switch to dark theme';
 
   @override
+  String get installApp => 'Install App';
+
+  @override
+  String get installAppSubtitle => 'Add Evenly to your home screen';
+
+  @override
   String get editExpense => 'Edit Expense';
 
   @override

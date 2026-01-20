@@ -11,7 +11,7 @@ import '../theme/widgets.dart';
 class AddExpenseScreen extends ConsumerStatefulWidget {
   final String tripId;
   final Expense? expense;
-  
+
   /// Pre-filled data from voice command (optional)
   final double? prefillAmount;
   final String? prefillTitle;
@@ -20,8 +20,8 @@ class AddExpenseScreen extends ConsumerStatefulWidget {
   final String? errorMessage;
 
   const AddExpenseScreen({
-    super.key, 
-    required this.tripId, 
+    super.key,
+    required this.tripId,
     this.expense,
     this.prefillAmount,
     this.prefillTitle,
@@ -62,7 +62,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       _amountController.text = (expense.amountCents / 100).toStringAsFixed(2);
       _selectedPayerId = expense.payerMemberId;
       _selectedParticipantIds = expense.participantMemberIds.toSet();
-      
+
       // Store original values
       _originalDescription = expense.description;
       _originalAmount = (expense.amountCents / 100).toStringAsFixed(2);
@@ -101,211 +101,239 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: membersAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(child: Text('${l10n.error}: $error')),
-          data: (members) {
-            if (members.isEmpty) {
-              return EmptyState(
-                icon: Icons.people_rounded,
-                title: l10n.noMembers,
-                subtitle: '',
-              );
-            }
-
-            final currency = tripAsync.valueOrNull?.currency ?? '';
-            final rawMemberNames = memberNamesAsync.valueOrNull ?? {};
-
-            final memberNames = <String, String>{};
-            for (final entry in rawMemberNames.entries) {
-              memberNames[entry.key] = localizeMemberName(
-                entry.value,
-                l10n.youIndicator,
-                l10n.manualIndicator,
-              );
-            }
-
-            // Initialize payer and participants if not set
-            if (_selectedPayerId == null && members.isNotEmpty) {
-              final currentUid = ref.read(currentUidProvider);
-              final currentMember = members.firstWhere(
-                (m) => m.uid == currentUid,
-                orElse: () => members.first,
-              );
-              _selectedPayerId = currentMember.id;
-            }
-
-            if (_selectedParticipantIds.isEmpty && !_isEditing && widget.prefillParticipantIds == null) {
-              _selectedParticipantIds = members.map((m) => m.id).toSet();
-            }
-            
-            // Show error message from voice command if any
-            if (widget.errorMessage != null && !_errorMessageShown) {
-              _errorMessageShown = true;
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(widget.errorMessage!),
-                    backgroundColor: Theme.of(context).colorScheme.error,
-                    behavior: SnackBarBehavior.floating,
-                    duration: const Duration(seconds: 5),
-                  ),
+        child: ContentContainer(
+          child: membersAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, stack) =>
+                Center(child: Text('${l10n.error}: $error')),
+            data: (members) {
+              if (members.isEmpty) {
+                return EmptyState(
+                  icon: Icons.people_rounded,
+                  title: l10n.noMembers,
+                  subtitle: '',
                 );
-              });
-            }
+              }
 
-            return Form(
-              key: _formKey,
-              child: CustomScrollView(
-                slivers: [
-                  // Header
-                  SliverToBoxAdapter(
-                    child: _buildHeader(context, l10n),
-                  ),
+              final currency = tripAsync.valueOrNull?.currency ?? '';
+              final rawMemberNames = memberNamesAsync.valueOrNull ?? {};
 
-                  // Form Content
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-                    sliver: SliverList(
-                      delegate: SliverChildListDelegate([
-                        // Description Input
-                        InputCard(
-                          child: TextFormField(
-                            controller: _descriptionController,
-                            decoration: InputDecoration(
-                              labelText: l10n.description,
-                              hintText: l10n.whatWasItFor,
-                              prefixIcon: const Icon(Icons.description_rounded),
-                              border: InputBorder.none,
-                            ),
-                            textCapitalization: TextCapitalization.sentences,
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return l10n.pleaseEnterDescription;
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        const SizedBox(height: 16),
+              final memberNames = <String, String>{};
+              for (final entry in rawMemberNames.entries) {
+                memberNames[entry.key] = localizeMemberName(
+                  entry.value,
+                  l10n.youIndicator,
+                  l10n.manualIndicator,
+                );
+              }
 
-                        // Amount Input
-                        InputCard(
-                          child: TextFormField(
-                            controller: _amountController,
-                            decoration: InputDecoration(
-                              labelText: l10n.amount,
-                              hintText: '0.00',
-                              prefixIcon: const Icon(Icons.attach_money_rounded),
-                              suffixText: currency,
-                              border: InputBorder.none,
-                            ),
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            onChanged: (_) => setState(() {}),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return l10n.pleaseEnterAmount;
-                              }
-                              final amount = double.tryParse(value.replaceAll(',', '.'));
-                              if (amount == null || amount <= 0) {
-                                return l10n.invalidAmount;
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        const SizedBox(height: 24),
+              // Initialize payer and participants if not set
+              if (_selectedPayerId == null && members.isNotEmpty) {
+                final currentUid = ref.read(currentUidProvider);
+                final currentMember = members.firstWhere(
+                  (m) => m.uid == currentUid,
+                  orElse: () => members.first,
+                );
+                _selectedPayerId = currentMember.id;
+              }
 
-                        // Payer Selection
-                        SectionHeader(title: l10n.whoPaid.toUpperCase()),
-                        const SizedBox(height: 8),
-                        _SelectionCard(
-                          children: members.map((member) {
-                            final isSelected = _selectedPayerId == member.id;
-                            final name = memberNames[member.id] ?? l10n.unknown;
-                            return _SelectionTile(
-                              name: name,
-                              isSelected: isSelected,
-                              isRadio: true,
-                              onTap: () => setState(() => _selectedPayerId = member.id),
-                            );
-                          }).toList(),
-                        ),
-                        const SizedBox(height: 24),
+              if (_selectedParticipantIds.isEmpty &&
+                  !_isEditing &&
+                  widget.prefillParticipantIds == null) {
+                _selectedParticipantIds = members.map((m) => m.id).toSet();
+              }
 
-                        // Participants Selection
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            SectionHeader(title: l10n.splitBetweenLabel.toUpperCase()),
-                            TextButton(
-                              onPressed: () {
-                                setState(() {
-                                  if (_selectedParticipantIds.length == members.length) {
-                                    _selectedParticipantIds.clear();
-                                  } else {
-                                    _selectedParticipantIds = members.map((m) => m.id).toSet();
-                                  }
-                                });
-                              },
-                              child: Text(
-                                _selectedParticipantIds.length == members.length
-                                    ? l10n.deselectAll
-                                    : l10n.selectAll,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        _SelectionCard(
-                          children: members.map((member) {
-                            final name = memberNames[member.id] ?? l10n.unknown;
-                            return _SelectionTile(
-                              name: name,
-                              isSelected: _selectedParticipantIds.contains(member.id),
-                              isRadio: false,
-                              onTap: () {
-                                setState(() {
-                                  if (_selectedParticipantIds.contains(member.id)) {
-                                    _selectedParticipantIds.remove(member.id);
-                                  } else {
-                                    _selectedParticipantIds.add(member.id);
-                                  }
-                                });
-                              },
-                            );
-                          }).toList(),
-                        ),
-
-                        // Split Preview
-                        if (_selectedParticipantIds.isNotEmpty) ...[
-                          const SizedBox(height: 24),
-                          _buildSplitPreview(currency, l10n),
-                        ],
-
-                        // Save Button
-                        const SizedBox(height: 32),
-                        SizedBox(
-                          width: double.infinity,
-                          child: LoadingButton(
-                            isLoading: _isLoading,
-                            onPressed: () => _saveExpense(l10n),
-                            icon: _isEditing ? Icons.save_rounded : Icons.check_rounded,
-                            label: _isEditing ? l10n.updateExpense : l10n.addExpense,
-                            loadingLabel: l10n.saving,
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                      ]),
+              // Show error message from voice command if any
+              if (widget.errorMessage != null && !_errorMessageShown) {
+                _errorMessageShown = true;
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(widget.errorMessage!),
+                      backgroundColor: Theme.of(context).colorScheme.error,
+                      behavior: SnackBarBehavior.floating,
+                      duration: const Duration(seconds: 5),
                     ),
-                  ),
-                ],
-              ),
-            );
-          },
+                  );
+                });
+              }
+
+              return Form(
+                key: _formKey,
+                child: CustomScrollView(
+                  slivers: [
+                    // Header
+                    SliverToBoxAdapter(child: _buildHeader(context, l10n)),
+
+                    // Form Content
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                      sliver: SliverList(
+                        delegate: SliverChildListDelegate([
+                          // Description Input
+                          InputCard(
+                            child: TextFormField(
+                              controller: _descriptionController,
+                              decoration: InputDecoration(
+                                labelText: l10n.description,
+                                hintText: l10n.whatWasItFor,
+                                prefixIcon: const Icon(
+                                  Icons.description_rounded,
+                                ),
+                                border: InputBorder.none,
+                              ),
+                              textCapitalization: TextCapitalization.sentences,
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return l10n.pleaseEnterDescription;
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Amount Input
+                          InputCard(
+                            child: TextFormField(
+                              controller: _amountController,
+                              decoration: InputDecoration(
+                                labelText: l10n.amount,
+                                hintText: '0.00',
+                                prefixIcon: const Icon(
+                                  Icons.attach_money_rounded,
+                                ),
+                                suffixText: currency,
+                                border: InputBorder.none,
+                              ),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              onChanged: (_) => setState(() {}),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return l10n.pleaseEnterAmount;
+                                }
+                                final amount = double.tryParse(
+                                  value.replaceAll(',', '.'),
+                                );
+                                if (amount == null || amount <= 0) {
+                                  return l10n.invalidAmount;
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Payer Selection
+                          SectionHeader(title: l10n.whoPaid.toUpperCase()),
+                          const SizedBox(height: 8),
+                          _SelectionCard(
+                            children: members.map((member) {
+                              final isSelected = _selectedPayerId == member.id;
+                              final name =
+                                  memberNames[member.id] ?? l10n.unknown;
+                              return _SelectionTile(
+                                name: name,
+                                isSelected: isSelected,
+                                isRadio: true,
+                                onTap: () => setState(
+                                  () => _selectedPayerId = member.id,
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Participants Selection
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              SectionHeader(
+                                title: l10n.splitBetweenLabel.toUpperCase(),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    if (_selectedParticipantIds.length ==
+                                        members.length) {
+                                      _selectedParticipantIds.clear();
+                                    } else {
+                                      _selectedParticipantIds = members
+                                          .map((m) => m.id)
+                                          .toSet();
+                                    }
+                                  });
+                                },
+                                child: Text(
+                                  _selectedParticipantIds.length ==
+                                          members.length
+                                      ? l10n.deselectAll
+                                      : l10n.selectAll,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          _SelectionCard(
+                            children: members.map((member) {
+                              final name =
+                                  memberNames[member.id] ?? l10n.unknown;
+                              return _SelectionTile(
+                                name: name,
+                                isSelected: _selectedParticipantIds.contains(
+                                  member.id,
+                                ),
+                                isRadio: false,
+                                onTap: () {
+                                  setState(() {
+                                    if (_selectedParticipantIds.contains(
+                                      member.id,
+                                    )) {
+                                      _selectedParticipantIds.remove(member.id);
+                                    } else {
+                                      _selectedParticipantIds.add(member.id);
+                                    }
+                                  });
+                                },
+                              );
+                            }).toList(),
+                          ),
+
+                          // Split Preview
+                          if (_selectedParticipantIds.isNotEmpty) ...[
+                            const SizedBox(height: 24),
+                            _buildSplitPreview(currency, l10n),
+                          ],
+
+                          // Save Button
+                          const SizedBox(height: 32),
+                          SizedBox(
+                            width: double.infinity,
+                            child: LoadingButton(
+                              isLoading: _isLoading,
+                              onPressed: () => _saveExpense(l10n),
+                              icon: _isEditing
+                                  ? Icons.save_rounded
+                                  : Icons.check_rounded,
+                              label: _isEditing
+                                  ? l10n.updateExpense
+                                  : l10n.addExpense,
+                              loadingLabel: l10n.saving,
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                        ]),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -326,9 +354,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
           Expanded(
             child: Text(
               _isEditing ? l10n.saveExpense : l10n.addExpense,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
           if (_isEditing)
@@ -360,9 +388,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       decoration: BoxDecoration(
         color: colorScheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: colorScheme.primary.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -373,24 +399,27 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
               Text(
                 l10n.eachPersonPays,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
+                  color: colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 l10n.peopleCount(_selectedParticipantIds.length),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
           Text(
-            BalanceCalculator.formatAmount((splitAmount * 100).round(), currency),
+            BalanceCalculator.formatAmount(
+              (splitAmount * 100).round(),
+              currency,
+            ),
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: colorScheme.primary,
-                ),
+              fontWeight: FontWeight.w700,
+              color: colorScheme.primary,
+            ),
           ),
         ],
       ),
@@ -401,16 +430,16 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedPayerId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.pleaseSelectWhoPaid)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.pleaseSelectWhoPaid)));
       return;
     }
 
     if (_selectedParticipantIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.selectAtLeastOne)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.selectAtLeastOne)));
       return;
     }
 
@@ -472,13 +501,13 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
   bool get _hasChanges {
     if (!_isEditing) return false;
-    
+
     return _descriptionController.text != _originalDescription ||
-           _amountController.text != _originalAmount ||
-           _selectedPayerId != _originalPayerId ||
-           !_setEquals(_selectedParticipantIds, _originalParticipantIds);
+        _amountController.text != _originalAmount ||
+        _selectedPayerId != _originalPayerId ||
+        !_setEquals(_selectedParticipantIds, _originalParticipantIds);
   }
-  
+
   bool _setEquals(Set<String> a, Set<String> b) {
     if (a.length != b.length) return false;
     return a.containsAll(b);
@@ -546,9 +575,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.expenseDeleted)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.expenseDeleted)));
       }
     } catch (e) {
       if (mounted) {
@@ -632,18 +661,14 @@ class _SelectionTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
-              UserAvatar(
-                name: name,
-                size: 40,
-                isHighlighted: isSelected,
-              ),
+              UserAvatar(name: name, size: 40, isHighlighted: isSelected),
               const SizedBox(width: 14),
               Expanded(
                 child: Text(
                   name,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                      ),
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  ),
                 ),
               ),
               if (isRadio)
@@ -653,10 +678,14 @@ class _SelectionTile extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isSelected ? colorScheme.primary : colorScheme.outline,
+                      color: isSelected
+                          ? colorScheme.primary
+                          : colorScheme.outline,
                       width: 2,
                     ),
-                    color: isSelected ? colorScheme.primary : Colors.transparent,
+                    color: isSelected
+                        ? colorScheme.primary
+                        : Colors.transparent,
                   ),
                   child: isSelected
                       ? Icon(
@@ -673,10 +702,14 @@ class _SelectionTile extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                      color: isSelected ? colorScheme.primary : colorScheme.outline,
+                      color: isSelected
+                          ? colorScheme.primary
+                          : colorScheme.outline,
                       width: 2,
                     ),
-                    color: isSelected ? colorScheme.primary : Colors.transparent,
+                    color: isSelected
+                        ? colorScheme.primary
+                        : Colors.transparent,
                   ),
                   child: isSelected
                       ? Icon(

@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -21,6 +22,11 @@ void main() async {
   // Initialize SharedPreferences
   final prefs = await SharedPreferences.getInstance();
 
+  // Initialize PWA service on web
+  if (kIsWeb) {
+    PwaService.instance.initialize();
+  }
+
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -36,9 +42,7 @@ void main() async {
 
   runApp(
     ProviderScope(
-      overrides: [
-        sharedPreferencesProvider.overrideWithValue(prefs),
-      ],
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
       child: const EvenlyApp(),
     ),
   );
@@ -153,8 +157,8 @@ class _AuthWrapperState extends ConsumerState<_AuthWrapper> {
                 Text(
                   'Please check your internet connection and try again.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -214,8 +218,8 @@ class _AuthWrapperState extends ConsumerState<_AuthWrapper> {
                 Text(
                   'Unable to load your profile. Please try again.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -250,11 +254,12 @@ class _AuthWrapperState extends ConsumerState<_AuthWrapper> {
 /// Wrapper that listens for voice command results and shows appropriate UI.
 class _VoiceCommandWrapper extends ConsumerStatefulWidget {
   final Widget child;
-  
+
   const _VoiceCommandWrapper({required this.child});
 
   @override
-  ConsumerState<_VoiceCommandWrapper> createState() => _VoiceCommandWrapperState();
+  ConsumerState<_VoiceCommandWrapper> createState() =>
+      _VoiceCommandWrapperState();
 }
 
 class _VoiceCommandWrapperState extends ConsumerState<_VoiceCommandWrapper> {
@@ -282,9 +287,9 @@ class _VoiceCommandWrapperState extends ConsumerState<_VoiceCommandWrapper> {
     VoiceCommandState current,
   ) {
     final l10n = AppLocalizations.of(context);
-    
+
     // Show disambiguation dialog if needed
-    if (current.needsDisambiguation && 
+    if (current.needsDisambiguation &&
         (previous?.disambiguationType != current.disambiguationType)) {
       _showDisambiguationDialog(current);
       return;
@@ -297,11 +302,12 @@ class _VoiceCommandWrapperState extends ConsumerState<_VoiceCommandWrapper> {
         SnackBar(
           content: Text(
             l10n?.voiceCommandExpenseCreated(
-              success.expense.amount.toStringAsFixed(2),
-              success.trip.currency,
-              success.expense.description,
-              success.trip.title,
-            ) ?? 'Expense created successfully',
+                  success.expense.amount.toStringAsFixed(2),
+                  success.trip.currency,
+                  success.expense.description,
+                  success.trip.title,
+                ) ??
+                'Expense created successfully',
           ),
           backgroundColor: const Color(0xFF10B981),
           behavior: SnackBarBehavior.floating,
@@ -321,18 +327,18 @@ class _VoiceCommandWrapperState extends ConsumerState<_VoiceCommandWrapper> {
           ),
         ),
       );
-      
+
       // Clear the result after showing
       ref.read(voiceCommandProvider.notifier).clearResult();
     }
-    
+
     // Handle partial success - open AddExpenseScreen with pre-filled data
     if (current.hasPartialSuccess && previous?.hasPartialSuccess != true) {
       final partial = current.partialSuccessResult!;
-      
+
       // Get localized error message
       final errorMessage = _getPartialErrorMessage(partial, l10n);
-      
+
       // Navigate to add expense screen with pre-filled data
       Navigator.push(
         context,
@@ -347,7 +353,7 @@ class _VoiceCommandWrapperState extends ConsumerState<_VoiceCommandWrapper> {
           ),
         ),
       );
-      
+
       // Clear the result
       ref.read(voiceCommandProvider.notifier).clearResult();
     }
@@ -363,7 +369,7 @@ class _VoiceCommandWrapperState extends ConsumerState<_VoiceCommandWrapper> {
           duration: const Duration(seconds: 4),
         ),
       );
-      
+
       // Clear the result after showing
       ref.read(voiceCommandProvider.notifier).clearResult();
     }
@@ -372,25 +378,30 @@ class _VoiceCommandWrapperState extends ConsumerState<_VoiceCommandWrapper> {
   String _getErrorMessage(VoiceCommandError error, AppLocalizations? l10n) {
     switch (error.errorType) {
       case VoiceCommandErrorType.noTripsFound:
-        return l10n?.voiceCommandNoTrips ?? 'You have no trips. Create a trip first.';
+        return l10n?.voiceCommandNoTrips ??
+            'You have no trips. Create a trip first.';
       case VoiceCommandErrorType.tripNotFound:
         return l10n?.voiceCommandTripNotFound ?? 'Trip not found.';
       case VoiceCommandErrorType.memberNotFound:
         return l10n?.voiceCommandMemberNotFound ?? 'Member not found.';
       case VoiceCommandErrorType.missingRequiredParameter:
-        return l10n?.voiceCommandMissingParameter ?? 'Missing required information.';
+        return l10n?.voiceCommandMissingParameter ??
+            'Missing required information.';
       case VoiceCommandErrorType.notAuthenticated:
         return l10n?.voiceCommandNotAuthenticated ?? 'Not signed in.';
       case VoiceCommandErrorType.unknownError:
         return error.message;
     }
   }
-  
-  String _getPartialErrorMessage(VoiceCommandPartialSuccess partial, AppLocalizations? l10n) {
+
+  String _getPartialErrorMessage(
+    VoiceCommandPartialSuccess partial,
+    AppLocalizations? l10n,
+  ) {
     final failedValue = partial.failedValue ?? '';
     switch (partial.errorType) {
       case VoiceCommandErrorType.memberNotFound:
-        return l10n?.voiceCommandPayerNotFound(failedValue) ?? 
+        return l10n?.voiceCommandPayerNotFound(failedValue) ??
             'Member "$failedValue" was not found in this trip. Please select the correct person.';
       default:
         return partial.errorMessage;
@@ -400,7 +411,7 @@ class _VoiceCommandWrapperState extends ConsumerState<_VoiceCommandWrapper> {
   void _showDisambiguationDialog(VoiceCommandState state) {
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     String title;
     switch (state.disambiguationType!) {
       case DisambiguationType.trip:
@@ -426,9 +437,9 @@ class _VoiceCommandWrapperState extends ConsumerState<_VoiceCommandWrapper> {
           children: [
             Text(
               title,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
             ),
             if (state.pendingCommand?.title != null) ...[
               const SizedBox(height: 8),
@@ -440,24 +451,29 @@ class _VoiceCommandWrapperState extends ConsumerState<_VoiceCommandWrapper> {
               ),
             ],
             const SizedBox(height: 16),
-            ...state.disambiguationOptions!.map((option) => ListTile(
-              leading: CircleAvatar(
-                backgroundColor: colorScheme.primaryContainer,
-                child: Text(
-                  option.displayName.isNotEmpty 
-                      ? option.displayName[0].toUpperCase() 
-                      : '?',
-                  style: TextStyle(color: colorScheme.onPrimaryContainer),
+            ...state.disambiguationOptions!.map(
+              (option) => ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: colorScheme.primaryContainer,
+                  child: Text(
+                    option.displayName.isNotEmpty
+                        ? option.displayName[0].toUpperCase()
+                        : '?',
+                    style: TextStyle(color: colorScheme.onPrimaryContainer),
+                  ),
                 ),
+                title: Text(option.displayName),
+                subtitle: option.subtitle != null
+                    ? Text(option.subtitle!)
+                    : null,
+                onTap: () {
+                  Navigator.pop(context);
+                  ref
+                      .read(voiceCommandProvider.notifier)
+                      .selectDisambiguationOption(option.id);
+                },
               ),
-              title: Text(option.displayName),
-              subtitle: option.subtitle != null ? Text(option.subtitle!) : null,
-              onTap: () {
-                Navigator.pop(context);
-                ref.read(voiceCommandProvider.notifier)
-                    .selectDisambiguationOption(option.id);
-              },
-            )),
+            ),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -475,4 +491,3 @@ class _VoiceCommandWrapperState extends ConsumerState<_VoiceCommandWrapper> {
     );
   }
 }
-

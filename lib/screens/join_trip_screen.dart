@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../models/trip.dart';
 import '../providers/providers.dart';
+import '../theme/widgets.dart';
 import 'trip_detail_screen.dart';
 
 class JoinTripScreen extends ConsumerStatefulWidget {
@@ -129,62 +130,56 @@ class _JoinTripScreenState extends ConsumerState<JoinTripScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(context, l10n, colorScheme),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(24),
-                children: [
-                  _buildIcon(colorScheme),
-                  const SizedBox(height: 24),
-                  _buildTitle(context, l10n, colorScheme),
-                  const SizedBox(height: 32),
-                  _buildCodeInput(context, l10n, colorScheme),
-                  if (_error != null) _buildError(context, colorScheme),
-                  if (_foundTrip != null) ...[
+        child: ContentContainer(
+          child: Column(
+            children: [
+              _buildHeader(context, l10n, colorScheme),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.all(24),
+                  children: [
+                    _buildIcon(colorScheme),
                     const SizedBox(height: 24),
-                    _buildTripCard(context, l10n, colorScheme),
+                    _buildTitle(context, l10n, colorScheme),
+                    const SizedBox(height: 32),
+                    _buildCodeInput(context, l10n, colorScheme),
+                    if (_error != null) _buildError(context, colorScheme),
+                    if (_foundTrip != null) ...[
+                      const SizedBox(height: 24),
+                      _buildTripCard(context, l10n, colorScheme),
+                    ],
+                    const SizedBox(height: 24),
+                    if (_foundTrip == null) _buildFindButton(l10n, colorScheme),
                   ],
-                  const SizedBox(height: 24),
-                  if (_foundTrip == null)
-                    _buildFindButton(l10n, colorScheme),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildHeader(
-      BuildContext context, AppLocalizations l10n, ColorScheme colorScheme) {
+    BuildContext context,
+    AppLocalizations l10n,
+    ColorScheme colorScheme,
+  ) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: IconButton(
-              onPressed: () => Navigator.of(context).pop(),
-              icon: const Icon(Icons.arrow_back_rounded),
-              iconSize: 22,
-              tooltip: l10n.goBack,
-            ),
+          HeaderIconButton(
+            icon: Icons.arrow_back_rounded,
+            onTap: () => Navigator.of(context).pop(),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
               l10n.joinTrip,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -211,22 +206,25 @@ class _JoinTripScreenState extends ConsumerState<JoinTripScreen> {
   }
 
   Widget _buildTitle(
-      BuildContext context, AppLocalizations l10n, ColorScheme colorScheme) {
+    BuildContext context,
+    AppLocalizations l10n,
+    ColorScheme colorScheme,
+  ) {
     return Column(
       children: [
         Text(
           l10n.enterInviteCode,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
         Text(
           l10n.enterInviteCodeHint,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
           textAlign: TextAlign.center,
         ),
       ],
@@ -234,7 +232,10 @@ class _JoinTripScreenState extends ConsumerState<JoinTripScreen> {
   }
 
   Widget _buildCodeInput(
-      BuildContext context, AppLocalizations l10n, ColorScheme colorScheme) {
+    BuildContext context,
+    AppLocalizations l10n,
+    ColorScheme colorScheme,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: colorScheme.surface,
@@ -263,9 +264,9 @@ class _JoinTripScreenState extends ConsumerState<JoinTripScreen> {
                 LengthLimitingTextInputFormatter(6),
               ],
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    letterSpacing: 8,
-                    fontWeight: FontWeight.w600,
-                  ),
+                letterSpacing: 8,
+                fontWeight: FontWeight.w600,
+              ),
               textAlign: TextAlign.center,
               onChanged: (_) {
                 if (_foundTrip != null || _error != null) {
@@ -300,14 +301,18 @@ class _JoinTripScreenState extends ConsumerState<JoinTripScreen> {
         ),
         child: Row(
           children: [
-            Icon(Icons.error_outline_rounded, color: colorScheme.error, size: 20),
+            Icon(
+              Icons.error_outline_rounded,
+              color: colorScheme.error,
+              size: 20,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 _error!,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colorScheme.error,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: colorScheme.error),
               ),
             ),
           ],
@@ -317,7 +322,10 @@ class _JoinTripScreenState extends ConsumerState<JoinTripScreen> {
   }
 
   Widget _buildTripCard(
-      BuildContext context, AppLocalizations l10n, ColorScheme colorScheme) {
+    BuildContext context,
+    AppLocalizations l10n,
+    ColorScheme colorScheme,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: colorScheme.surface,
@@ -355,21 +363,23 @@ class _JoinTripScreenState extends ConsumerState<JoinTripScreen> {
                             ? l10n.alreadyMemberOf
                             : l10n.youreInvitedToJoin,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         _foundTrip!.title,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: colorScheme.secondaryContainer,
                     borderRadius: BorderRadius.circular(8),
@@ -377,9 +387,9 @@ class _JoinTripScreenState extends ConsumerState<JoinTripScreen> {
                   child: Text(
                     _foundTrip!.currency,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: colorScheme.onSecondaryContainer,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      color: colorScheme.onSecondaryContainer,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],

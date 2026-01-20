@@ -1,1 +1,41 @@
-{"firestore":{"rules":"firestore.rules","indexes":"firestore.indexes.json"},"hosting":{"public":"build/web","ignore":["firebase.json","**/.*","**/node_modules/**"],"rewrites":[{"source":"**","destination":"/index.html"}]},"flutter":{"platforms":{"android":{"default":{"projectId":"evenly-app-6f5f2","appId":"1:842719625398:android:8a00250fe4b802279d2617","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"evenly-app-6f5f2","configurations":{"android":"1:842719625398:android:8a00250fe4b802279d2617","ios":"1:842719625398:ios:2c47a758a42fb2769d2617","web":"1:842719625398:web:b228b3da4ed9e0db9d2617"}}}}}}
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "evenly-app-6f5f2",
+          "appId": "1:842719625398:android:8a00250fe4b802279d2617",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "evenly-app-6f5f2",
+          "configurations": {
+            "android": "1:842719625398:android:8a00250fe4b802279d2617",
+            "ios": "1:842719625398:ios:2c47a758a42fb2769d2617",
+            "web": "1:842719625398:web:b228b3da4ed9e0db9d2617"
+          }
+        }
+      }
+    }
+  }
+}

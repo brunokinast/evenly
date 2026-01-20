@@ -389,12 +389,40 @@ Do not implement or suggest these unless the user explicitly requests:
 
 ### Key Commands
 
+Use `rps` (Run Package Scripts) to run commands defined in `pubspec.yaml`:
+
 ```bash
-flutter analyze          # Check for errors
-flutter gen-l10n         # Regenerate localization
-flutter run -d chrome    # Run web version
-firebase deploy --only firestore:rules  # Deploy rules
+# Run
+rps run web              # Run on Chrome
+rps run android          # Run on emulator
+
+# Build
+rps build web            # Build web release
+rps build android        # Build APK
+
+# Deploy
+rps deploy web           # Build web + deploy to Firebase Hosting
+rps deploy firebase      # Deploy everything to Firebase
+rps deploy rules         # Deploy Firestore rules only
+
+# Code generation
+rps gen l10n             # Regenerate localization
+rps gen icons            # Generate app icons
+rps gen splash           # Generate splash screen
+rps gen all              # Run all generators
+
+# Code quality
+rps analyze              # Check for errors
+rps format               # Format code
+rps fix                  # Apply dart fixes
+rps lint                 # Format + analyze
+
+# Utilities
+rps clean                # Clean + pub get
+rps test                 # Run tests
 ```
+
+Scripts are defined in `pubspec.yaml` under the `scripts:` key with YAML hierarchy.
 
 ### Supported Locales
 

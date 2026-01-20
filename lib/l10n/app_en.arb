@@ -233,6 +233,8 @@
   "darkMode": "Dark Mode",
   "switchToLightTheme": "Switch to light theme",
   "switchToDarkTheme": "Switch to dark theme",
+  "installApp": "Install App",
+  "installAppSubtitle": "Add Evenly to your home screen",
   
   "editExpense": "Edit Expense",
   "updateExpense": "Update Expense",

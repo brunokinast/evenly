@@ -878,6 +878,18 @@ abstract class AppLocalizations {
   /// **'Switch to dark theme'**
   String get switchToDarkTheme;
 
+  /// No description provided for @installApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Install App'**
+  String get installApp;
+
+  /// No description provided for @installAppSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Evenly to your home screen'**
+  String get installAppSubtitle;
+
   /// No description provided for @editExpense.
   ///
   /// In en, this message translates to:

@@ -61,92 +61,94 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
 
         return Scaffold(
           body: SafeArea(
-            child: Column(
-              children: [
-                // Custom Header
-                _TripHeader(
-                  trip: trip,
-                  isOwner: isOwner,
-                  onBack: () => Navigator.pop(context),
-                  onInviteCode: () => _showInviteCodeDialog(trip, l10n),
-                  onMenu: () => _showTripOptionsSheet(trip, isOwner, l10n),
-                ),
-
-                // Tab Selector
-                Container(
-                  margin: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(14),
+            child: ContentContainer(
+              child: Column(
+                children: [
+                  // Custom Header
+                  _TripHeader(
+                    trip: trip,
+                    isOwner: isOwner,
+                    onBack: () => Navigator.pop(context),
+                    onInviteCode: () => _showInviteCodeDialog(trip, l10n),
+                    onMenu: () => _showTripOptionsSheet(trip, isOwner, l10n),
                   ),
-                  padding: const EdgeInsets.all(4),
-                  child: TabBar(
-                    controller: _tabController,
-                    indicator: BoxDecoration(
-                      color: colorScheme.surface,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 4,
-                          offset: const Offset(0, 1),
+
+                  // Tab Selector
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    padding: const EdgeInsets.all(4),
+                    child: TabBar(
+                      controller: _tabController,
+                      indicator: BoxDecoration(
+                        color: colorScheme.surface,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      dividerColor: Colors.transparent,
+                      labelColor: colorScheme.onSurface,
+                      unselectedLabelColor: colorScheme.onSurfaceVariant,
+                      labelStyle: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                      unselectedLabelStyle: const TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                      ),
+                      tabs: [
+                        Tab(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.receipt_long_rounded, size: 18),
+                              const SizedBox(width: 8),
+                              Text(l10n.expenses),
+                            ],
+                          ),
+                        ),
+                        Tab(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.people_rounded, size: 18),
+                              const SizedBox(width: 8),
+                              Text(l10n.members),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    dividerColor: Colors.transparent,
-                    labelColor: colorScheme.onSurface,
-                    unselectedLabelColor: colorScheme.onSurfaceVariant,
-                    labelStyle: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                    unselectedLabelStyle: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 14,
-                    ),
-                    tabs: [
-                      Tab(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.receipt_long_rounded, size: 18),
-                            const SizedBox(width: 8),
-                            Text(l10n.expenses),
-                          ],
-                        ),
-                      ),
-                      Tab(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.people_rounded, size: 18),
-                            const SizedBox(width: 8),
-                            Text(l10n.members),
-                          ],
-                        ),
-                      ),
-                    ],
                   ),
-                ),
 
-                // Tab Content
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _ExpensesTab(tripId: widget.tripId, currency: trip.currency),
-                      _MembersTab(tripId: widget.tripId),
-                    ],
+                  // Tab Content
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _ExpensesTab(
+                          tripId: widget.tripId,
+                          currency: trip.currency,
+                        ),
+                        _MembersTab(tripId: widget.tripId),
+                      ],
+                    ),
                   ),
-                ),
 
-                // Bottom Action Bar
-                _BottomActionBar(
-                  tripId: widget.tripId,
-                  l10n: l10n,
-                ),
-              ],
+                  // Bottom Action Bar
+                  _BottomActionBar(tripId: widget.tripId, l10n: l10n),
+                ],
+              ),
             ),
           ),
         );
@@ -301,7 +303,9 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
               if (dialogContext.mounted) {
                 Navigator.pop(dialogContext);
               }
-              messenger.showSnackBar(SnackBar(content: Text(l10n.codeRegenerated)));
+              messenger.showSnackBar(
+                SnackBar(content: Text(l10n.codeRegenerated)),
+              );
             },
             child: Text(l10n.regenerate),
           ),
@@ -526,7 +530,10 @@ class _ExpensesTab extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: colorScheme.onPrimary.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(20),
@@ -612,10 +619,7 @@ class _ExpenseCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                UserAvatar(
-                  name: payerName,
-                  size: 44,
-                ),
+                UserAvatar(name: payerName, size: 44),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
@@ -810,10 +814,7 @@ class _TripHeader extends StatelessWidget {
       child: Row(
         children: [
           // Back Button
-          HeaderIconButton(
-            icon: Icons.arrow_back_rounded,
-            onTap: onBack,
-          ),
+          HeaderIconButton(icon: Icons.arrow_back_rounded, onTap: onBack),
           const SizedBox(width: 16),
 
           // Title
@@ -823,9 +824,9 @@ class _TripHeader extends StatelessWidget {
               children: [
                 Text(
                   trip.title,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -851,10 +852,7 @@ class _TripHeader extends StatelessWidget {
           const SizedBox(width: 10),
 
           // Menu Button
-          HeaderIconButton(
-            icon: Icons.more_horiz_rounded,
-            onTap: onMenu,
-          ),
+          HeaderIconButton(icon: Icons.more_horiz_rounded, onTap: onMenu),
         ],
       ),
     );
@@ -869,10 +867,7 @@ class _BottomActionBar extends StatelessWidget {
   final String tripId;
   final AppLocalizations l10n;
 
-  const _BottomActionBar({
-    required this.tripId,
-    required this.l10n,
-  });
+  const _BottomActionBar({required this.tripId, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -894,38 +889,14 @@ class _BottomActionBar extends StatelessWidget {
         children: [
           // View Balances Button
           Expanded(
-            child: Material(
-              color: colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(16),
-              child: InkWell(
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => BalanceScreen(tripId: tripId),
-                  ),
-                ),
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.account_balance_wallet_rounded,
-                        color: colorScheme.onSurface,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        l10n.balances,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onSurface,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ],
-                  ),
+            child: ActionButton(
+              icon: Icons.account_balance_wallet_rounded,
+              label: l10n.balances,
+              isPrimary: false,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => BalanceScreen(tripId: tripId),
                 ),
               ),
             ),
@@ -934,38 +905,14 @@ class _BottomActionBar extends StatelessWidget {
 
           // Add Expense Button
           Expanded(
-            child: Material(
-              color: colorScheme.primary,
-              borderRadius: BorderRadius.circular(16),
-              child: InkWell(
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => AddExpenseScreen(tripId: tripId),
-                  ),
-                ),
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.add_rounded,
-                        color: colorScheme.onPrimary,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        l10n.addExpense,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onPrimary,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ],
-                  ),
+            child: ActionButton(
+              icon: Icons.add_rounded,
+              label: l10n.addExpense,
+              isPrimary: true,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AddExpenseScreen(tripId: tripId),
                 ),
               ),
             ),

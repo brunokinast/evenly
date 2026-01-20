@@ -440,6 +440,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get switchToDarkTheme => 'Mudar para tema escuro';
 
   @override
+  String get installApp => 'Instalar App';
+
+  @override
+  String get installAppSubtitle => 'Adicionar Evenly à tela inicial';
+
+  @override
   String get editExpense => 'Editar Despesa';
 
   @override

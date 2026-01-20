@@ -68,3 +68,51 @@ flutter_native_splash:
     image: "assets/icon-without-background.png"
     image_dark: "assets/icon-without-background.png"
   web: true
+
+# Scripts (run with: rps <script>)
+scripts:
+  # Run app
+  run:
+    web: flutter run -d chrome
+    android: flutter run -d emulator
+  
+  # Build release
+  build:
+    web: flutter build web --release
+    android: flutter build apk --release
+  
+  # Deploy to Firebase
+  deploy:
+    web: |
+      flutter build web --release
+      firebase deploy --only hosting
+    firebase: firebase deploy
+    rules: firebase deploy --only firestore:rules
+  
+  # Code generation
+  gen:
+    l10n: flutter gen-l10n
+    icons: dart run flutter_launcher_icons
+    splash: dart run flutter_native_splash:create
+    all: |
+      flutter gen-l10n
+      dart run flutter_launcher_icons
+      dart run flutter_native_splash:create
+  
+  # Code quality
+  analyze: flutter analyze
+  format: dart format .
+  fix: dart fix --apply
+  lint: |
+    dart format .
+    flutter analyze
+  
+  # Testing
+  test: flutter test
+  
+  # Utilities
+  clean: |
+    flutter clean
+    flutter pub get
+  upgrade: flutter pub upgrade --major-versions
+  outdated: flutter pub outdated

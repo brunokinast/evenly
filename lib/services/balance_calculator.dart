@@ -175,7 +175,7 @@ class BalanceCalculator {
     final amount = cents / 100;
     final symbol = _currencySymbols[currency] ?? currency;
     final locale = _currencyLocales[currency] ?? 'en_US';
-    
+
     // Format number according to locale
     final formatted = _formatNumber(amount, locale);
     return '$symbol $formatted';
@@ -188,7 +188,7 @@ class BalanceCalculator {
       final parts = value.toStringAsFixed(2).split('.');
       final intPart = parts[0];
       final decPart = parts[1];
-      
+
       // Add thousand separators (dots)
       final buffer = StringBuffer();
       for (var i = 0; i < intPart.length; i++) {
@@ -199,12 +199,12 @@ class BalanceCalculator {
       }
       return '${buffer.toString()},$decPart';
     }
-    
+
     // Default: US/UK format (comma for thousands, dot for decimals)
     final parts = value.toStringAsFixed(2).split('.');
     final intPart = parts[0];
     final decPart = parts[1];
-    
+
     // Add thousand separators (commas)
     final buffer = StringBuffer();
     for (var i = 0; i < intPart.length; i++) {

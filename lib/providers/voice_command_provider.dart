@@ -17,7 +17,7 @@ class VoiceCommandState {
   final VoiceCommandResult? lastResult;
   final DisambiguationType? disambiguationType;
   final List<DisambiguationOption>? disambiguationOptions;
-  
+
   // Selected values during disambiguation
   final String? selectedTripId;
   final String? selectedPayerId;
@@ -49,39 +49,49 @@ class VoiceCommandState {
   }) {
     return VoiceCommandState(
       isProcessing: isProcessing ?? this.isProcessing,
-      pendingCommand: clearPendingCommand ? null : (pendingCommand ?? this.pendingCommand),
+      pendingCommand: clearPendingCommand
+          ? null
+          : (pendingCommand ?? this.pendingCommand),
       lastResult: clearLastResult ? null : (lastResult ?? this.lastResult),
-      disambiguationType: clearDisambiguation ? null : (disambiguationType ?? this.disambiguationType),
-      disambiguationOptions: clearDisambiguation ? null : (disambiguationOptions ?? this.disambiguationOptions),
+      disambiguationType: clearDisambiguation
+          ? null
+          : (disambiguationType ?? this.disambiguationType),
+      disambiguationOptions: clearDisambiguation
+          ? null
+          : (disambiguationOptions ?? this.disambiguationOptions),
       selectedTripId: selectedTripId ?? this.selectedTripId,
       selectedPayerId: selectedPayerId ?? this.selectedPayerId,
-      selectedParticipantIds: selectedParticipantIds ?? this.selectedParticipantIds,
+      selectedParticipantIds:
+          selectedParticipantIds ?? this.selectedParticipantIds,
     );
   }
 
   /// Whether disambiguation is needed.
-  bool get needsDisambiguation => 
+  bool get needsDisambiguation =>
       disambiguationType != null && disambiguationOptions != null;
-  
+
   /// Whether the last command was successful.
   bool get wasSuccessful => lastResult is VoiceCommandSuccess;
-  
+
   /// Whether the last command resulted in partial success (needs manual correction).
   bool get hasPartialSuccess => lastResult is VoiceCommandPartialSuccess;
-  
+
   /// Whether the last command failed.
   bool get hasFailed => lastResult is VoiceCommandError;
-  
+
   /// Gets the success result if available.
-  VoiceCommandSuccess? get successResult => 
-      lastResult is VoiceCommandSuccess ? lastResult as VoiceCommandSuccess : null;
-  
+  VoiceCommandSuccess? get successResult => lastResult is VoiceCommandSuccess
+      ? lastResult as VoiceCommandSuccess
+      : null;
+
   /// Gets the partial success result if available.
-  VoiceCommandPartialSuccess? get partialSuccessResult => 
-      lastResult is VoiceCommandPartialSuccess ? lastResult as VoiceCommandPartialSuccess : null;
-  
+  VoiceCommandPartialSuccess? get partialSuccessResult =>
+      lastResult is VoiceCommandPartialSuccess
+      ? lastResult as VoiceCommandPartialSuccess
+      : null;
+
   /// Gets the error result if available.
-  VoiceCommandError? get errorResult => 
+  VoiceCommandError? get errorResult =>
       lastResult is VoiceCommandError ? lastResult as VoiceCommandError : null;
 }
 
@@ -90,8 +100,8 @@ class VoiceCommandNotifier extends StateNotifier<VoiceCommandState> {
   final VoiceCommandService _service;
   final Ref _ref;
 
-  VoiceCommandNotifier(this._service, this._ref) 
-      : super(const VoiceCommandState()) {
+  VoiceCommandNotifier(this._service, this._ref)
+    : super(const VoiceCommandState()) {
     // Initialize the service and listen for commands
     _service.initialize();
     _service.onVoiceCommand = _handleIncomingCommand;
@@ -150,7 +160,9 @@ class VoiceCommandNotifier extends StateNotifier<VoiceCommandState> {
       state = state.copyWith(
         isProcessing: false,
         lastResult: result,
-        clearPendingCommand: result is VoiceCommandSuccess || result is VoiceCommandPartialSuccess,
+        clearPendingCommand:
+            result is VoiceCommandSuccess ||
+            result is VoiceCommandPartialSuccess,
         clearDisambiguation: true,
       );
     }
@@ -178,7 +190,7 @@ class VoiceCommandNotifier extends StateNotifier<VoiceCommandState> {
             .subtitle
             ?.replaceAll('Matching "', '')
             .replaceAll('"', '');
-        
+
         if (pendingParticipantName != null) {
           final newMap = Map<String, String>.from(state.selectedParticipantIds);
           newMap[pendingParticipantName] = optionId;
@@ -191,7 +203,7 @@ class VoiceCommandNotifier extends StateNotifier<VoiceCommandState> {
       case null:
         break;
     }
-    
+
     // Reprocess the command with the new selection
     processCommand();
   }
@@ -217,8 +229,8 @@ class VoiceCommandNotifier extends StateNotifier<VoiceCommandState> {
 }
 
 /// Provider for voice command state and notifier.
-final voiceCommandProvider = 
+final voiceCommandProvider =
     StateNotifierProvider<VoiceCommandNotifier, VoiceCommandState>((ref) {
-  final service = ref.watch(voiceCommandServiceProvider);
-  return VoiceCommandNotifier(service, ref);
-});
+      final service = ref.watch(voiceCommandServiceProvider);
+      return VoiceCommandNotifier(service, ref);
+    });
