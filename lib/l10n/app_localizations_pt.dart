@@ -446,20 +446,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get installAppSubtitle => 'Adicionar Evenly à tela inicial';
 
   @override
-  String get installAppDialogBody =>
-      'Instale o Evenly para uma experiência melhor!';
-
-  @override
-  String get installAppDialogFinePrint =>
-      'Você pode instalar depois pelo menu de opções (⋮)';
-
-  @override
-  String get maybeLater => 'Talvez depois';
-
-  @override
-  String get installNow => 'Instalar agora';
-
-  @override
   String get editExpense => 'Editar Despesa';
 
   @override
