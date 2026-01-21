@@ -353,7 +353,14 @@ class FirestoreRepository {
       createdAt: now,
     );
 
-    await memberRef.set(member.toFirestore());
+    // Update both member and trip document to trigger stream
+    await Future.wait([
+      memberRef.set(member.toFirestore()),
+      _firestore.collection('trips').doc(tripId).update({
+        'updatedAt': Timestamp.fromDate(now),
+      }),
+    ]);
+
     return member;
   }
 
