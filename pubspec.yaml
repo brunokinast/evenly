@@ -83,9 +83,7 @@ scripts:
   
   # Deploy to Firebase
   deploy:
-    web: |
-      flutter build web --release
-      firebase deploy --only hosting
+    web: flutter build web --release && firebase deploy --only hosting
     firebase: firebase deploy
     rules: firebase deploy --only firestore:rules
   
@@ -103,16 +101,12 @@ scripts:
   analyze: flutter analyze
   format: dart format .
   fix: dart fix --apply
-  lint: |
-    dart format .
-    flutter analyze
+  lint: dart format . && flutter analyze
   
   # Testing
   test: flutter test
   
   # Utilities
-  clean: |
-    flutter clean
-    flutter pub get
+  clean: flutter clean && flutter pub get
   upgrade: flutter pub upgrade --major-versions
   outdated: flutter pub outdated

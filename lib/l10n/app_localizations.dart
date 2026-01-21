@@ -425,7 +425,7 @@ abstract class AppLocalizations {
   /// No description provided for @addExpense.
   ///
   /// In en, this message translates to:
-  /// **'Add Expense'**
+  /// **'Add'**
   String get addExpense;
 
   /// No description provided for @exportPdf.

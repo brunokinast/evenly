@@ -66,9 +66,7 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                               const SizedBox(height: 8),
                               Text(
                                 l10n.chooseIcon,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
+                                style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(
                                       color: colorScheme.primary,
                                       fontWeight: FontWeight.w500,
@@ -215,12 +213,14 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
 
     await handleAsyncAction(
       context: context,
-      action: () => ref.read(firestoreRepositoryProvider).createTrip(
-        title: _titleController.text.trim(),
-        currency: _selectedCurrency,
-        ownerUid: uid,
-        iconName: _selectedIconName,
-      ),
+      action: () => ref
+          .read(firestoreRepositoryProvider)
+          .createTrip(
+            title: _titleController.text.trim(),
+            currency: _selectedCurrency,
+            ownerUid: uid,
+            iconName: _selectedIconName,
+          ),
       popOnSuccess: true,
       errorMessage: l10n.failedToCreateTrip(''),
       setLoading: (loading) => setState(() => _isLoading = loading),

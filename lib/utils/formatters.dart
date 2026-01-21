@@ -11,7 +11,7 @@ class CurrencyInputFormatter extends TextInputFormatter {
   ) {
     // Remove all non-digit characters
     final digitsOnly = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
-    
+
     if (digitsOnly.isEmpty) {
       return const TextEditingValue(
         text: '',
@@ -21,11 +21,11 @@ class CurrencyInputFormatter extends TextInputFormatter {
 
     // Parse as cents
     final cents = int.tryParse(digitsOnly) ?? 0;
-    
+
     // Format as decimal with 2 decimal places
     final dollars = cents / 100;
     final formatted = dollars.toStringAsFixed(2);
-    
+
     return TextEditingValue(
       text: formatted,
       selection: TextSelection.collapsed(offset: formatted.length),

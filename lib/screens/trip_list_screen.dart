@@ -54,10 +54,9 @@ class TripListScreen extends ConsumerWidget {
                       const SizedBox(height: 4),
                       Text(
                         l10n.welcomeSubtitle,
-                        style: Theme.of(context).textTheme.bodyMedium
-                            ?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -275,11 +274,7 @@ class TripListScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(height: 8),
-            IconCircle(
-              icon: Icons.wallet_rounded,
-              size: 72,
-              iconSize: 36,
-            ),
+            IconCircle(icon: Icons.wallet_rounded, size: 72, iconSize: 36),
             const SizedBox(height: 20),
             Text(l10n.appTitle, style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),

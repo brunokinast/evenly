@@ -38,10 +38,9 @@ class _JoinTripConfirmationScreenState
 
     await handleAsyncAction(
       context: context,
-      action: () => ref.read(firestoreRepositoryProvider).addMember(
-        tripId: widget.trip.id,
-        uid: uid,
-      ),
+      action: () => ref
+          .read(firestoreRepositoryProvider)
+          .addMember(tripId: widget.trip.id, uid: uid),
       onSuccess: (_) => _openTrip(),
       errorMessage: l10n.failedToJoinTrip(''),
       setLoading: (loading) => setState(() => _isJoining = loading),
@@ -51,7 +50,8 @@ class _JoinTripConfirmationScreenState
   void _openTrip() {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-          builder: (_) => TripDetailScreen(tripId: widget.trip.id)),
+        builder: (_) => TripDetailScreen(tripId: widget.trip.id),
+      ),
     );
   }
 
@@ -108,8 +108,9 @@ class _JoinTripConfirmationScreenState
                                               .textTheme
                                               .bodySmall
                                               ?.copyWith(
-                                            color: colorScheme.onSurfaceVariant,
-                                          ),
+                                                color: colorScheme
+                                                    .onSurfaceVariant,
+                                              ),
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
@@ -130,8 +131,9 @@ class _JoinTripConfirmationScreenState
                             ),
                             Container(
                               height: 1,
-                              color: colorScheme.outlineVariant
-                                  .withValues(alpha: 0.3),
+                              color: colorScheme.outlineVariant.withValues(
+                                alpha: 0.3,
+                              ),
                             ),
                             Padding(
                               padding: const EdgeInsets.all(16),

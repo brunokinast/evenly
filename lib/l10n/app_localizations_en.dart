@@ -184,7 +184,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addMember => 'Add Member';
 
   @override
-  String get addExpense => 'Add Expense';
+  String get addExpense => 'Add';
 
   @override
   String get exportPdf => 'Export PDF';

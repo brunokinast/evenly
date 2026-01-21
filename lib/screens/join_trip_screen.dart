@@ -146,13 +146,11 @@ class _JoinTripScreenState extends ConsumerState<JoinTripScreen> {
                                 FilteringTextInputFormatter.digitsOnly,
                                 LengthLimitingTextInputFormatter(6),
                               ],
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineSmall
+                              style: Theme.of(context).textTheme.headlineSmall
                                   ?.copyWith(
-                                letterSpacing: 8,
-                                fontWeight: FontWeight.w600,
-                              ),
+                                    letterSpacing: 8,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                               textAlign: TextAlign.center,
                               onChanged: (_) {
                                 if (_error != null) {
@@ -175,10 +173,7 @@ class _JoinTripScreenState extends ConsumerState<JoinTripScreen> {
                     ),
                     if (_error != null) ...[
                       const SizedBox(height: 16),
-                      MessageCard(
-                        message: _error!,
-                        type: MessageType.error,
-                      ),
+                      MessageCard(message: _error!, type: MessageType.error),
                     ],
                     const SizedBox(height: 24),
                     SizedBox(

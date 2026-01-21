@@ -24,9 +24,7 @@ extension ContextExtensions on BuildContext {
 
   /// Shows an info SnackBar with neutral styling.
   void showInfoSnackBar(String message) {
-    ScaffoldMessenger.of(this).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(this).showSnackBar(SnackBar(content: Text(message)));
   }
 
   /// Pops the current route if the widget is still mounted.

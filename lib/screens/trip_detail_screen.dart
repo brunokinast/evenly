@@ -291,7 +291,7 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
       message: l10n.regenerateCodeConfirm,
       confirmLabel: l10n.regenerate,
     );
-    
+
     if (confirmed) {
       final repository = ref.read(firestoreRepositoryProvider);
       await repository.regenerateInviteCode(trip.id);
@@ -383,7 +383,7 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
       confirmLabel: l10n.delete,
       isDestructive: true,
     );
-    
+
     if (confirmed) {
       final repository = ref.read(firestoreRepositoryProvider);
       await repository.deleteTrip(trip.id);
@@ -691,10 +691,7 @@ class _MembersTab extends ConsumerWidget {
             return Card(
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
-                leading: UserAvatar(
-                  name: memberName,
-                  isHighlighted: false,
-                ),
+                leading: UserAvatar(name: memberName, isHighlighted: false),
                 title: Row(
                   children: [
                     Text(memberName),
@@ -795,7 +792,7 @@ class _TripHeader extends StatelessWidget {
             children: [
               // Back Button
               HeaderIconButton(icon: Icons.arrow_back_rounded, onTap: onBack),
-              
+
               Row(
                 children: [
                   // Invite Code Button
@@ -808,7 +805,10 @@ class _TripHeader extends StatelessWidget {
                   const SizedBox(width: 10),
 
                   // Menu Button
-                  HeaderIconButton(icon: Icons.more_horiz_rounded, onTap: onMenu),
+                  HeaderIconButton(
+                    icon: Icons.more_horiz_rounded,
+                    onTap: onMenu,
+                  ),
                 ],
               ),
             ],
