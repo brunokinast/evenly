@@ -7,6 +7,8 @@ import '../models/models.dart';
 import '../providers/providers.dart';
 import '../services/services.dart';
 import '../theme/widgets.dart';
+import '../utils/async_helpers.dart';
+import '../utils/context_extensions.dart';
 import '../utils/formatters.dart';
 import 'add_expense_screen.dart';
 import 'balance_screen.dart';
@@ -258,9 +260,7 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
           FilledButton.icon(
             onPressed: () {
               Clipboard.setData(ClipboardData(text: trip.inviteCode));
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text(l10n.codeCopied)));
+              context.showSuccessSnackBar(l10n.codeCopied);
               Navigator.pop(dialogContext);
             },
             icon: const Icon(Icons.copy),
@@ -284,34 +284,21 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
     }
   }
 
-  void _confirmRegenerateCode(Trip trip, AppLocalizations l10n) {
-    showDialog(
+  Future<void> _confirmRegenerateCode(Trip trip, AppLocalizations l10n) async {
+    final confirmed = await showConfirmationDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.regenerateCode),
-        content: Text(l10n.regenerateCodeConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () async {
-              final repository = ref.read(firestoreRepositoryProvider);
-              final messenger = ScaffoldMessenger.of(context);
-              await repository.regenerateInviteCode(trip.id);
-              if (dialogContext.mounted) {
-                Navigator.pop(dialogContext);
-              }
-              messenger.showSnackBar(
-                SnackBar(content: Text(l10n.codeRegenerated)),
-              );
-            },
-            child: Text(l10n.regenerate),
-          ),
-        ],
-      ),
+      title: l10n.regenerateCode,
+      message: l10n.regenerateCodeConfirm,
+      confirmLabel: l10n.regenerate,
     );
+    
+    if (confirmed) {
+      final repository = ref.read(firestoreRepositoryProvider);
+      await repository.regenerateInviteCode(trip.id);
+      if (mounted) {
+        context.showSuccessSnackBar(l10n.codeRegenerated);
+      }
+    }
   }
 
   void _showAddMemberDialog(AppLocalizations l10n) {
@@ -388,34 +375,22 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
     );
   }
 
-  void _confirmDeleteTrip(Trip trip, AppLocalizations l10n) {
-    showDialog(
+  Future<void> _confirmDeleteTrip(Trip trip, AppLocalizations l10n) async {
+    final confirmed = await showConfirmationDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.deleteTrip),
-        content: Text(l10n.deleteTripConfirm(trip.title)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () async {
-              final repository = ref.read(firestoreRepositoryProvider);
-              final navigator = Navigator.of(context);
-              await repository.deleteTrip(trip.id);
-
-              if (dialogContext.mounted) {
-                Navigator.pop(dialogContext); // Close dialog
-              }
-              navigator.pop(); // Go back to list
-            },
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
+      title: l10n.deleteTrip,
+      message: l10n.deleteTripConfirm(trip.title),
+      confirmLabel: l10n.delete,
+      isDestructive: true,
     );
+    
+    if (confirmed) {
+      final repository = ref.read(firestoreRepositoryProvider);
+      await repository.deleteTrip(trip.id);
+      if (mounted) {
+        Navigator.of(context).pop(); // Go back to list
+      }
+    }
   }
 }
 
@@ -494,7 +469,7 @@ class _ExpensesTab extends ConsumerWidget {
               Container(
                 width: double.infinity,
                 margin: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -512,11 +487,11 @@ class _ExpensesTab extends ConsumerWidget {
                       l10n.totalExpenses,
                       style: TextStyle(
                         color: colorScheme.onPrimary.withValues(alpha: 0.9),
-                        fontSize: 14,
+                        fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Text(
                       BalanceCalculator.formatAmount(
                         balanceResult.totalSpentCents,
@@ -524,11 +499,11 @@ class _ExpensesTab extends ConsumerWidget {
                       ),
                       style: TextStyle(
                         color: colorScheme.onPrimary,
-                        fontSize: 32,
+                        fontSize: 28,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -718,7 +693,7 @@ class _MembersTab extends ConsumerWidget {
               child: ListTile(
                 leading: UserAvatar(
                   name: memberName,
-                  isHighlighted: isCurrentUser,
+                  isHighlighted: false,
                 ),
                 title: Row(
                   children: [
@@ -811,48 +786,57 @@ class _TripHeader extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Back Button
-          HeaderIconButton(icon: Icons.arrow_back_rounded, onTap: onBack),
-          const SizedBox(width: 16),
-
-          // Title
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  trip.title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  BalanceCalculator.getCurrencySymbol(trip.currency),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w500,
+          // Buttons Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Back Button
+              HeaderIconButton(icon: Icons.arrow_back_rounded, onTap: onBack),
+              
+              Row(
+                children: [
+                  // Invite Code Button
+                  HeaderIconButton(
+                    icon: Icons.group_add_rounded,
+                    onTap: onInviteCode,
+                    backgroundColor: colorScheme.primaryContainer,
+                    iconColor: colorScheme.primary,
                   ),
+                  const SizedBox(width: 10),
+
+                  // Menu Button
+                  HeaderIconButton(icon: Icons.more_horiz_rounded, onTap: onMenu),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Title Row
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                trip.title,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                BalanceCalculator.getCurrencySymbol(trip.currency),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-
-          // Invite Code Button
-          HeaderIconButton(
-            icon: Icons.group_add_rounded,
-            onTap: onInviteCode,
-            backgroundColor: colorScheme.primaryContainer,
-            iconColor: colorScheme.primary,
-          ),
-          const SizedBox(width: 10),
-
-          // Menu Button
-          HeaderIconButton(icon: Icons.more_horiz_rounded, onTap: onMenu),
         ],
       ),
     );

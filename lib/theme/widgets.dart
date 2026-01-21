@@ -560,6 +560,251 @@ class AmountBadge extends StatelessWidget {
 }
 
 // ============================================================
+// SCREEN HEADER
+// ============================================================
+
+/// A consistent header with back button and title, optionally with actions.
+class ScreenHeader extends StatelessWidget {
+  final String title;
+  final VoidCallback? onBack;
+  final List<Widget>? actions;
+  final IconData backIcon;
+
+  const ScreenHeader({
+    super.key,
+    required this.title,
+    this.onBack,
+    this.actions,
+    this.backIcon = Icons.arrow_back_rounded,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Row(
+        children: [
+          HeaderIconButton(
+            icon: backIcon,
+            onTap: onBack ?? () => Navigator.of(context).pop(),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              title,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          if (actions != null) ...actions!,
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================
+// MESSAGE CARD
+// ============================================================
+
+/// A styled container for displaying error, info, or warning messages.
+class MessageCard extends StatelessWidget {
+  final String message;
+  final MessageType type;
+
+  const MessageCard({
+    super.key,
+    required this.message,
+    this.type = MessageType.info,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final Color color;
+    final IconData icon;
+
+    switch (type) {
+      case MessageType.error:
+        color = colorScheme.error;
+        icon = Icons.error_outline_rounded;
+        break;
+      case MessageType.warning:
+        color = Colors.orange;
+        icon = Icons.warning_amber_rounded;
+        break;
+      case MessageType.info:
+        color = colorScheme.primary;
+        icon = Icons.info_outline_rounded;
+        break;
+      case MessageType.success:
+        color = const Color(0xFF059669);
+        icon = Icons.check_circle_outline_rounded;
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: color,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+enum MessageType { error, warning, info, success }
+
+// ============================================================
+// ICON CIRCLE
+// ============================================================
+
+/// A circular container with an icon, using primary color scheme.
+class IconCircle extends StatelessWidget {
+  final IconData icon;
+  final double size;
+  final double? iconSize;
+  final Color? backgroundColor;
+  final Color? iconColor;
+
+  const IconCircle({
+    super.key,
+    required this.icon,
+    this.size = 80,
+    this.iconSize,
+    this.backgroundColor,
+    this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final effectiveIconSize = iconSize ?? size * 0.5;
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: backgroundColor ?? colorScheme.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(size * 0.3),
+      ),
+      child: Icon(
+        icon,
+        size: effectiveIconSize,
+        color: iconColor ?? colorScheme.primary,
+      ),
+    );
+  }
+}
+
+// ============================================================
+// BADGE PILL
+// ============================================================
+
+/// A small badge/pill container for displaying labels like currency codes.
+class BadgePill extends StatelessWidget {
+  final String label;
+  final Color? backgroundColor;
+  final Color? textColor;
+  final double? fontSize;
+
+  const BadgePill({
+    super.key,
+    required this.label,
+    this.backgroundColor,
+    this.textColor,
+    this.fontSize,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: backgroundColor ?? colorScheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: fontSize ?? 12,
+          fontWeight: FontWeight.w600,
+          color: textColor ?? colorScheme.onSecondaryContainer,
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// LIST CARD
+// ============================================================
+
+/// A styled container for list items with border and rounded corners.
+class ListCard extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+  final VoidCallback? onTap;
+
+  const ListCard({
+    super.key,
+    required this.child,
+    this.padding,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final content = Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      child: child,
+    );
+
+    if (onTap != null) {
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: content,
+        ),
+      );
+    }
+
+    return content;
+  }
+}
+
+// ============================================================
 // BOTTOM SHEET HELPERS
 // ============================================================
 

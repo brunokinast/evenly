@@ -6,6 +6,9 @@ import '../models/models.dart';
 import '../providers/providers.dart';
 import '../services/balance_calculator.dart';
 import '../theme/widgets.dart';
+import '../utils/async_helpers.dart';
+import '../utils/context_extensions.dart';
+import '../utils/formatters.dart';
 
 /// Screen for adding or editing an expense.
 class AddExpenseScreen extends ConsumerStatefulWidget {
@@ -148,14 +151,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                 _errorMessageShown = true;
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(widget.errorMessage!),
-                      backgroundColor: Theme.of(context).colorScheme.error,
-                      behavior: SnackBarBehavior.floating,
-                      duration: const Duration(seconds: 5),
-                    ),
-                  );
+                  context.showErrorSnackBar(widget.errorMessage!);
                 });
               }
 
@@ -211,6 +207,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                                   const TextInputType.numberWithOptions(
                                     decimal: true,
                                   ),
+                              inputFormatters: [CurrencyInputFormatter()],
                               onChanged: (_) => setState(() {}),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
@@ -342,33 +339,21 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   Widget _buildHeader(BuildContext context, AppLocalizations l10n) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 16, 8),
-      child: Row(
-        children: [
-          HeaderIconButton(
-            icon: Icons.close_rounded,
-            onTap: () => _handleClose(l10n),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              _isEditing ? l10n.saveExpense : l10n.addExpense,
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
-            ),
-          ),
-          if (_isEditing)
-            HeaderIconButton(
-              icon: Icons.delete_outline_rounded,
-              onTap: () => _confirmDelete(l10n),
-              backgroundColor: colorScheme.error.withValues(alpha: 0.1),
-              iconColor: colorScheme.error,
-              isLoading: _isDeleting,
-            ),
-        ],
-      ),
+    return ScreenHeader(
+      title: _isEditing ? l10n.saveExpense : l10n.addExpense,
+      backIcon: Icons.close_rounded,
+      onBack: () => _handleClose(l10n),
+      actions: _isEditing
+          ? [
+              HeaderIconButton(
+                icon: Icons.delete_outline_rounded,
+                onTap: () => _confirmDelete(l10n),
+                backgroundColor: colorScheme.error.withValues(alpha: 0.1),
+                iconColor: colorScheme.error,
+                isLoading: _isDeleting,
+              ),
+            ]
+          : null,
     );
   }
 
@@ -476,21 +461,14 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       }
 
       if (mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_isEditing ? l10n.expenseUpdated : l10n.expenseAdded),
-          ),
+        context.popIfMounted();
+        context.showSuccessSnackBar(
+          _isEditing ? l10n.expenseUpdated : l10n.expenseAdded,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.failedToSaveExpense(e.toString())),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        context.showErrorSnackBar(l10n.failedToSaveExpense(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -513,57 +491,34 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     return a.containsAll(b);
   }
 
-  void _handleClose(AppLocalizations l10n) {
+  Future<void> _handleClose(AppLocalizations l10n) async {
     if (_hasChanges) {
-      showDialog(
+      final confirmed = await showConfirmationDialog(
         context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: Text(l10n.discardChanges),
-          content: Text(l10n.discardChangesMessage),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(l10n.keepEditing),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-                Navigator.pop(context);
-              },
-              child: Text(l10n.discard),
-            ),
-          ],
-        ),
+        title: l10n.discardChanges,
+        message: l10n.discardChangesMessage,
+        confirmLabel: l10n.discard,
+        cancelLabel: l10n.keepEditing,
       );
+      if (confirmed && mounted) {
+        Navigator.pop(context);
+      }
     } else {
       Navigator.pop(context);
     }
   }
 
-  void _confirmDelete(AppLocalizations l10n) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    showDialog(
+  Future<void> _confirmDelete(AppLocalizations l10n) async {
+    final confirmed = await showConfirmationDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.deleteExpenseQuestion),
-        content: Text(l10n.deleteExpenseWarning),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: colorScheme.error),
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              _deleteExpense(l10n);
-            },
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
+      title: l10n.deleteExpenseQuestion,
+      message: l10n.deleteExpenseWarning,
+      confirmLabel: l10n.delete,
+      isDestructive: true,
     );
+    if (confirmed) {
+      _deleteExpense(l10n);
+    }
   }
 
   Future<void> _deleteExpense(AppLocalizations l10n) async {
@@ -574,19 +529,12 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       await repository.deleteExpense(widget.tripId, widget.expense!.id);
 
       if (mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.expenseDeleted)));
+        context.popIfMounted();
+        context.showSuccessSnackBar(l10n.expenseDeleted);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.failedToSaveExpense(e.toString())),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        context.showErrorSnackBar(l10n.failedToSaveExpense(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -605,14 +553,7 @@ class _SelectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-        ),
-      ),
+    return ListCard(
       child: Column(
         children: children.asMap().entries.map((entry) {
           final index = entry.key;

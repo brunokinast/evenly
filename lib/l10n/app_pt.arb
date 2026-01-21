@@ -63,7 +63,7 @@
   "summary": "Resumo",
   "share": "Compartilhar",
   "addMember": "Adicionar Membro",
-  "addExpense": "Adicionar Despesa",
+  "addExpense": "Adicionar",
   "exportPdf": "Exportar PDF",
   
   "membersCount": "Membros ({count})",

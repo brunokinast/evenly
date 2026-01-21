@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/providers.dart';
 import '../theme/widgets.dart';
+import '../utils/async_helpers.dart';
+import '../utils/context_extensions.dart';
 import '../utils/trip_icons.dart';
 
 /// Screen to create a new trip.
@@ -41,26 +43,9 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
             key: _formKey,
             child: Column(
               children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                  child: Row(
-                    children: [
-                      // Close button
-                      HeaderIconButton(
-                        icon: Icons.close_rounded,
-                        onTap: () => Navigator.of(context).pop(),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(
-                          l10n.createTrip,
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ],
-                  ),
+                ScreenHeader(
+                  title: l10n.createTrip,
+                  backIcon: Icons.close_rounded,
                 ),
 
                 // Content
@@ -74,25 +59,16 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                           onTap: _showIconPicker,
                           child: Column(
                             children: [
-                              Container(
-                                width: 80,
-                                height: 80,
-                                decoration: BoxDecoration(
-                                  color: colorScheme.primary.withValues(
-                                    alpha: 0.1,
-                                  ),
-                                  borderRadius: BorderRadius.circular(24),
-                                ),
-                                child: Icon(
-                                  getTripIcon(_selectedIconName),
-                                  size: 40,
-                                  color: colorScheme.primary,
-                                ),
+                              IconCircle(
+                                icon: getTripIcon(_selectedIconName),
+                                size: 80,
                               ),
                               const SizedBox(height: 8),
                               Text(
                                 l10n.chooseIcon,
-                                style: Theme.of(context).textTheme.bodySmall
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
                                     ?.copyWith(
                                       color: colorScheme.primary,
                                       fontWeight: FontWeight.w500,
@@ -131,100 +107,75 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                       const SizedBox(height: 16),
 
                       // Currency Selector
-                      Container(
-                        decoration: BoxDecoration(
-                          color: colorScheme.surface,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: colorScheme.outlineVariant.withValues(
-                              alpha: 0.5,
-                            ),
+                      InputCard(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
                           ),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.currency_exchange_rounded,
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    l10n.currency,
-                                    style: Theme.of(context).textTheme.bodySmall
-                                        ?.copyWith(
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.currency_exchange_rounded,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      l10n.currency,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: colorScheme.onSurfaceVariant,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    DropdownButtonHideUnderline(
+                                      child: DropdownButton<String>(
+                                        value: _selectedCurrency,
+                                        isExpanded: true,
+                                        isDense: true,
+                                        icon: Icon(
+                                          Icons.keyboard_arrow_down_rounded,
                                           color: colorScheme.onSurfaceVariant,
                                         ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  DropdownButtonHideUnderline(
-                                    child: DropdownButton<String>(
-                                      value: _selectedCurrency,
-                                      isExpanded: true,
-                                      isDense: true,
-                                      icon: Icon(
-                                        Icons.keyboard_arrow_down_rounded,
-                                        color: colorScheme.onSurfaceVariant,
+                                        items: _currencies.map((currency) {
+                                          return DropdownMenuItem(
+                                            value: currency,
+                                            child: Text(
+                                              currency,
+                                              style: Theme.of(
+                                                context,
+                                              ).textTheme.bodyLarge,
+                                            ),
+                                          );
+                                        }).toList(),
+                                        onChanged: (value) {
+                                          if (value != null) {
+                                            setState(() {
+                                              _selectedCurrency = value;
+                                            });
+                                          }
+                                        },
                                       ),
-                                      items: _currencies.map((currency) {
-                                        return DropdownMenuItem(
-                                          value: currency,
-                                          child: Text(
-                                            currency,
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.bodyLarge,
-                                          ),
-                                        );
-                                      }).toList(),
-                                      onChanged: (value) {
-                                        if (value != null) {
-                                          setState(() {
-                                            _selectedCurrency = value;
-                                          });
-                                        }
-                                      },
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                       const SizedBox(height: 32),
 
                       // Info card
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.info_outline_rounded,
-                              color: colorScheme.primary,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                l10n.inviteFriendsHint,
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(color: colorScheme.primary),
-                              ),
-                            ),
-                          ],
-                        ),
+                      MessageCard(
+                        message: l10n.inviteFriendsHint,
+                        type: MessageType.info,
                       ),
                     ],
                   ),
@@ -235,19 +186,12 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                   padding: const EdgeInsets.all(24),
                   child: SizedBox(
                     width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: _isLoading ? null : _createTrip,
-                      icon: _isLoading
-                          ? SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: colorScheme.onPrimary,
-                              ),
-                            )
-                          : const Icon(Icons.add_rounded),
-                      label: Text(_isLoading ? l10n.settingUp : l10n.create),
+                    child: LoadingButton(
+                      isLoading: _isLoading,
+                      onPressed: _createTrip,
+                      icon: Icons.add_rounded,
+                      label: l10n.create,
+                      loadingLabel: l10n.settingUp,
                     ),
                   ),
                 ),
@@ -262,39 +206,25 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
   Future<void> _createTrip() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+    final l10n = AppLocalizations.of(context)!;
+    final uid = ref.read(currentUidProvider);
+    if (uid == null) {
+      context.showErrorSnackBar(l10n.voiceCommandNotAuthenticated);
+      return;
+    }
 
-    try {
-      final uid = ref.read(currentUidProvider);
-      if (uid == null) throw Exception('Not signed in');
-
-      final repository = ref.read(firestoreRepositoryProvider);
-
-      await repository.createTrip(
+    await handleAsyncAction(
+      context: context,
+      action: () => ref.read(firestoreRepositoryProvider).createTrip(
         title: _titleController.text.trim(),
         currency: _selectedCurrency,
         ownerUid: uid,
         iconName: _selectedIconName,
-      );
-
-      if (mounted) {
-        Navigator.of(context).pop();
-      }
-    } catch (e) {
-      if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.failedToCreateTrip(e.toString())),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
+      ),
+      popOnSuccess: true,
+      errorMessage: l10n.failedToCreateTrip(''),
+      setLoading: (loading) => setState(() => _isLoading = loading),
+    );
   }
 
   void _showIconPicker() {

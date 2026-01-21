@@ -15,7 +15,7 @@ final userTripsProvider = StreamProvider<List<Trip>>((ref) {
   if (uid == null) return Stream.value([]);
 
   final repository = ref.watch(firestoreRepositoryProvider);
-  return repository.watchUserOwnedTrips(uid);
+  return repository.watchUserTrips(uid);
 });
 
 /// Provider for a single trip.

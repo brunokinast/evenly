@@ -1,4 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+/// Text input formatter for currency amounts.
+/// Formats input as decimal with 2 decimal places (e.g., "50.00").
+class CurrencyInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    // Remove all non-digit characters
+    final digitsOnly = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
+    
+    if (digitsOnly.isEmpty) {
+      return const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
+      );
+    }
+
+    // Parse as cents
+    final cents = int.tryParse(digitsOnly) ?? 0;
+    
+    // Format as decimal with 2 decimal places
+    final dollars = cents / 100;
+    final formatted = dollars.toStringAsFixed(2);
+    
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
 
 /// Formats a date based on locale.
 ///

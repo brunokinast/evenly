@@ -245,6 +245,59 @@ class FirestoreRepository {
         .map((snapshot) => snapshot.docs.map(Trip.fromFirestore).toList());
   }
 
+  /// Stream of all trips where user is owner OR member (for real-time updates).
+  Stream<List<Trip>> watchUserTrips(String uid) async* {
+    // Watch owned trips
+    final ownedStream = _firestore
+        .collection('trips')
+        .where('ownerUid', isEqualTo: uid)
+        .orderBy('createdAt', descending: true)
+        .snapshots();
+
+    // Watch all trips and filter by membership
+    final allTripsStream = _firestore
+        .collection('trips')
+        .orderBy('createdAt', descending: true)
+        .snapshots();
+
+    await for (final allTripsSnapshot in allTripsStream) {
+      final trips = <Trip>[];
+      final tripIds = <String>{};
+
+      // First, add all owned trips
+      for (final doc in allTripsSnapshot.docs) {
+        final trip = Trip.fromFirestore(doc);
+        if (trip.ownerUid == uid) {
+          trips.add(trip);
+          tripIds.add(trip.id);
+        }
+      }
+
+      // Then, check membership for non-owned trips
+      for (final doc in allTripsSnapshot.docs) {
+        final trip = Trip.fromFirestore(doc);
+        if (!tripIds.contains(trip.id)) {
+          final memberQuery = await _firestore
+              .collection('trips')
+              .doc(trip.id)
+              .collection('members')
+              .where('uid', isEqualTo: uid)
+              .limit(1)
+              .get();
+
+          if (memberQuery.docs.isNotEmpty) {
+            trips.add(trip);
+            tripIds.add(trip.id);
+          }
+        }
+      }
+
+      // Sort by creation date
+      trips.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      yield trips;
+    }
+  }
+
   /// Stream of a single trip.
   Stream<Trip?> watchTrip(String tripId) {
     return _firestore.collection('trips').doc(tripId).snapshots().map((doc) {

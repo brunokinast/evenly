@@ -32,32 +32,32 @@ class TripListScreen extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
                               l10n.myTrips,
                               style: Theme.of(context).textTheme.headlineMedium
                                   ?.copyWith(fontWeight: FontWeight.w700),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              l10n.welcomeSubtitle,
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                            ),
-                          ],
-                        ),
+                          ),
+                          HeaderIconButton(
+                            icon: Icons.more_horiz_rounded,
+                            onTap: () => _showOptionsSheet(context, l10n, ref),
+                          ),
+                        ],
                       ),
-                      HeaderIconButton(
-                        icon: Icons.more_horiz_rounded,
-                        onTap: () => _showOptionsSheet(context, l10n, ref),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.welcomeSubtitle,
+                        style: Theme.of(context).textTheme.bodyMedium
+                            ?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                       ),
                     ],
                   ),
@@ -118,7 +118,7 @@ class TripListScreen extends ConsumerWidget {
                   }
 
                   return SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 100),
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate((context, index) {
                         final trip = trips[index];
@@ -172,18 +172,11 @@ class TripListScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: colorScheme.error.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Icon(
-                Icons.cloud_off_rounded,
-                size: 40,
-                color: colorScheme.error,
-              ),
+            IconCircle(
+              icon: Icons.cloud_off_rounded,
+              size: 80,
+              backgroundColor: colorScheme.error.withValues(alpha: 0.1),
+              iconColor: colorScheme.error,
             ),
             const SizedBox(height: 24),
             Text(l10n.error, style: Theme.of(context).textTheme.titleLarge),
@@ -282,18 +275,10 @@ class TripListScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(height: 8),
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Icon(
-                Icons.wallet_rounded,
-                size: 36,
-                color: colorScheme.primary,
-              ),
+            IconCircle(
+              icon: Icons.wallet_rounded,
+              size: 72,
+              iconSize: 36,
             ),
             const SizedBox(height: 20),
             Text(l10n.appTitle, style: Theme.of(context).textTheme.titleLarge),

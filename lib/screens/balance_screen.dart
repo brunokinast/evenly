@@ -6,6 +6,7 @@ import '../models/models.dart';
 import '../providers/providers.dart';
 import '../services/services.dart';
 import '../theme/widgets.dart';
+import '../utils/context_extensions.dart';
 
 /// Screen showing balance summary and suggested settlements.
 class BalanceScreen extends ConsumerWidget {
@@ -164,9 +165,7 @@ class BalanceScreen extends ConsumerWidget {
           rawMemberNames == null ||
           expenses == null ||
           balanceResult == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.dataNotReady)));
+        context.showInfoSnackBar(l10n.dataNotReady);
         return;
       }
 
@@ -219,12 +218,7 @@ class BalanceScreen extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.failedToExportPdf(e.toString())),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        context.showErrorSnackBar(l10n.failedToExportPdf(e.toString()));
       }
     }
   }
