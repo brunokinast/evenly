@@ -77,7 +77,7 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen>
 
                   // Tab Selector
                   Container(
-                    margin: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+                    margin: const EdgeInsets.fromLTRB(24, 10, 24, 8),
                     decoration: BoxDecoration(
                       color: colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(14),
@@ -573,7 +573,6 @@ class _ExpenseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
@@ -610,7 +609,7 @@ class _ExpenseCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${l10n.paidBy(payerName)} • ${formatDate(context, expense.createdAt, includeTime: true)}',
+                        '$payerName • ${formatDate(context, expense.createdAt, includeTime: true)}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -782,7 +781,8 @@ class _TripHeader extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+      // padding: const EdgeInsets.all(0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -817,7 +817,7 @@ class _TripHeader extends StatelessWidget {
 
           // Title Row
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: Text(

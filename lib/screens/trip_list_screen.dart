@@ -31,7 +31,7 @@ class TripListScreen extends ConsumerWidget {
               // Header
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -51,7 +51,7 @@ class TripListScreen extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 10),
                       Text(
                         l10n.welcomeSubtitle,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -66,7 +66,7 @@ class TripListScreen extends ConsumerWidget {
               // Quick Actions
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                  padding: const EdgeInsets.fromLTRB(24, 4, 24, 16),
                   child: Row(
                     children: [
                       Expanded(

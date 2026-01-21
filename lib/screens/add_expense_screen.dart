@@ -59,16 +59,19 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   @override
   void initState() {
     super.initState();
-    
+
     // Get currency from trip
     final trip = ref.read(tripProvider(widget.tripId)).value;
     final currency = trip?.currency ?? 'USD';
-    
+
     if (_isEditing) {
       final expense = widget.expense!;
       _descriptionController.text = expense.description;
       // Format cents for display using proper formatting
-      _amountController.text = _formatCentsForDisplay(expense.amountCents, currency);
+      _amountController.text = _formatCentsForDisplay(
+        expense.amountCents,
+        currency,
+      );
       _selectedPayerId = expense.payerMemberId;
       _selectedParticipantIds = expense.participantMemberIds.toSet();
 
@@ -223,10 +226,13 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                                 if (value == null || value.isEmpty) {
                                   return l10n.pleaseEnterAmount;
                                 }
-                              // Strip all formatting, keep only digits (formatter stores as cents)
-                              final digitsOnly = value.replaceAll(RegExp(r'[^\d]'), '');
-                              final amountCents = int.tryParse(digitsOnly);
-                              if (amountCents == null || amountCents <= 0) {
+                                // Strip all formatting, keep only digits (formatter stores as cents)
+                                final digitsOnly = value.replaceAll(
+                                  RegExp(r'[^\d]'),
+                                  '',
+                                );
+                                final amountCents = int.tryParse(digitsOnly);
+                                if (amountCents == null || amountCents <= 0) {
                                   return l10n.invalidAmount;
                                 }
                                 return null;
@@ -412,10 +418,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
           const SizedBox(width: 12),
           Flexible(
             child: Text(
-              BalanceCalculator.formatAmount(
-                splitAmountCents,
-                currency,
-              ),
+              BalanceCalculator.formatAmount(splitAmountCents, currency),
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: colorScheme.primary,
@@ -450,7 +453,10 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
     try {
       // Strip all formatting, keep only digits (formatter stores as cents)
-      final digitsOnly = _amountController.text.replaceAll(RegExp(r'[^\d]'), '');
+      final digitsOnly = _amountController.text.replaceAll(
+        RegExp(r'[^\d]'),
+        '',
+      );
       final amountCents = int.parse(digitsOnly);
 
       final repository = ref.read(firestoreRepositoryProvider);
