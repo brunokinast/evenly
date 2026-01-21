@@ -59,16 +59,22 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   @override
   void initState() {
     super.initState();
+    
+    // Get currency from trip
+    final trip = ref.read(tripProvider(widget.tripId)).value;
+    final currency = trip?.currency ?? 'USD';
+    
     if (_isEditing) {
       final expense = widget.expense!;
       _descriptionController.text = expense.description;
-      _amountController.text = (expense.amountCents / 100).toStringAsFixed(2);
+      // Format cents for display using proper formatting
+      _amountController.text = _formatCentsForDisplay(expense.amountCents, currency);
       _selectedPayerId = expense.payerMemberId;
       _selectedParticipantIds = expense.participantMemberIds.toSet();
 
       // Store original values
       _originalDescription = expense.description;
-      _originalAmount = (expense.amountCents / 100).toStringAsFixed(2);
+      _originalAmount = _formatCentsForDisplay(expense.amountCents, currency);
       _originalPayerId = expense.payerMemberId;
       _originalParticipantIds = expense.participantMemberIds.toSet();
     } else {
@@ -77,7 +83,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
         _descriptionController.text = widget.prefillTitle!;
       }
       if (widget.prefillAmount != null) {
-        _amountController.text = widget.prefillAmount!.toStringAsFixed(2);
+        // Convert voice command amount (dollars) to cents, then format for display
+        final amountCents = (widget.prefillAmount! * 100).round();
+        _amountController.text = _formatCentsForDisplay(amountCents, currency);
       }
       if (widget.prefillPayerId != null) {
         _selectedPayerId = widget.prefillPayerId;
@@ -361,14 +369,15 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
   Widget _buildSplitPreview(String currency, AppLocalizations l10n) {
     final colorScheme = Theme.of(context).colorScheme;
-    final amountText = _amountController.text.replaceAll(',', '.');
-    final amount = double.tryParse(amountText);
+    // Strip all formatting, keep only digits (formatter stores as cents)
+    final digitsOnly = _amountController.text.replaceAll(RegExp(r'[^\d]'), '');
+    final amountCents = int.tryParse(digitsOnly);
 
-    if (amount == null || amount <= 0) {
+    if (amountCents == null || amountCents <= 0) {
       return const SizedBox.shrink();
     }
 
-    final splitAmount = amount / _selectedParticipantIds.length;
+    final splitAmountCents = amountCents ~/ _selectedParticipantIds.length;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -404,7 +413,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
           Flexible(
             child: Text(
               BalanceCalculator.formatAmount(
-                (splitAmount * 100).round(),
+                splitAmountCents,
                 currency,
               ),
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -498,6 +507,36 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   bool _setEquals(Set<String> a, Set<String> b) {
     if (a.length != b.length) return false;
     return a.containsAll(b);
+  }
+
+  /// Formats cents for display matching CurrencyInputFormatter output
+  String _formatCentsForDisplay(int cents, String currency) {
+    final dollars = cents / 100;
+    final parts = dollars.toStringAsFixed(2).split('.');
+    final intPart = parts[0];
+    final decPart = parts[1];
+
+    // Brazilian Real uses dot for thousands, comma for decimals
+    if (currency == 'BRL') {
+      final buffer = StringBuffer();
+      for (var i = 0; i < intPart.length; i++) {
+        if (i > 0 && (intPart.length - i) % 3 == 0) {
+          buffer.write('.');
+        }
+        buffer.write(intPart[i]);
+      }
+      return '${buffer.toString()},$decPart';
+    }
+
+    // Default: comma for thousands, dot for decimals
+    final buffer = StringBuffer();
+    for (var i = 0; i < intPart.length; i++) {
+      if (i > 0 && (intPart.length - i) % 3 == 0) {
+        buffer.write(',');
+      }
+      buffer.write(intPart[i]);
+    }
+    return '${buffer.toString()}.$decPart';
   }
 
   Future<void> _handleClose(AppLocalizations l10n) async {
