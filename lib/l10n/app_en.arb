@@ -235,6 +235,10 @@
   "switchToDarkTheme": "Switch to dark theme",
   "installApp": "Install App",
   "installAppSubtitle": "Add Evenly to your home screen",
+  "installOnIOS": "Install on iOS",
+  "iosInstallStep1": "1. Tap the Share button in Safari (box with arrow pointing up)",
+  "iosInstallStep2": "2. Scroll down and tap 'Add to Home Screen'",
+  "iosInstallStep3": "3. Tap 'Add' to install Evenly",
   
   "editExpense": "Edit Expense",
   "updateExpense": "Update Expense",

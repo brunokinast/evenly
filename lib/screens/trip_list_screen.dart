@@ -253,13 +253,50 @@ class TripListScreen extends ConsumerWidget {
                     subtitle: l10n.installAppSubtitle,
                     onTap: () async {
                       Navigator.pop(context);
-                      await PwaService.instance.promptInstall();
+                      // On iOS (any browser), show instructions dialog
+                      if (PwaService.instance.isIOSSafari) {
+                        _showIOSInstallDialog(context, l10n);
+                      } else {
+                        // On Chrome/Edge, trigger the native prompt
+                        await PwaService.instance.promptInstall();
+                      }
                     },
                   );
                 },
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showIOSInstallDialog(BuildContext context, AppLocalizations l10n) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: Icon(
+          Icons.install_mobile_rounded,
+          size: 48,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+        title: Text(l10n.installOnIOS),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.iosInstallStep1),
+            const SizedBox(height: 12),
+            Text(l10n.iosInstallStep2),
+            const SizedBox(height: 12),
+            Text(l10n.iosInstallStep3),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.ok),
+          ),
+        ],
       ),
     );
   }

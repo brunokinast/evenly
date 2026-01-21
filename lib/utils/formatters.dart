@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 /// Text input formatter for currency amounts.
-/// Formats input as decimal with 2 decimal places (e.g., "50.00").
+/// Formats input as decimal with 2 decimal places and locale-aware separators.
 class CurrencyInputFormatter extends TextInputFormatter {
+  final String currency;
+
+  CurrencyInputFormatter({required this.currency});
+
   @override
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
@@ -24,12 +28,41 @@ class CurrencyInputFormatter extends TextInputFormatter {
 
     // Format as decimal with 2 decimal places
     final dollars = cents / 100;
-    final formatted = dollars.toStringAsFixed(2);
+    final formatted = _formatWithSeparators(dollars, currency);
 
     return TextEditingValue(
       text: formatted,
       selection: TextSelection.collapsed(offset: formatted.length),
     );
+  }
+
+  /// Formats number with locale-aware decimal and thousands separators.
+  String _formatWithSeparators(double value, String currency) {
+    final parts = value.toStringAsFixed(2).split('.');
+    final intPart = parts[0];
+    final decPart = parts[1];
+
+    // Brazilian Real uses dot for thousands, comma for decimals
+    if (currency == 'BRL') {
+      final buffer = StringBuffer();
+      for (var i = 0; i < intPart.length; i++) {
+        if (i > 0 && (intPart.length - i) % 3 == 0) {
+          buffer.write('.');
+        }
+        buffer.write(intPart[i]);
+      }
+      return '${buffer.toString()},$decPart';
+    }
+
+    // Default: comma for thousands, dot for decimals (USD, EUR, GBP)
+    final buffer = StringBuffer();
+    for (var i = 0; i < intPart.length; i++) {
+      if (i > 0 && (intPart.length - i) % 3 == 0) {
+        buffer.write(',');
+      }
+      buffer.write(intPart[i]);
+    }
+    return '${buffer.toString()}.$decPart';
   }
 }
 

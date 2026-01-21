@@ -207,7 +207,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                                   const TextInputType.numberWithOptions(
                                     decimal: true,
                                   ),
-                              inputFormatters: [CurrencyInputFormatter()],
+                              inputFormatters: [
+                                CurrencyInputFormatter(currency: currency),
+                              ],
                               onChanged: (_) => setState(() {}),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
@@ -378,32 +380,39 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.eachPersonPays,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurface.withValues(alpha: 0.7),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.eachPersonPays,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                l10n.peopleCount(_selectedParticipantIds.length),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
+                const SizedBox(height: 4),
+                Text(
+                  l10n.peopleCount(_selectedParticipantIds.length),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          Text(
-            BalanceCalculator.formatAmount(
-              (splitAmount * 100).round(),
-              currency,
+              ],
             ),
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: colorScheme.primary,
+          ),
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(
+              BalanceCalculator.formatAmount(
+                (splitAmount * 100).round(),
+                currency,
+              ),
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: colorScheme.primary,
+              ),
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.right,
             ),
           ),
         ],

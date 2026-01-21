@@ -18,12 +18,23 @@ class PwaService extends ChangeNotifier {
   bool _canInstall = false;
   bool _isInstalled = false;
   bool _initialized = false;
+  bool _isIOS = false;
+  bool _isIOSSafari = false;
 
   /// Whether the PWA install prompt can be shown.
+  /// On iOS Safari, returns true if not installed (users need manual instructions).
+  /// On Chrome/Edge, returns true if beforeinstallprompt is available.
   bool get canInstall => _canInstall && !_isInstalled;
 
   /// Whether the app is already installed as a PWA.
   bool get isInstalled => _isInstalled;
+  
+  /// Whether the device is running iOS.
+  bool get isIOS => _isIOS;
+  
+  /// Whether running on iOS (any browser - Safari, Chrome, Firefox, etc.).
+  /// All iOS browsers use WebKit and require manual PWA installation.
+  bool get isIOSSafari => _isIOSSafari;
 
   /// Initialize the PWA service. Call this once at app startup.
   void initialize() {
@@ -32,7 +43,16 @@ class PwaService extends ChangeNotifier {
 
     // Check initial state - the beforeinstallprompt might have already fired
     _isInstalled = _jsIsPwaInstalled();
-    _canInstall = _jsIsPwaInstallAvailable();
+    _isIOS = _jsIsIOS();
+    _isIOSSafari = _jsIsIOSSafari();
+    
+    // On iOS (any browser), we can show install instructions if not installed
+    // On desktop Chrome/Edge, we need the beforeinstallprompt event
+    if (_isIOSSafari && !_isInstalled) {
+      _canInstall = true;
+    } else {
+      _canInstall = _jsIsPwaInstallAvailable();
+    }
 
     // Set up callbacks for JS to call when events happen
     _setupCallbacks();
@@ -86,3 +106,9 @@ external set _onPwaInstallAvailable(JSFunction? value);
 
 @JS('onPwaInstalled')
 external set _onPwaInstalled(JSFunction? value);
+
+@JS('isIOS')
+external bool _jsIsIOS();
+
+@JS('isIOSSafari')
+external bool _jsIsIOSSafari();

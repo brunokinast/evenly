@@ -19,7 +19,7 @@
   <meta name="description" content="Split expenses fairly with friends and family">
 
   <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Evenly">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
@@ -155,6 +155,18 @@
       const standalone = window.matchMedia('(display-mode: standalone)').matches ||
              window.navigator.standalone === true;
       return standalone;
+    }
+    
+    // Check if running on iOS
+    function isIOS() {
+      return /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
+    }
+    
+    // Check if running on any iOS browser (all use WebKit, all require manual install)
+    function isIOSSafari() {
+      // All iOS browsers (Safari, Chrome, Firefox, Edge) use WebKit and require
+      // the same manual "Add to Home Screen" flow, so we treat them all as iOS
+      return isIOS();
     }
   </script>
 </head>

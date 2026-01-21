@@ -816,18 +816,22 @@ class _TripHeader extends StatelessWidget {
           const SizedBox(height: 12),
 
           // Title Row
-          Column(
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                trip.title,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+              Expanded(
+                child: Text(
+                  trip.title,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(width: 12),
               Text(
                 BalanceCalculator.getCurrencySymbol(trip.currency),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
