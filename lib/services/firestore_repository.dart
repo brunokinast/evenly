@@ -247,13 +247,6 @@ class FirestoreRepository {
 
   /// Stream of all trips where user is owner OR member (for real-time updates).
   Stream<List<Trip>> watchUserTrips(String uid) async* {
-    // Watch owned trips
-    final ownedStream = _firestore
-        .collection('trips')
-        .where('ownerUid', isEqualTo: uid)
-        .orderBy('createdAt', descending: true)
-        .snapshots();
-
     // Watch all trips and filter by membership
     final allTripsStream = _firestore
         .collection('trips')

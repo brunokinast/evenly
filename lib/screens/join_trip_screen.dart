@@ -3,10 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/app_localizations.dart';
-import '../models/trip.dart';
 import '../providers/providers.dart';
 import '../theme/widgets.dart';
-import '../utils/context_extensions.dart';
 import 'join_trip_confirmation_screen.dart';
 
 class JoinTripScreen extends ConsumerStatefulWidget {
@@ -175,7 +173,7 @@ class _JoinTripScreenState extends ConsumerState<JoinTripScreen> {
                         ],
                       ),
                     ),
-                    if (_error != null) ..[
+                    if (_error != null) ...[
                       const SizedBox(height: 16),
                       MessageCard(
                         message: _error!,
