@@ -373,6 +373,7 @@ class _BalancesList extends StatelessWidget {
           final balanceEntry = entry.value;
           final memberName = memberNames[balanceEntry.key] ?? l10n.unknown;
           final balance = balanceEntry.value;
+          final memberId = balanceEntry.key;
           final isPositive = balance > 0;
           final isNegative = balance < 0;
           final isLast = index == sortedEntries.length - 1;
@@ -395,7 +396,9 @@ class _BalancesList extends StatelessWidget {
             statusText = l10n.settled;
           }
 
-          return Column(
+          return RepaintBoundary(
+            key: ValueKey(memberId),
+            child: Column(
             children: [
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -449,6 +452,7 @@ class _BalancesList extends StatelessWidget {
                   color: colorScheme.outlineVariant.withValues(alpha: 0.5),
                 ),
             ],
+            ),
           );
         }).toList(),
       ),
@@ -530,60 +534,63 @@ class _SettlementsList extends StatelessWidget {
           final to = memberNames[transfer.toMemberId] ?? l10n.unknown;
           final isLast = index == transfers.length - 1;
 
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Row(
-                        children: [
-                          UserAvatar(name: from, size: 36),
-                          const SizedBox(width: 10),
-                          Flexible(
-                            child: Text(
-                              from,
-                              style: Theme.of(context).textTheme.titleSmall
-                                  ?.copyWith(fontWeight: FontWeight.w600),
-                              overflow: TextOverflow.ellipsis,
+          return RepaintBoundary(
+            key: ValueKey('${transfer.fromMemberId}_${transfer.toMemberId}'),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            UserAvatar(name: from, size: 36),
+                            const SizedBox(width: 10),
+                            Flexible(
+                              child: Text(
+                                from,
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: Icon(
-                              Icons.arrow_forward_rounded,
-                              size: 18,
-                              color: colorScheme.onSurfaceVariant,
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              child: Icon(
+                                Icons.arrow_forward_rounded,
+                                size: 18,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
                             ),
-                          ),
-                          Flexible(
-                            child: Text(
-                              to,
-                              style: Theme.of(context).textTheme.titleSmall
-                                  ?.copyWith(fontWeight: FontWeight.w600),
-                              overflow: TextOverflow.ellipsis,
+                            Flexible(
+                              child: Text(
+                                to,
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    AmountBadge(
-                      amount: BalanceCalculator.formatAmount(
-                        transfer.amountCents,
-                        currency,
+                      const SizedBox(width: 12),
+                      AmountBadge(
+                        amount: BalanceCalculator.formatAmount(
+                          transfer.amountCents,
+                          currency,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              if (!isLast)
-                Divider(
-                  height: 1,
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-                ),
-            ],
+                if (!isLast)
+                  Divider(
+                    height: 1,
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                  ),
+              ],
+            ),
           );
         }).toList(),
       ),

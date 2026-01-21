@@ -536,15 +536,18 @@ class _ExpensesTab extends ConsumerWidget {
                   final payerName =
                       memberNames[expense.payerMemberId] ?? l10n.unknown;
 
-                  return _ExpenseCard(
-                    expense: expense,
-                    payerName: payerName,
-                    currency: currency,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            AddExpenseScreen(tripId: tripId, expense: expense),
+                  return RepaintBoundary(
+                    key: ValueKey(expense.id),
+                    child: _ExpenseCard(
+                      expense: expense,
+                      payerName: payerName,
+                      currency: currency,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              AddExpenseScreen(tripId: tripId, expense: expense),
+                        ),
                       ),
                     ),
                   );
@@ -687,7 +690,9 @@ class _MembersTab extends ConsumerWidget {
               memberBalanceProvider((tripId: tripId, memberId: member.id)),
             );
 
-            return Card(
+            return RepaintBoundary(
+              key: ValueKey(member.id),
+              child: Card(
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
                 leading: UserAvatar(name: memberName, isHighlighted: false),
@@ -749,7 +754,7 @@ class _MembersTab extends ConsumerWidget {
                   ),
                 ),
               ),
-            );
+            ));
           },
         );
       },

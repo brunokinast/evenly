@@ -121,18 +121,21 @@ class TripListScreen extends ConsumerWidget {
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate((context, index) {
                         final trip = trips[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _TripCard(
-                            title: trip.title,
-                            currency: trip.currency,
-                            iconName: trip.iconName,
-                            createdAt: trip.createdAt,
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    TripDetailScreen(tripId: trip.id),
+                        return RepaintBoundary(
+                          key: ValueKey(trip.id),
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _TripCard(
+                              title: trip.title,
+                              currency: trip.currency,
+                              iconName: trip.iconName,
+                              createdAt: trip.createdAt,
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      TripDetailScreen(tripId: trip.id),
+                                ),
                               ),
                             ),
                           ),
