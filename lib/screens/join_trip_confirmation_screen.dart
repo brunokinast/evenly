@@ -41,17 +41,21 @@ class _JoinTripConfirmationScreenState
       action: () => ref
           .read(firestoreRepositoryProvider)
           .addMember(tripId: widget.trip.id, uid: uid),
-      onSuccess: (_) => _openTrip(),
+      onSuccess: (_) {
+        ref.invalidate(userTripsProvider);
+        _openTrip();
+      },
       errorMessage: l10n.failedToJoinTrip(''),
       setLoading: (loading) => setState(() => _isJoining = loading),
     );
   }
 
   void _openTrip() {
-    Navigator.of(context).pushReplacement(
+    Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(
         builder: (_) => TripDetailScreen(tripId: widget.trip.id),
       ),
+      (route) => route.isFirst,
     );
   }
 
