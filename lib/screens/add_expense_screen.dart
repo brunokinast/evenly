@@ -215,9 +215,11 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                                 if (value == null || value.isEmpty) {
                                   return l10n.pleaseEnterAmount;
                                 }
-                                final amount = double.tryParse(
-                                  value.replaceAll(',', '.'),
-                                );
+                              // Remove thousand separators, then replace decimal comma with dot
+                              final cleanValue = value
+                                  .replaceAll(RegExp(r'[,.](?=\d{3}(\D|$))'), '')
+                                  .replaceAll(',', '.');
+                              final amount = double.tryParse(cleanValue);
                                 if (amount == null || amount <= 0) {
                                   return l10n.invalidAmount;
                                 }
