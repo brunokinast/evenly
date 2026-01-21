@@ -443,6 +443,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get installAppSubtitle => 'Add Evenly to your home screen';
 
   @override
+  String get installOnIOS => 'Install on iOS';
+
+  @override
+  String get iosInstallStep1 =>
+      '1. Tap the Share button in Safari (box with arrow pointing up)';
+
+  @override
+  String get iosInstallStep2 => '2. Scroll down and tap \'Add to Home Screen\'';
+
+  @override
+  String get iosInstallStep3 => '3. Tap \'Add\' to install Evenly';
+
+  @override
   String get editExpense => 'Edit Expense';
 
   @override

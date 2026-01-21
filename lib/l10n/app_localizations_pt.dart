@@ -446,6 +446,21 @@ class AppLocalizationsPt extends AppLocalizations {
   String get installAppSubtitle => 'Adicionar Evenly à tela inicial';
 
   @override
+  String get installOnIOS => 'Instalar no iOS';
+
+  @override
+  String get iosInstallStep1 =>
+      '1. Toque no botão Compartilhar no Safari (caixa com seta apontando para cima)';
+
+  @override
+  String get iosInstallStep2 =>
+      '2. Role para baixo e toque em \'Adicionar à Tela de Início\'';
+
+  @override
+  String get iosInstallStep3 =>
+      '3. Toque em \'Adicionar\' para instalar o Evenly';
+
+  @override
   String get editExpense => 'Editar Despesa';
 
   @override

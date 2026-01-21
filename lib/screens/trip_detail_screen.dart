@@ -824,9 +824,7 @@ class _TripHeader extends StatelessWidget {
                   trip.title,
                   style: Theme.of(
                     context,
-                  ).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),

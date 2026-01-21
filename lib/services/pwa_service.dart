@@ -28,10 +28,10 @@ class PwaService extends ChangeNotifier {
 
   /// Whether the app is already installed as a PWA.
   bool get isInstalled => _isInstalled;
-  
+
   /// Whether the device is running iOS.
   bool get isIOS => _isIOS;
-  
+
   /// Whether running on iOS (any browser - Safari, Chrome, Firefox, etc.).
   /// All iOS browsers use WebKit and require manual PWA installation.
   bool get isIOSSafari => _isIOSSafari;
@@ -45,7 +45,7 @@ class PwaService extends ChangeNotifier {
     _isInstalled = _jsIsPwaInstalled();
     _isIOS = _jsIsIOS();
     _isIOSSafari = _jsIsIOSSafari();
-    
+
     // On iOS (any browser), we can show install instructions if not installed
     // On desktop Chrome/Edge, we need the beforeinstallprompt event
     if (_isIOSSafari && !_isInstalled) {

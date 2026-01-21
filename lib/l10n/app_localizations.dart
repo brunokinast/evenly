@@ -890,6 +890,30 @@ abstract class AppLocalizations {
   /// **'Add Evenly to your home screen'**
   String get installAppSubtitle;
 
+  /// No description provided for @installOnIOS.
+  ///
+  /// In en, this message translates to:
+  /// **'Install on iOS'**
+  String get installOnIOS;
+
+  /// No description provided for @iosInstallStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Tap the Share button in Safari (box with arrow pointing up)'**
+  String get iosInstallStep1;
+
+  /// No description provided for @iosInstallStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Scroll down and tap \'Add to Home Screen\''**
+  String get iosInstallStep2;
+
+  /// No description provided for @iosInstallStep3.
+  ///
+  /// In en, this message translates to:
+  /// **'3. Tap \'Add\' to install Evenly'**
+  String get iosInstallStep3;
+
   /// No description provided for @editExpense.
   ///
   /// In en, this message translates to:
