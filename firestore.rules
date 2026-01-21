@@ -57,10 +57,14 @@ service cloud.firestore {
       // Members can read the trip
       allow read: if isAuthenticated();
       
-      // Owner can update the trip
+      // Owner can update the trip, OR members can update only the updatedAt field
       allow update: if isAuthenticated() 
-        && isTripOwner(tripId)
-        && request.resource.data.ownerUid == resource.data.ownerUid; // Can't change owner
+        && (
+          // Owner can update anything (except ownerUid)
+          (isTripOwner(tripId) && request.resource.data.ownerUid == resource.data.ownerUid)
+          // Or any authenticated user can update only updatedAt (for join triggering stream)
+          || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['updatedAt']))
+        );
       
       // Only owner can delete
       allow delete: if isAuthenticated() && isTripOwner(tripId);
