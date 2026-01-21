@@ -215,12 +215,10 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                                 if (value == null || value.isEmpty) {
                                   return l10n.pleaseEnterAmount;
                                 }
-                              // Remove thousand separators, then replace decimal comma with dot
-                              final cleanValue = value
-                                  .replaceAll(RegExp(r'[,.](?=\d{3}(\D|$))'), '')
-                                  .replaceAll(',', '.');
-                              final amount = double.tryParse(cleanValue);
-                                if (amount == null || amount <= 0) {
+                              // Strip all formatting, keep only digits (formatter stores as cents)
+                              final digitsOnly = value.replaceAll(RegExp(r'[^\d]'), '');
+                              final amountCents = int.tryParse(digitsOnly);
+                              if (amountCents == null || amountCents <= 0) {
                                   return l10n.invalidAmount;
                                 }
                                 return null;
@@ -442,9 +440,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final amountText = _amountController.text.replaceAll(',', '.');
-      final amount = double.parse(amountText);
-      final amountCents = (amount * 100).round();
+      // Strip all formatting, keep only digits (formatter stores as cents)
+      final digitsOnly = _amountController.text.replaceAll(RegExp(r'[^\d]'), '');
+      final amountCents = int.parse(digitsOnly);
 
       final repository = ref.read(firestoreRepositoryProvider);
 
