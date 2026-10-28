@@ -4,7 +4,7 @@
 The summary shows totals, each member's balance, and a short list of suggested payments that settle everyone up.
 
 ## Flows
-1. **Summary screen**: total spent, number of expenses and members, average per person; each member's balance ("Gets back X" / "Owes X" / "Settled"); suggested settlements ("A pays B X"). When everything is settled: "All settled! No payments needed."
+1. **Summary screen**: total spent, number of expenses and members, average per person; each member's balance ("Gets back X" / "Owes X" / "Settled"); suggested settlements ("A pays B X"), in two groups: **Your payments** first (what the current user pays or receives, or "You're settled up"), then **Other payments** between other members (only if there are any). When everything is settled: "All settled! No payments needed."
 
 ## Rules
 - A member's **balance** = total they paid − total of their shares. Positive = gets back, negative = owes.
@@ -17,4 +17,5 @@ The summary shows totals, each member's balance, and a short list of suggested p
 - **BAL-4** Settlements are suggestions only; the app doesn't record payments.
 - **BAL-5** Balances and settlements update live with expense/member changes.
 - **BAL-6** Members are listed by balance, highest "gets back" first.
+- **BAL-8** Suggested payments involving the current user are listed separately and first: amounts they pay in the "owes" color, amounts they receive in the "gets back" color.
 - **BAL-7** Worked example: A pays 100.00 for A, B, C → shares A 33.34, B 33.33, C 33.33 → balances A +66.66, B −33.33, C −33.33 (sum 0) → settlements: B pays A 33.33, C pays A 33.33.

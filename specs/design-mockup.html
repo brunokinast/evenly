@@ -1,0 +1,746 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<title>Evenly Mockups</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a phone-sized app frame, centered; a slim mockup bar above it switches screens and theme. Tokens mirror specs/design.md. */
+:root {
+  --bg: #F6F7F9; --surface: #FFFFFF; --surface-2: #EEF0F4; --border: #DDE1E8;
+  --fg: #171A21; --fg-muted: #5D6472;
+  --accent: #F2B233; --accent-fg: #1A1405; --accent-soft: #FDF1D6; --accent-text: #8A5A00;
+  --positive: #18794E; --negative: #C33B2C;
+  --page: #E4E7EC; --shadow: 0 8px 28px rgba(23,26,33,.16);
+  --av1-bg:#DCEBFF; --av1-fg:#1D4E89; --av2-bg:#E3F4E6; --av2-fg:#21613A; --av3-bg:#FBE4DE; --av3-fg:#8C3121;
+  --av4-bg:#EDE4FA; --av4-fg:#5A3592; --av5-bg:#DDF2F2; --av5-fg:#1F5E5E; --av6-bg:#FBEACF; --av6-fg:#7A4E05;
+  --font: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --r-ctl: 10px; --r-card: 16px; --r-sheet: 24px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0F1115; --surface: #171A20; --surface-2: #20242C; --border: #2C313B;
+  --fg: #ECEEF2; --fg-muted: #9AA2B1;
+  --accent: #F5BE4B; --accent-fg: #1A1405; --accent-soft: #3A2F17; --accent-text: #F5BE4B;
+  --positive: #4CC38A; --negative: #F07A6A;
+  --page: #07080A; --shadow: 0 8px 28px rgba(0,0,0,.5);
+  --av1-bg:#1C2D44; --av1-fg:#A9CBFA; --av2-bg:#1C3324; --av2-fg:#9FD9AE; --av3-bg:#3E231D; --av3-fg:#F3B3A4;
+  --av4-bg:#2E2340; --av4-fg:#CDB6F2; --av5-bg:#183433; --av5-fg:#9CD9D7; --av6-bg:#3A2C14; --av6-fg:#F1CC8A;
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #0F1115; --surface: #171A20; --surface-2: #20242C; --border: #2C313B;
+  --fg: #ECEEF2; --fg-muted: #9AA2B1;
+  --accent: #F5BE4B; --accent-fg: #1A1405; --accent-soft: #3A2F17; --accent-text: #F5BE4B;
+  --positive: #4CC38A; --negative: #F07A6A;
+  --page: #07080A; --shadow: 0 8px 28px rgba(0,0,0,.5);
+  --av1-bg:#1C2D44; --av1-fg:#A9CBFA; --av2-bg:#1C3324; --av2-fg:#9FD9AE; --av3-bg:#3E231D; --av3-fg:#F3B3A4;
+  --av4-bg:#2E2340; --av4-fg:#CDB6F2; --av5-bg:#183433; --av5-fg:#9CD9D7; --av6-bg:#3A2C14; --av6-fg:#F1CC8A;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  background: var(--page); color: var(--fg); font-family: var(--font); font-size: 16px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  margin: 0; padding-block: 12px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+* { box-sizing: border-box; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; border: 0; background: none; padding: 0; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num { font-variant-numeric: tabular-nums; }
+svg.lucide { width: 20px; height: 20px; stroke-width: 2; flex: none; }
+
+/* Mockup bar (not part of the app) */
+.mockbar { width: 100%; max-width: 400px; display: flex; gap: 6px; align-items: center; justify-content: space-between; font-size: 13px; overflow-x: auto; flex: none; }
+.mockbar .grp { display: flex; gap: 4px; }
+.mockbar button { padding: 6px 9px; white-space: nowrap; border-radius: 999px; background: var(--surface); color: var(--fg-muted); border: 1px solid var(--border); }
+.mockbar button[aria-pressed="true"] { color: var(--fg); border-color: var(--fg); }
+.mockbar .label { color: var(--fg-muted); text-transform: uppercase; letter-spacing: .06em; font-size: 11px; font-weight: 600; }
+
+/* Device */
+.device {
+  width: 100%; max-width: 400px; flex: 1; min-height: 0; max-height: 860px;
+  background: var(--bg); border-radius: 28px; border: 1px solid var(--border); box-shadow: var(--shadow);
+  position: relative; overflow: hidden; display: flex; flex-direction: column;
+}
+.screen { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.topbar { display: flex; align-items: center; gap: 4px; padding: 14px 8px 10px 16px; min-height: 60px; }
+.topbar h1 { font-size: 24px; line-height: 30px; font-weight: 700; margin: 0; flex: 1; min-width: 0; text-wrap: balance; }
+.topbar.compact { padding-left: 4px; }
+.topbar.compact h1 { font-size: 18px; line-height: 24px; display: flex; align-items: center; gap: 10px; }
+.iconbtn { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 999px; color: var(--fg); }
+.iconbtn:active { background: var(--surface-2); }
+.scroll { flex: 1; overflow-y: auto; padding: 4px 16px 112px; display: flex; flex-direction: column; gap: 20px; }
+.scroll.no-fab { padding-bottom: 24px; }
+
+/* Lists */
+.group { background: var(--surface); border-radius: var(--r-card); border: 1px solid var(--border); overflow: hidden; }
+.row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; min-height: 64px; width: 100%; text-align: left; position: relative; }
+button.row:active { background: var(--surface-2); }
+.row + .row::before { content: ""; position: absolute; top: 0; left: 66px; right: 0; border-top: 1px solid var(--border); }
+.row.compact { min-height: 52px; padding-block: 8px; }
+.row.compact + .row.compact::before { left: 54px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.btn.sm { min-height: 40px; padding: 0 12px; font-size: 14px; gap: 6px; }
+.btn.sm svg.lucide { width: 18px; height: 18px; }
+.dhead { display: flex; align-items: flex-start; gap: 12px; padding: 6px 16px 12px; }
+.dtitle { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.sheet .dhead h2 { margin: 0; font-size: 20px; line-height: 26px; text-wrap: balance; }
+.dsum { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.detail-amt { font-size: 34px; line-height: 40px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.share-chip { font-size: 14px; font-weight: 600; padding: 6px 12px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); font-variant-numeric: tabular-nums; }
+.btn.export { align-self: center; color: var(--fg-muted); font-weight: 500; }
+.row .txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.row .title { font-weight: 600; line-height: 22px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .meta { font-size: 14px; line-height: 20px; color: var(--fg-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .amt { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.row .amt small { display: block; font-size: 12px; font-weight: 500; color: var(--fg-muted); }
+.ghdr { font-size: 12px; line-height: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--fg-muted); margin: 0 0 8px 4px; }
+.tile { width: 44px; height: 44px; border-radius: 12px; background: var(--accent-soft); color: var(--accent-text); display: grid; place-items: center; flex: none; }
+.tile.sm { width: 32px; height: 32px; border-radius: 9px; }
+.tile.sm svg.lucide { width: 18px; height: 18px; }
+.av { width: 40px; height: 40px; border-radius: 999px; display: grid; place-items: center; font-size: 14px; font-weight: 700; flex: none; letter-spacing: .02em; }
+.av.sm { width: 28px; height: 28px; font-size: 11px; }
+.av.guest { outline: 1.5px dashed currentColor; outline-offset: -1.5px; }
+.tag { font-size: 11px; line-height: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 1px 7px; border-radius: 999px; background: var(--surface-2); color: var(--fg-muted); vertical-align: 2px; margin-left: 6px; }
+.pos, .row .meta.pos { color: var(--positive); } .neg { color: var(--negative); } .muted { color: var(--fg-muted); }
+
+/* Buttons */
+.btn { min-height: 48px; padding: 0 18px; border-radius: var(--r-ctl); font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.btn.primary { background: var(--accent); color: var(--accent-fg); }
+.btn.secondary { background: var(--surface-2); color: var(--fg); }
+.btn.danger { color: var(--negative); }
+.btn.block { width: 100%; }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.primary:disabled { opacity: 1; background: var(--surface-2); color: var(--fg-muted); }
+.btn.quiet { color: var(--fg-muted); font-weight: 500; }
+.btn.primary:not(:disabled):active { filter: brightness(.94); }
+.bottombar { display: flex; gap: 10px; padding: 12px 16px 16px; background: var(--surface); border-top: 1px solid var(--border); }
+.bottombar .btn { flex: 1; }
+.fab { position: absolute; right: 16px; bottom: 80px; z-index: 5; box-shadow: var(--shadow); border-radius: 999px; padding: 0 20px 0 16px; min-height: 52px; }
+
+/* Tab bar */
+.tabbar { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--surface); border-top: 1px solid var(--border); padding: 6px 4px 10px; }
+.tab { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: var(--fg-muted); min-height: 52px; justify-content: center; }
+.tab .pill { width: 56px; height: 30px; border-radius: 999px; display: grid; place-items: center; }
+.tab[aria-selected="true"] { color: var(--fg); }
+.tab[aria-selected="true"] .pill { background: var(--accent); color: var(--accent-fg); }
+
+/* Summary blocks */
+.total { display: flex; flex-direction: column; gap: 2px; padding: 4px 4px 0; }
+.total .k { font-size: 14px; color: var(--fg-muted); }
+.total .v { font-size: 28px; line-height: 34px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.stat .k { font-size: 12px; color: var(--fg-muted); }
+.stat .v { font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.empty { flex: 1; justify-content: center; text-align: center; color: var(--fg-muted); padding: 32px 12px; display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.empty p { margin: 0; max-width: 28ch; line-height: 22px; }
+.settle-arrow { display: flex; align-items: center; gap: 2px; color: var(--fg-muted); }
+.settle-arrow svg.lucide { width: 16px; height: 16px; }
+.row .title.wrap { white-space: normal; }
+.invite-card { display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--accent-soft); border-radius: var(--r-card); }
+.invite-card .txt { flex: 1; font-size: 14px; line-height: 20px; }
+.invite-card strong { display: block; font-size: 16px; }
+.addguest { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--border); }
+.field { width: 100%; min-height: 48px; border-radius: var(--r-ctl); border: 1px solid transparent; background: var(--surface-2); padding: 0 14px; font-size: 16px; }
+.field:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
+.hint { font-size: 14px; color: var(--fg-muted); line-height: 20px; }
+.err { font-size: 14px; color: var(--negative); line-height: 20px; }
+
+/* Add expense */
+.amount-wrap { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 20px 0 8px; }
+.amount-disp { font-size: 44px; line-height: 52px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.amount-disp.zero { color: var(--fg-muted); }
+.amount-wrap input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: text; }
+.amount-wrap.focus .amount-disp::after { content: ""; display: inline-block; width: 2px; height: 38px; background: var(--accent); margin-left: 3px; vertical-align: -4px; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.setting { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 12px 0 14px; width: 100%; text-align: left; position: relative; font-size: 15px; }
+.setting:active { background: var(--surface-2); }
+.setting + .setting::before { content: ""; position: absolute; top: 0; left: 44px; right: 0; border-top: 1px solid var(--border); }
+.setting .k { color: var(--fg-muted); flex: none; }
+.setting .v { flex: 1; min-width: 0; text-align: right; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.setting.changed .v { color: var(--accent-text); }
+.setting svg.lucide { color: var(--fg-muted); }
+.choice { display: flex; flex-wrap: wrap; gap: 8px; }
+.choice button { min-height: 40px; padding: 0 14px; border-radius: 999px; background: var(--surface-2); font-weight: 600; font-size: 14px; }
+.choice button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-text); outline: 2px solid var(--accent); outline-offset: -2px; }
+.addform { flex: 1; overflow-y: auto; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 16px; }
+
+/* Sheets */
+.backdrop { position: absolute; inset: 0; background: rgba(10,12,16,.45); z-index: 20; animation: fade .2s ease-out; }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 21; background: var(--surface); border-radius: var(--r-sheet) var(--r-sheet) 0 0; max-height: 85%; display: flex; flex-direction: column; box-shadow: var(--shadow); animation: up .22s ease-out; }
+.sheet .handle { width: 36px; height: 4px; border-radius: 4px; background: var(--border); margin: 8px auto 4px; }
+.sheet h2 { font-size: 18px; margin: 6px 16px 10px; }
+.sheet .body { overflow-y: auto; padding: 0 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+.opt { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 6px 4px; width: 100%; text-align: left; border-radius: 12px; }
+.opt:active { background: var(--surface-2); }
+.opt .txt { flex: 1; min-width: 0; font-weight: 600; }
+.check { width: 24px; height: 24px; border-radius: 999px; border: 2px solid var(--border); display: grid; place-items: center; flex: none; }
+.check.box { border-radius: 7px; }
+.check.on { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.check svg.lucide { width: 16px; height: 16px; stroke-width: 3; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--surface-2); border-radius: var(--r-ctl); padding: 3px; gap: 3px; }
+.seg button { min-height: 40px; border-radius: 8px; font-weight: 600; font-size: 14px; color: var(--fg-muted); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.split-row { display: flex; align-items: center; gap: 8px; min-height: 56px; }
+.split-row .opt { flex: 1; min-width: 0; padding: 0; min-height: 48px; }
+.mini-amt { width: 128px; flex: none; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.mini-amt::placeholder { color: var(--fg-muted); font-weight: 400; opacity: 1; }
+.code { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; position: relative; }
+.code span { height: 56px; border-radius: var(--r-ctl); background: var(--surface-2); display: grid; place-items: center; font-size: 24px; font-weight: 700; border: 2px solid transparent; }
+.code span.cur { border-color: var(--accent); }
+.code input { position: absolute; inset: 0; opacity: 0; }
+.bigcode { font-size: 40px; font-weight: 700; letter-spacing: .08em; text-align: center; font-variant-numeric: tabular-nums; padding: 8px 0 0; }
+.icongrid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+.icongrid button { height: 48px; border-radius: 12px; background: var(--surface-2); display: grid; place-items: center; }
+.icongrid button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-text); outline: 2px solid var(--accent); outline-offset: -2px; }
+.preview { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--r-card); border: 1px solid var(--border); }
+
+.toast { position: absolute; left: 50%; bottom: 150px; transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 30; white-space: nowrap; animation: fade .2s ease-out; box-shadow: var(--shadow); }
+.spin { width: 18px; height: 18px; border: 2.5px solid currentColor; border-right-color: transparent; border-radius: 999px; animation: rot .7s linear infinite; }
+@keyframes rot { to { transform: rotate(360deg); } }
+@keyframes up { from { transform: translateY(100%); } }
+@keyframes fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .sheet, .backdrop, .toast { animation: none; } .amount-wrap.focus .amount-disp::after { animation: none; } }
+</style>
+
+<div class="mockbar" role="toolbar" aria-label="Mockup controls">
+  <div class="grp" id="mk-views">
+    <button id="mk-home" data-act="mk-view" data-v="home">Home</button>
+    <button id="mk-empty" data-act="mk-view" data-v="empty">Empty</button>
+    <button id="mk-trip" data-act="mk-view" data-v="trip">Trip</button>
+    <button id="mk-add" data-act="mk-view" data-v="add">Add expense</button>
+  </div>
+  <div class="grp">
+    <button id="mk-theme" data-act="mk-theme" aria-label="Switch theme">System</button>
+  </div>
+</div>
+<div class="device" id="device"><div class="screen" id="screen"></div><div id="layer"></div></div>
+
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script>
+(() => {
+const LOCALE = 'en-US';
+const iso = d => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+const TODAY = iso(new Date());
+const YESTERDAY = iso(new Date(Date.now() - 864e5));
+const ICONS = ['luggage','plane','tree-palm','tent','utensils-crossed','house','party-popper','trophy','music','shopping-bag','car','sailboat','mountain','building-2','briefcase','graduation-cap'];
+const CURRENCIES = ['BRL','USD','EUR','GBP'];
+
+const ME = 'sam';
+const people = { sam: 'Sam', ana: 'Ana', marco: 'Marco', julia: 'Júlia', leo: 'Leo' };
+const lisbon = {
+  id: 'lis', name: 'Lisbon 2026', icon: 'plane', cur: 'EUR', created: '2026-10-24', owner: ME,
+  members: [
+    { id: 'sam' }, { id: 'ana' }, { id: 'marco' }, { id: 'julia' }, { id: 'leo', guest: true },
+  ],
+  expenses: [
+    { id: 'e1', desc: 'Dinner at Time Out Market', cents: 8640, payer: 'ana', parts: ['sam','ana','marco','julia','leo'], date: TODAY, time: '20:15' },
+    { id: 'e2', desc: 'Tram 28 tickets', cents: 1200, payer: 'marco', parts: ['sam','ana','marco','julia'], date: TODAY, time: '11:40' },
+    { id: 'e5', desc: 'Groceries at Pingo Doce', cents: 6420, payer: 'sam', parts: ['sam','ana','marco','julia','leo'], date: TODAY, time: '09:10' },
+    { id: 'e3', desc: 'Apartment, 3 nights', cents: 48000, payer: 'ana', parts: ['sam','ana','marco','julia','leo'], date: YESTERDAY, time: '16:00' },
+    { id: 'e4', desc: 'Pastéis de Belém', cents: 960, payer: 'julia', parts: ['sam','julia'], custom: { sam: 320, julia: 640 }, date: YESTERDAY, time: '10:30' },
+  ],
+};
+const S = {
+  view: 'home', tab: 'expenses', themeIdx: 0, empty: false,
+  trips: [
+    lisbon,
+    { id: 'serra', name: 'Serra weekend', icon: 'tent', cur: 'BRL', created: '2026-09-12', owner: 'ana', members: [{ id: 'ana' }, { id: 'sam' }], expenses: [] },
+    { id: 'bday', name: "Ana's birthday", icon: 'party-popper', cur: 'BRL', created: '2026-07-03', owner: 'ana', members: [{ id: 'ana' }, { id: 'sam' }], expenses: [] },
+  ],
+  tripId: 'lis', form: null, sheet: null,
+};
+const trip = () => S.trips.find(t => t.id === S.tripId);
+
+// ---- money (whole cents) ----
+const fmt = (c, cur) => new Intl.NumberFormat(LOCALE, { style: 'currency', currency: cur }).format(c / 100);
+const fmtNum = c => new Intl.NumberFormat(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(c / 100);
+// BAL-2: floor share each, leftover cents to payer if participating, else first participant in member order
+function shares(e, memberOrder) {
+  if (e.custom) return { ...e.custom };
+  const parts = memberOrder.filter(id => e.parts.includes(id));
+  const n = parts.length, base = Math.floor(e.cents / n), rem = e.cents % n;
+  const out = {}; parts.forEach(id => out[id] = base);
+  out[parts.includes(e.payer) ? e.payer : parts[0]] += rem;
+  return out;
+}
+function balances(t) {
+  const order = t.members.map(m => m.id), bal = {};
+  order.forEach(id => bal[id] = 0);
+  t.expenses.forEach(e => {
+    bal[e.payer] += e.cents;
+    const sh = shares(e, order);
+    for (const id in sh) bal[id] -= sh[id];
+  });
+  return bal;
+}
+// BAL-3: biggest debtor pays biggest creditor, repeat
+function settlements(t) {
+  const order = t.members.map(m => m.id), b = balances(t), out = [];
+  for (;;) {
+    const ids = order.filter(id => b[id] !== 0);
+    if (!ids.length) break;
+    const d = ids.reduce((a, x) => b[x] < b[a] ? x : a, ids[0]);
+    const c = ids.reduce((a, x) => b[x] > b[a] ? x : a, ids[0]);
+    const amt = Math.min(-b[d], b[c]);
+    out.push({ from: d, to: c, cents: amt }); b[d] += amt; b[c] -= amt;
+  }
+  return out;
+}
+
+// ---- small view helpers ----
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+const ic = (n, cls = '') => `<i data-lucide="${n}" class="${cls}"></i>`;
+const name = id => people[id];
+const label = id => id === ME ? 'You' : name(id);
+const hash = s => [...s].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7);
+function avatar(id, sm, guest) {
+  const k = hash(id) % 6 + 1, init = name(id).split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  return `<span class="av${sm ? ' sm' : ''}${guest ? ' guest' : ''}" style="background:var(--av${k}-bg);color:var(--av${k}-fg)" aria-hidden="true">${esc(init)}</span>`;
+}
+const dateLabel = d => d === TODAY ? 'Today' : d === YESTERDAY ? 'Yesterday'
+  : new Intl.DateTimeFormat(LOCALE, { weekday: 'short', month: 'short', day: 'numeric' }).format(new Date(d + 'T12:00'));
+const nowHM = () => { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+const timeLabel = hm => new Intl.DateTimeFormat(LOCALE, { hour: 'numeric', minute: '2-digit' }).format(new Date('2000-01-01T' + hm));
+const whenLabel = (d, hm) => `${dateLabel(d)}, ${timeLabel(hm)}`;
+const longDate = d => new Intl.DateTimeFormat(LOCALE, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(d + 'T12:00'));
+
+// ---- screens ----
+function homeView() {
+  const trips = S.empty ? [] : S.trips;
+  const list = trips.length ? `<div class="group">${trips.map(t => `
+    <button class="row" data-act="open-trip" data-id="${t.id}">
+      <span class="tile">${ic(t.icon)}</span>
+      <span class="txt"><span class="title">${esc(t.name)}</span><span class="meta">${t.cur} · ${longDate(t.created)}</span></span>
+      ${ic('chevron-right', 'muted')}
+    </button>`).join('')}</div>`
+  : `<div class="empty"><span class="tile">${ic('luggage')}</span><p>No trips yet. Create one and invite your friends, or join a trip with a 6-digit code.</p></div>`;
+  return `
+  <header class="topbar"><h1>Your trips</h1>
+    <button class="iconbtn" data-act="sheet" data-s="profile" aria-label="Profile">${avatar(ME, true)}</button></header>
+  <main class="scroll no-fab">${list}</main>
+  <div class="bottombar">
+    <button class="btn secondary" data-act="sheet" data-s="join">${ic('ticket')}Join trip</button>
+    <button class="btn primary" data-act="sheet" data-s="newtrip">${ic('plus')}New trip</button>
+  </div>`;
+}
+
+function tripView() {
+  const t = trip(), tabs = [['expenses', 'receipt', 'Expenses'], ['balances', 'scale', 'Balances'], ['members', 'users', 'Members']];
+  const body = S.tab === 'expenses' ? expensesTab(t) : S.tab === 'balances' ? balancesTab(t) : membersTab(t);
+  return `
+  <header class="topbar compact">
+    <button class="iconbtn" data-act="go-home" aria-label="Back to trips">${ic('chevron-left')}</button>
+    <h1><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.name)}</span></h1>
+    ${t.owner === ME ? `<button class="btn secondary sm" data-act="sheet" data-s="invite">${ic('user-plus')}Invite</button>` : ''}
+    <button class="iconbtn" data-act="sheet" data-s="menu" aria-label="Trip options">${ic('ellipsis')}</button>
+  </header>
+  <main class="scroll" id="tabpanel" role="tabpanel">${body}</main>
+  <button class="btn primary fab" data-act="add">${ic('plus')}Add expense</button>
+  <nav class="tabbar" role="tablist">${tabs.map(([k, i, l]) => `
+    <button class="tab" role="tab" aria-selected="${S.tab === k}" data-act="tab" data-t="${k}"><span class="pill">${ic(i)}</span>${l}</button>`).join('')}
+  </nav>`;
+}
+
+function expensesTab(t) {
+  if (!t.expenses.length) return `<div class="empty"><span class="tile">${ic('receipt')}</span><p>No expenses yet. Tap Add expense to record the first one.</p></div>`;
+  const total = t.expenses.reduce((s, e) => s + e.cents, 0);
+  const byDate = {};
+  [...t.expenses].sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time)).forEach(e => (byDate[e.date] ||= []).push(e));
+  return `
+  <div class="total"><span class="k">Total spent · ${t.expenses.length} expenses</span><span class="v">${fmt(total, t.cur)}</span></div>
+  ${Object.entries(byDate).map(([d, es]) => `<section><h3 class="ghdr">${dateLabel(d)}</h3><div class="group">${es.map(e => {
+    const split = e.custom ? 'Custom split' : e.parts.length < t.members.length ? `Split between ${e.parts.length}` : 'Split between all';
+    return `<button class="row compact" data-act="detail" data-id="${e.id}">
+      ${avatar(e.payer, true)}<span class="sr-only">Paid by ${label(e.payer)}.</span>
+      <span class="txt"><span class="title">${esc(e.desc)}</span><span class="meta">${timeLabel(e.time)} · ${split}</span></span>
+      <span class="amt">${fmt(e.cents, t.cur)}</span>
+    </button>`;
+  }).join('')}</div></section>`).join('')}`;
+}
+
+function balancesTab(t) {
+  const b = balances(t), total = t.expenses.reduce((s, e) => s + e.cents, 0), n = t.members.length;
+  const rows = [...t.members].sort((x, y) => b[y.id] - b[x.id]);
+  const st = settlements(t);
+  const mine = st.filter(s => s.from === ME || s.to === ME), others = st.filter(s => s.from !== ME && s.to !== ME);
+  return `
+  <div class="stats">
+    <div class="stat"><span class="k">Total</span><span class="v">${fmt(total, t.cur)}</span></div>
+    <div class="stat"><span class="k">Per person</span><span class="v">${fmt(Math.round(total / n), t.cur)}</span></div>
+    <div class="stat"><span class="k">Expenses</span><span class="v">${t.expenses.length}</span></div>
+  </div>
+  ${st.length ? '' : `<section><div class="group"><div class="row"><span class="tile sm">${ic('circle-check')}</span><span class="txt"><span class="title">All settled! No payments needed.</span></span></div></div></section>`}
+  ${st.length ? `
+  <section><h3 class="ghdr">Your payments</h3><div class="group">${mine.length ? mine.map(s => payRow(s, t, s.from === ME ? 'neg' : 'pos')).join('')
+    : `<div class="row compact"><span class="tile sm">${ic('circle-check')}</span><span class="txt"><span class="title">You're settled up</span></span></div>`}</div></section>
+  ` : ''}
+  <section><h3 class="ghdr">Balances</h3><div class="group">${rows.map(m => {
+    const v = b[m.id];
+    return `<div class="row">${avatar(m.id, false, m.guest)}<span class="txt"><span class="title">${label(m.id)}</span></span>
+      <span class="amt ${v > 0 ? 'pos' : v < 0 ? 'neg' : 'muted'}"><small>${v > 0 ? 'Gets back' : v < 0 ? 'Owes' : ''}</small>${v ? fmt(Math.abs(v), t.cur) : 'Settled'}</span></div>`;
+  }).join('')}</div></section>
+  ${others.length ? `<section><h3 class="ghdr">Other payments</h3><div class="group">${others.map(s => payRow(s, t, '')).join('')}</div></section>` : ''}
+  <button class="btn sm export" data-act="mock">${ic('file-down')}Export as PDF</button>`;
+}
+function payRow(s, t, tone) {
+  const text = s.from === ME ? `You pay ${name(s.to)}` : s.to === ME ? `${name(s.from)} pays you` : `${name(s.from)} pays ${name(s.to)}`;
+  return `<div class="row compact"><span class="settle-arrow">${avatar(s.from, true)}${ic('arrow-right')}${avatar(s.to, true)}</span>
+    <span class="txt"><span class="title wrap">${text}</span></span><span class="amt ${tone}">${fmt(s.cents, t.cur)}</span></div>`;
+}
+
+function membersTab(t) {
+  const owner = t.owner === ME;
+  return `
+  ${owner && t.members.length === 1 ? `<div class="invite-card"><span class="txt"><strong>Invite friends</strong>Share a 6-digit code. It works for 1 hour.</span>
+    <button class="btn primary" data-act="sheet" data-s="invite">${ic('user-plus')}Invite</button></div>` : ''}
+  <section><h3 class="ghdr">${t.members.length} members</h3><div class="group">${t.members.map(m => {
+    const tap = owner && m.id !== ME, el = tap ? 'button' : 'div';
+    return `<${el} class="row"${tap ? ` data-act="member" data-id="${m.id}"` : ''}>${avatar(m.id, false, m.guest)}<span class="txt"><span class="title">${esc(name(m.id))}${m.id === ME ? '<span class="tag">You</span>' : ''}${m.id === t.owner ? '<span class="tag">Owner</span>' : ''}${m.guest ? '<span class="tag">Guest</span>' : ''}</span></span>${tap ? ic('chevron-right', 'muted') : ''}</${el}>`;
+  }).join('')}
+    ${owner ? `<form class="addguest" data-form="guest"><input class="field" id="guest-name" placeholder="Add a guest by name" autocomplete="off" aria-label="Guest name"><button class="btn secondary" type="submit">Add</button></form>` : ''}
+  </div><p class="err" id="guest-err" hidden></p></section>`;
+}
+
+function addView() {
+  const t = trip(), f = S.form;
+  return `
+  <header class="topbar compact">
+    <button class="iconbtn" data-act="close-add" aria-label="Close">${ic('x')}</button>
+    <h1>${f.editId ? 'Edit expense' : 'New expense'}</h1>
+    ${f.editId ? `<button class="iconbtn" data-act="mock" aria-label="Delete expense">${ic('trash-2')}</button>` : ''}
+  </header>
+  <form class="addform" data-form="expense" novalidate>
+    <label class="amount-wrap" id="amount-wrap">
+      <span class="amount-disp" id="amount-disp"></span>
+      <span class="hint" id="each-hint">&nbsp;</span>
+      <input id="amount" inputmode="numeric" pattern="[0-9]*" autocomplete="off" aria-label="Amount" enterkeyhint="next" value="${f.cents || ''}">
+    </label>
+    <input class="field" id="desc" placeholder="What was it for?" autocomplete="off" aria-label="Description" enterkeyhint="done" value="${esc(f.desc)}">
+    <div class="group" id="chips"></div>
+    <p class="err" id="split-err" hidden></p>
+  </form>
+  <div class="bottombar"><button class="btn primary block" id="save" data-act="save">Save</button></div>`;
+}
+
+// ---- add expense state ----
+function newForm(e) {
+  const t = trip(), all = t.members.map(m => m.id);
+  return e ? { editId: e.id, cents: e.cents, desc: e.desc, payer: e.payer, parts: [...e.parts], custom: e.custom ? { ...e.custom } : null, date: e.date, time: e.time }
+           : { editId: null, cents: 0, desc: '', payer: ME, parts: all, custom: null, date: TODAY, time: nowHM() };
+}
+// Custom split: typed amounts stay as typed; everyone else shares what's left equally (leftover cents per BAL-2).
+function customSplit(f) {
+  const parts = trip().members.map(m => m.id).filter(id => f.parts.includes(id));
+  const typed = parts.filter(id => id in f.custom), auto = parts.filter(id => !(id in f.custom));
+  const left = f.cents - typed.reduce((s, id) => s + f.custom[id], 0);
+  const out = {}; typed.forEach(id => out[id] = f.custom[id]);
+  if (auto.length) {
+    const pool = Math.max(left, 0), base = Math.floor(pool / auto.length), rem = pool % auto.length;
+    auto.forEach(id => out[id] = base); out[auto.includes(f.payer) ? f.payer : auto[0]] += rem;
+  }
+  return { out, auto, remaining: auto.length ? Math.min(left, 0) : left };
+}
+function customRemaining(f) { return customSplit(f).remaining; }
+const isCustom = f => !!f.custom && Object.keys(f.custom).length > 0;
+function refreshAdd() {
+  const t = trip(), f = S.form, all = t.members.map(m => m.id);
+  const disp = document.getElementById('amount-disp');
+  if (!disp) return;
+  disp.textContent = fmt(f.cents, t.cur); disp.classList.toggle('zero', !f.cents);
+  const order = all.filter(id => f.parts.includes(id));
+  let hint = ' ';
+  if (f.cents && !isCustom(f) && order.length) {
+    const base = Math.floor(f.cents / order.length), rem = f.cents % order.length;
+    hint = `Each person pays ${fmt(base, t.cur)}${rem ? ` (${fmt(rem, t.cur)} extra to ${label(order.includes(f.payer) ? f.payer : order[0])})` : ''}`;
+  }
+  document.getElementById('each-hint').textContent = hint;
+  const allIn = f.parts.length === all.length;
+  const splitTxt = isCustom(f) ? 'Custom amounts' : allIn ? 'Equally between all' : `Equally between ${f.parts.length}`;
+  const setting = (s, icon, k, v, changed) => `<button type="button" class="setting${changed ? ' changed' : ''}" data-act="sheet" data-s="${s}">${ic(icon)}<span class="k">${k}</span><span class="v">${v}</span>${ic('chevron-right')}</button>`;
+  document.getElementById('chips').innerHTML =
+    setting('payer', 'wallet', 'Paid by', label(f.payer), f.payer !== ME) +
+    setting('split', 'users', 'Split', splitTxt, !allIn || isCustom(f)) +
+    setting('date', 'calendar', 'When', whenLabel(f.date, f.time), f.date !== TODAY);
+  const rem = f.custom ? customRemaining(f) : 0;
+  const se = document.getElementById('split-err');
+  se.hidden = !(f.custom && rem !== 0 && f.cents);
+  se.textContent = rem > 0 ? `Remaining ${fmt(rem, t.cur)} to assign in the custom split.` : `Custom amounts are ${fmt(-rem, t.cur)} over the total.`;
+  document.getElementById('save').disabled = !(f.cents > 0 && f.desc.trim() && f.parts.length && rem === 0);
+  icons();
+}
+
+// ---- sheets ----
+function sheetView(s) {
+  const t = trip(), f = S.form;
+  const wrap = (title, body, head) => `<div class="backdrop" data-act="close-sheet"></div>
+    <div class="sheet" data-s="${s}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="handle"></div>${head || `<h2>${esc(title)}</h2>`}<div class="body">${body}</div></div>`;
+  if (s === 'payer') return wrap('Paid by', t.members.map(m => `
+    <button class="opt" data-act="pick-payer" data-id="${m.id}">${avatar(m.id, false, m.guest)}<span class="txt">${label(m.id)}</span>
+      <span class="check${f.payer === m.id ? ' on' : ''}">${f.payer === m.id ? ic('check') : ''}</span></button>`).join(''));
+  if (s === 'split') {
+    const cs = f.custom ? customSplit(f) : null;
+    const rows = t.members.map(m => {
+      const on = f.parts.includes(m.id);
+      return `<div class="split-row"><button class="opt" data-act="toggle-part" data-id="${m.id}">
+        <span class="check box${on ? ' on' : ''}">${on ? ic('check') : ''}</span>${avatar(m.id, true, m.guest)}<span class="txt">${label(m.id)}</span></button>
+        ${cs && on ? `<input class="field mini-amt" inputmode="numeric" autocomplete="off" data-cust="${m.id}" id="cust-${m.id}" aria-label="Amount for ${label(m.id)}"
+          placeholder="${fmtNum(cs.out[m.id])}" value="${m.id in f.custom ? fmtNum(f.custom[m.id]) : ''}">` : ''}</div>`;
+    }).join('');
+    return wrap('Split', `
+      <div class="seg"><button aria-pressed="${!f.custom}" data-act="split-mode" data-m="equal">Equally</button><button aria-pressed="${!!f.custom}" data-act="split-mode" data-m="custom">Custom amounts</button></div>
+      ${f.custom ? `<p class="hint" style="margin:0">Type an amount only for people who pay a different share. Everyone else splits the rest equally.</p>` : ''}
+      <div>${rows}</div>
+      <p class="hint" id="split-rem"></p>
+      <button class="btn primary block" data-act="close-sheet">Done</button>`);
+  }
+  if (s === 'date') return wrap('Date and time', `
+    <div style="display:grid;grid-template-columns:3fr 2fr;gap:8px">
+      <input class="field" type="date" id="date-in" max="${TODAY}" value="${f.date}" aria-label="Expense date">
+      <input class="field" type="time" id="time-in" value="${f.time}" aria-label="Expense time"></div>
+    <p class="err" id="when-err" hidden>The date and time can't be in the future.</p>
+    <button class="btn primary block" data-act="pick-date">Done</button>`);
+  if (s === 'expense') {
+    const e = t.expenses.find(x => x.id === S.detailId), order = t.members.map(m => m.id), sh = shares(e, order);
+    const n = Object.keys(sh).length, guest = id => t.members.find(m => m.id === id)?.guest;
+    const head = `<div class="dhead"><div class="dtitle"><h2>${esc(e.desc)}</h2><span class="hint">${whenLabel(e.date, e.time)}</span></div>
+      <button class="btn secondary sm" data-act="edit" data-id="${e.id}">${ic('pencil')}Edit</button></div>`;
+    return wrap(e.desc, `
+      <div class="dsum"><span class="detail-amt">${fmt(e.cents, t.cur)}</span>
+        <span class="share-chip">${ME in sh ? `Your share ${fmt(sh[ME], t.cur)}` : `You're not in this split`}</span></div>
+      <section><h3 class="ghdr">${e.custom ? 'Custom split' : `Split between ${n === order.length ? 'all' : n}`}</h3>
+      <div class="group">${order.filter(id => id in sh || id === e.payer).map(id => `<div class="row compact">${avatar(id, true, guest(id))}
+        <span class="txt"><span class="title">${label(id)}</span>${id === e.payer ? `<span class="meta pos">Paid ${fmt(e.cents, t.cur)}</span>` : ''}</span>
+        <span class="amt">${id in sh ? fmt(sh[id], t.cur) : '<span class="muted">Not in split</span>'}</span></div>`).join('')}</div></section>`, head);
+  }
+  if (s === 'member') {
+    const m = t.members.find(x => x.id === S.memberId), uses = t.expenses.filter(e => e.payer === m.id || e.parts.includes(m.id)).length;
+    return wrap(name(m.id), `
+      <div class="preview">${avatar(m.id, false, m.guest)}<span style="flex:1"><strong>${esc(name(m.id))}</strong><br><span class="hint">${m.guest ? 'Guest, added by you' : 'Joined with an invite code'}</span></span></div>
+      ${uses ? `<p class="hint" style="margin:0">${esc(name(m.id))} is in ${uses} expense${uses > 1 ? 's' : ''}. Remove them from ${uses > 1 ? 'those expenses' : 'that expense'} first.</p>` : ''}
+      <button class="btn danger block" data-act="mock" ${uses ? 'disabled' : ''}>${ic('user-minus')}Remove from trip</button>`, '<div style="height:8px"></div>');
+  }
+  if (s === 'invite') return wrap('Invite code', `
+    <p class="hint" style="text-align:center;margin:0">Friends enter this code in Evenly to join <strong>${esc(t.name)}</strong>.</p>
+    <div class="bigcode" aria-label="Code 4 8 2 9 1 3">482 913</div>
+    <p class="hint num" style="text-align:center;margin:0">Expires in 59:48</p>
+    <div style="display:flex;gap:10px"><button class="btn secondary" style="flex:1" data-act="copy">${ic('copy')}Copy</button><button class="btn primary" style="flex:1" data-act="mock">${ic('share-2')}Share</button></div>
+    <button class="btn quiet" data-act="mock">Generate a new code</button>`);
+  if (s === 'menu') return wrap(t.name, [['user-round-plus', 'Add guest', 'goto-guest'], ['pencil', 'Rename trip', 'mock']]
+    .map(([i, l, a]) => `<button class="opt" data-act="${a}">${ic(i)}<span class="txt">${l}</span></button>`).join('')
+    + `<button class="opt" data-act="mock" style="color:var(--negative)">${ic('trash-2')}<span class="txt">Delete trip</span></button>`);
+  if (s === 'profile') return wrap('Profile', `
+    <label class="hint" for="pname">Your name</label>
+    <input class="field" id="pname" value="Sam" autocomplete="off">
+    <span class="hint">Theme</span>
+    <div class="seg">${['System', 'Light', 'Dark'].map((l, i) => `<button aria-pressed="${S.themeIdx === i}" data-act="set-theme" data-i="${i}">${l}</button>`).join('')}</div>
+    <button class="opt" data-act="mock">${ic('smartphone')}<span class="txt">Install app</span>${ic('chevron-right', 'muted')}</button>
+    <button class="btn primary block" data-act="close-sheet">Done</button>`);
+  if (s === 'join') return wrap('Join trip', `
+    <p class="hint" style="margin:0">Enter the 6-digit code from the trip owner.</p>
+    <label class="code" id="code-boxes"><input id="code-in" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" aria-label="Invite code">${'<span></span>'.repeat(6)}</label>
+    <div id="join-result"></div>`);
+  if (s === 'newtrip') return wrap('New trip', `
+    <form data-form="newtrip" style="display:flex;flex-direction:column;gap:12px">
+    <input class="field" id="trip-name" placeholder="Trip name" autocomplete="off" aria-label="Trip name" enterkeyhint="done">
+    <span class="hint">Icon</span>
+    <div class="icongrid">${ICONS.map((n, i) => `<button type="button" aria-pressed="${i === 0}" data-act="pick-icon" data-n="${n}" aria-label="${n}">${ic(n)}</button>`).join('')}</div>
+    <span class="hint">Currency (can't be changed later)</span>
+    <div class="seg">${CURRENCIES.map(c => `<button type="button" aria-pressed="${c === 'USD'}" data-act="pick-cur" data-c="${c}">${c}</button>`).join('')}</div>
+    <button class="btn primary block" type="submit">Create trip</button></form>`);
+  return '';
+}
+function refreshSplitRem() {
+  const el = document.getElementById('split-rem'); if (!el) return;
+  const f = S.form, cur = trip().cur;
+  if (!f.custom) { el.textContent = 'Everyone ticked pays an equal share.'; el.className = 'hint'; return; }
+  const cs = customSplit(f);
+  cs.auto.forEach(id => { const inp = document.getElementById('cust-' + id); if (inp) inp.placeholder = fmtNum(cs.out[id]); });
+  el.textContent = cs.remaining > 0 ? `Remaining: ${fmt(cs.remaining, cur)}` : cs.remaining < 0 ? `Over the total by ${fmt(-cs.remaining, cur)}` : 'Adds up to the total.';
+  el.className = cs.remaining ? 'err' : 'hint';
+}
+
+// ---- render ----
+function icons() { if (window.lucide) lucide.createIcons(); }
+function render() {
+  const scr = document.getElementById('screen');
+  scr.innerHTML = S.view === 'home' ? homeView() : S.view === 'trip' ? tripView() : addView();
+  ['home', 'trip', 'add'].forEach(v => document.getElementById('mk-' + v).setAttribute('aria-pressed', S.view === v && !(v === 'home' && S.empty)));
+  document.getElementById('mk-empty').setAttribute('aria-pressed', S.view === 'home' && S.empty);
+  renderSheet();
+  if (S.view === 'add') { refreshAdd(); focusSoon('amount'); }
+  icons();
+}
+// An open sheet updates its content in place; it only slides in when a different sheet opens.
+function renderSheet() {
+  const layer = document.getElementById('layer'), open = layer.querySelector('.sheet');
+  if (S.sheet && open && open.dataset.s === S.sheet) {
+    const tmp = document.createElement('div'); tmp.innerHTML = sheetView(S.sheet);
+    open.querySelector('.body').replaceWith(tmp.querySelector('.body'));
+  } else {
+    layer.innerHTML = S.sheet ? sheetView(S.sheet) : '';
+    if (S.sheet === 'join') focusSoon('code-in');
+    if (S.sheet === 'newtrip') focusSoon('trip-name');
+  }
+  if (S.sheet === 'split') refreshSplitRem();
+  icons();
+}
+function focusSoon(id) { setTimeout(() => document.getElementById(id)?.focus({ preventScroll: true }), 30); }
+let toastTimer;
+function toast(msg) {
+  document.querySelector('.toast')?.remove();
+  const el = document.createElement('div'); el.className = 'toast'; el.setAttribute('role', 'status'); el.textContent = msg;
+  document.getElementById('device').appendChild(el);
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.remove(), 3000);
+}
+const THEMES = ['System', 'Light', 'Dark'];
+function applyTheme() {
+  const r = document.documentElement;
+  if (S.themeIdx === 0) r.removeAttribute('data-theme'); else r.setAttribute('data-theme', THEMES[S.themeIdx].toLowerCase());
+  document.getElementById('mk-theme').textContent = THEMES[S.themeIdx];
+}
+
+// ---- events ----
+let newTrip = { icon: 'luggage', cur: 'USD' };
+document.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-act]'); if (!el) return;
+  const a = el.dataset.act, t = trip();
+  if (a === 'mk-view') {
+    S.sheet = null; S.empty = el.dataset.v === 'empty';
+    if (el.dataset.v === 'trip' || el.dataset.v === 'add') S.tripId = 'lis';
+    if (el.dataset.v === 'add') S.form = newForm();
+    S.view = S.empty ? 'home' : el.dataset.v; render();
+  } else if (a === 'mk-theme') { S.themeIdx = (S.themeIdx + 1) % 3; applyTheme(); }
+  else if (a === 'set-theme') { S.themeIdx = +el.dataset.i; applyTheme(); renderSheet(); }
+  else if (a === 'open-trip') { S.tripId = el.dataset.id; S.view = 'trip'; S.tab = 'expenses'; render(); }
+  else if (a === 'go-home') { S.view = 'home'; render(); }
+  else if (a === 'tab') { S.tab = el.dataset.t; render(); }
+  else if (a === 'add') { S.form = newForm(); S.view = 'add'; render(); }
+  else if (a === 'detail') { S.detailId = el.dataset.id; S.sheet = 'expense'; renderSheet(); }
+  else if (a === 'edit') { S.sheet = null; S.form = newForm(t.expenses.find(e => e.id === el.dataset.id)); S.view = 'add'; render(); }
+  else if (a === 'close-add') { S.view = 'trip'; S.sheet = null; render(); }
+  else if (a === 'sheet') { S.sheet = el.dataset.s; renderSheet(); }
+  else if (a === 'close-sheet') { S.sheet = null; renderSheet(); if (S.view === 'add') refreshAdd(); }
+  else if (a === 'pick-payer') { S.form.payer = el.dataset.id; S.sheet = null; renderSheet(); refreshAdd(); }
+  else if (a === 'toggle-part') {
+    const f = S.form, id = el.dataset.id;
+    f.parts = f.parts.includes(id) ? f.parts.filter(x => x !== id) : t.members.map(m => m.id).filter(x => x === id || f.parts.includes(x));
+    if (f.custom && !f.parts.includes(id)) delete f.custom[id];
+    renderSheet(); refreshAdd();
+  } else if (a === 'split-mode') {
+    const f = S.form;
+    if (el.dataset.m === 'custom' && !f.custom) f.custom = {};
+    else if (el.dataset.m === 'equal') f.custom = null;
+    renderSheet(); refreshAdd();
+  } else if (a === 'pick-date') {
+    const d = document.getElementById('date-in').value, tm = document.getElementById('time-in').value;
+    if (!d || !tm || d > TODAY || (d === TODAY && tm > nowHM())) { document.getElementById('when-err').hidden = false; return; }
+    S.form.date = d; S.form.time = tm;
+    S.sheet = null; renderSheet(); refreshAdd();
+  } else if (a === 'save') save();
+  else if (a === 'copy') { navigator.clipboard?.writeText('482913').then(() => toast('Code copied'), () => toast('Code: 482913')); }
+  else if (a === 'pick-icon') { newTrip.icon = el.dataset.n; el.parentElement.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b === el)); }
+  else if (a === 'pick-cur') { newTrip.cur = el.dataset.c; el.parentElement.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b === el)); }
+  else if (a === 'join') { S.sheet = null; renderSheet(); toast('Mockup: you would now be in "Porto food tour"'); }
+  else if (a === 'goto-guest') { S.sheet = null; S.tab = 'members'; render(); focusSoon('guest-name'); }
+  else if (a === 'member') { S.memberId = el.dataset.id; S.sheet = 'member'; renderSheet(); }
+  else if (a === 'claim') {
+    S.claim = S.claim === el.dataset.n ? null : el.dataset.n;
+    el.parentElement.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.n === S.claim));
+    document.getElementById('join-btn').textContent = S.claim ? `Join as ${S.claim}` : 'Join trip';
+  }
+  else if (a === 'mock') { S.sheet = null; renderSheet(); toast('Not part of this mockup'); }
+});
+
+function save() {
+  const f = S.form, t = trip(), btn = document.getElementById('save');
+  if (btn.disabled) return;
+  btn.disabled = true; btn.innerHTML = '<span class="spin" aria-label="Saving"></span>';
+  setTimeout(() => {
+    const e = { id: f.editId || 'e' + Date.now(), desc: f.desc.trim(), cents: f.cents, payer: f.payer, parts: [...f.parts], date: f.date, time: f.time };
+    if (isCustom(f)) {
+      const out = customSplit(f).out;
+      e.parts = e.parts.filter(id => out[id] > 0); // EXP-12: 0 means not a participant
+      e.custom = Object.fromEntries(e.parts.map(id => [id, out[id]]));
+    }
+    if (f.editId) t.expenses = t.expenses.map(x => x.id === f.editId ? e : x); else t.expenses.push(e);
+    S.view = 'trip'; S.tab = 'expenses'; render(); toast(f.editId ? 'Expense updated' : 'Expense added');
+  }, 450);
+}
+
+document.addEventListener('input', ev => {
+  const el = ev.target, f = S.form;
+  if (el.id === 'amount') {
+    const digits = el.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 9);
+    el.value = digits;
+    const before = f.cents; f.cents = +digits || 0;
+    if (isCustom(f) && f.cents !== before) { f.custom = null; toast('Split reset to equal'); }
+    refreshAdd();
+  } else if (el.id === 'desc') { f.desc = el.value; refreshAdd(); }
+  else if (el.dataset.cust) {
+    // Same entry as the main amount: digits fill from the right; clearing the field returns it to the equal share.
+    const digits = el.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 9);
+    if (digits) { f.custom[el.dataset.cust] = +digits; el.value = fmtNum(+digits); }
+    else { delete f.custom[el.dataset.cust]; el.value = ''; }
+    el.setSelectionRange(el.value.length, el.value.length);
+    refreshSplitRem(); refreshAdd();
+  } else if (el.id === 'code-in') {
+    const v = el.value.replace(/\D/g, '').slice(0, 6); el.value = v;
+    const boxes = [...document.querySelectorAll('#code-boxes span')];
+    boxes.forEach((b, i) => { b.textContent = v[i] || ''; b.classList.toggle('cur', i === v.length); });
+    const res = document.getElementById('join-result');
+    if (v.length < 6) { res.innerHTML = ''; return; }
+    res.innerHTML = v === '000000'
+      ? `<p class="err">Invalid or expired invite code</p>`
+      : `<div class="preview"><span class="tile">${ic('utensils-crossed')}</span><span style="flex:1"><strong>Porto food tour</strong><br><span class="hint">EUR · 3 members</span></span></div>
+         <p class="hint" style="margin:14px 0 8px">Are you one of these? (optional)</p>
+         <div class="choice">${['Rita', 'Tom'].map(n => `<button data-act="claim" data-n="${n}" aria-pressed="false">${n}</button>`).join('')}</div>
+         <button class="btn primary block" id="join-btn" data-act="join" style="margin-top:14px">Join trip</button>`;
+    S.claim = null;
+    icons();
+  }
+});
+document.addEventListener('focusin', ev => { if (ev.target.id === 'amount') document.getElementById('amount-wrap').classList.add('focus'); });
+document.addEventListener('focusout', ev => { if (ev.target.id === 'amount') document.getElementById('amount-wrap')?.classList.remove('focus'); });
+document.addEventListener('keydown', ev => {
+  if (ev.key !== 'Enter') return;
+  if (ev.target.id === 'amount') { ev.preventDefault(); document.getElementById('desc').focus(); }
+  else if (ev.target.id === 'desc') { ev.preventDefault(); save(); }
+});
+document.addEventListener('submit', ev => {
+  ev.preventDefault();
+  const form = ev.target.dataset.form, t = trip();
+  if (form === 'guest') {
+    const inp = document.getElementById('guest-name'), n = inp.value.trim(), err = document.getElementById('guest-err');
+    const dup = t.members.some(m => m.guest && name(m.id).toLowerCase() === n.toLowerCase());
+    if (!n || dup) { err.hidden = false; err.textContent = n ? `There's already a guest called ${n}.` : 'Enter a name.'; return; }
+    const id = 'g' + Date.now(); people[id] = n; t.members.push({ id, guest: true });
+    render(); toast(`${n} added`); focusSoon('guest-name');
+  } else if (form === 'newtrip') {
+    const n = document.getElementById('trip-name').value.trim();
+    if (!n) { document.getElementById('trip-name').focus(); return; }
+    const nt = { id: 't' + Date.now(), name: n, icon: newTrip.icon, cur: newTrip.cur, created: TODAY, owner: ME, members: [{ id: ME }], expenses: [] };
+    S.trips.unshift(nt); S.tripId = nt.id; S.view = 'trip'; S.tab = 'members'; S.sheet = null; S.empty = false;
+    newTrip = { icon: 'luggage', cur: 'USD' }; render();
+  }
+});
+
+// Keyboard never covers the field: the page follows the visible viewport (iOS doesn't resize the layout for the keyboard),
+// so bottom bars and sheets sit above the keyboard, and the focused field scrolls into view.
+const vv = window.visualViewport;
+function fitViewport() { document.documentElement.style.height = vv.height + 'px'; if (vv.offsetTop) window.scrollTo(0, 0); }
+if (vv) { vv.addEventListener('resize', fitViewport); vv.addEventListener('scroll', fitViewport); fitViewport(); }
+document.addEventListener('focusin', ev => {
+  const el = ev.target;
+  if (!el.matches('input')) return;
+  if (el.dataset.cust) requestAnimationFrame(() => el.setSelectionRange(el.value.length, el.value.length));
+  setTimeout(() => el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 300);
+});
+
+applyTheme(); render();
+})();
+</script>

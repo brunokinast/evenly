@@ -39,3 +39,4 @@ Notes:
 - The owner is also a member document (with `uid == ownerUid`).
 - Member IDs are referenced by expenses; the migration must preserve or remap them.
 - Some members may have neither `uid` nor `manualName` (shown as "Unknown").
+- Expenses now have a date and time (EXP-11); take both from the old `createdAt`.

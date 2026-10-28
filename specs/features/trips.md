@@ -7,7 +7,7 @@ A trip groups members and expenses. It has a name, an icon and a currency. The p
 1. **Home** lists every trip the user belongs to (owned or joined), newest first. Each item shows the icon, name, currency and creation date.
 2. **Empty state**: with no trips, Home explains what to do and offers "New trip" and "Join trip".
 3. **Create trip**: name (required), icon (one of a fixed set, default luggage) and currency (BRL, USD, EUR, GBP). After creating it, the user lands on the trip, where they can invite friends.
-4. **Trip screen**: shows the trip name and icon, with Expenses and Members sections and access to the balance summary.
+4. **Trip screen**: shows the trip name, an **Invite** button for the owner (always visible, not inside a menu), and Expenses, Balances and Members sections.
 5. **Trip settings (owner only)**: invite (see invites spec), add a guest, rename the trip, delete the trip. Members see "Leave trip".
 
 ## Acceptance criteria

@@ -5,3 +5,4 @@ dist/
 *.jks
 key.properties
 CLAUDE.local.md
+.playwright-mcp/
