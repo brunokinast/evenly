@@ -99,7 +99,7 @@ test("INV-1..7 MEM-1 MEM-7 TRIP-5 invite, preview, claim a guest and join live",
   await expect(bia.getByRole("button", { name: "Delete trip" })).toBeHidden();
 });
 
-test("EXP BAL expenses, details, custom split, edit, delete and balances, live for everyone", async ({
+test("EXP-7 BAL-5 expenses, details, custom split, edit, delete and balances, live for everyone", async ({
   browser,
 }, info) => {
   const ana = await newUser(browser, "Ana");

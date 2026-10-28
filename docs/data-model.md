@@ -22,20 +22,21 @@ There is no user profile collection. The display name lives in the Firebase Auth
 
 ### `trips/{tripId}`
 
-| Field            | Type                                                              | Notes                                                                                                  |
-| ---------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `name`           | string, 1–50 chars, trimmed                                       | TRIP-2, owner can change (TRIP-11)                                                                     |
-| `icon`           | one of the 16 TRIP-4 ids                                          | fixed after creation (no spec to change it)                                                            |
-| `currency`       | `"BRL" \| "USD" \| "EUR" \| "GBP"`                                | immutable (TRIP-3)                                                                                     |
-| `ownerUid`       | string                                                            | immutable                                                                                              |
-| `createdAt`      | int ms                                                            | immutable; Home sorts by it, newest first                                                              |
-| `members`        | map memberId → `{ name: string, uid?: string, joinedAt: int ms }` | `uid` present = app user, absent = guest                                                               |
-| `memberIdsByUid` | map uid → memberId                                                | which member entry belongs to which user                                                               |
-| `memberUids`     | array of uid                                                      | same uids as `memberIdsByUid` keys; exists for the Home query (`array-contains`) and cheap rule checks |
-| `invite`         | `{ code: string, expiresAt: int ms }` or `null`                   | the current code (INV-2); written by the owner only                                                    |
+| Field            | Type                                                              | Notes                                                                                                   |
+| ---------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `name`           | string, 1–50 chars, trimmed                                       | TRIP-2, owner can change (TRIP-11)                                                                      |
+| `icon`           | one of the 16 TRIP-4 ids                                          | fixed after creation (no spec to change it)                                                             |
+| `currency`       | `"BRL" \| "USD" \| "EUR" \| "GBP"`                                | immutable (TRIP-3)                                                                                      |
+| `ownerUid`       | string                                                            | immutable                                                                                               |
+| `createdAt`      | int ms                                                            | immutable; Home sorts by it, newest first                                                               |
+| `members`        | map memberId → `{ name: string, uid?: string, joinedAt: int ms }` | `uid` present = app user, absent = guest                                                                |
+| `memberIdsByUid` | map uid → memberId                                                | which member entry belongs to which user                                                                |
+| `memberUids`     | array of uid                                                      | same uids as `memberIdsByUid` keys; exists for the Home query (`array-contains`) and cheap rule checks  |
+| `invite`         | `{ code: string, expiresAt: int ms }` or `null`                   | the current code (INV-2); written by the owner only                                                     |
+| `editedMember`   | memberId (optional)                                               | the one member entry the owner's last write changed; only for the rules (they can't loop over map keys) |
 
 - **memberId** is an opaque random ID. Expenses reference members by memberId, never by uid. So claiming a guest (MEM-7) is just "attach a uid to the guest's entry", and leaving (MEM-5) is "detach the uid": the entry becomes a guest with the same name. No expense ever changes.
-- `members[m].name` is the guest's name, or for app users a **copy** of their Auth display name. Renaming updates every copy in one batch (ID-5).
+- `members[m].name` is the guest's name, or for app users a **copy** of their Auth display name. Renaming updates every copy with one write per trip, so one trip the user lost access to can't block the others (ID-5).
 - Member order = `joinedAt` ascending; the owner joined first. Screens show the current user first, then this order (MEM-6); computations (BAL-2) use this order as stored. A claimed guest keeps its original `joinedAt`.
 - Invariant (rule-checked on every write): `memberUids` as a set == keys of `memberIdsByUid`, and `ownerUid` is in it.
 
@@ -78,7 +79,7 @@ Each is one write or one batch, in `src/data/`. "Batch" = Firestore batched writ
 
 | Operation                                | Writes                                                                                                                                                                                                                         |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Set name (ID-1..3, ID-5)                 | Auth `updateProfile`; then one batch updating `members[myId].name` in each of my trips (≤ 500 trips per batch)                                                                                                                 |
+| Set name (ID-1..3, ID-5)                 | Auth `updateProfile`; then one write per trip updating `members[myId].name` (each is its own single-document write)                                                                                                            |
 | Create trip (TRIP-1)                     | set `trips/{new}` with me as the owner and only member                                                                                                                                                                         |
 | Rename trip (TRIP-11)                    | batch: trip `name` + valid invite `name`                                                                                                                                                                                       |
 | Delete trip (TRIP-7, KI-5)               | batch: delete all expenses, the invite (only if still valid; an expired code may already belong to another trip), the trip. Over 499 docs: delete expenses in chunks and the trip in the last batch, so a retry resumes safely |
@@ -102,7 +103,7 @@ Helpers: `signedIn()`, `trip(id)` = `get(/trips/id).data`, `isMember(t)` = `requ
 - create: `ownerUid == me`, `memberUids == [me]`, one member entry with `uid == me`, `invite == null`, valid name/icon/currency.
 - delete: owner.
 - update, exactly one of these cases:
-  1. **Owner edit**: only `name`, `members`, `memberUids`, `memberIdsByUid`, `invite` change; owner stays a member; invariant holds.
+  1. **Owner edit**: only `name`, `members`, `memberUids`, `memberIdsByUid`, `invite`, `editedMember` change; owner stays a member; invariant holds; the invite expires within about an hour. Members: either no entry changes (and `memberUids` / `memberIdsByUid` don't either), or exactly the entry named in `editedMember` changes, in one of three ways: a new guest (`{name 2–50, joinedAt ≈ now}`), a guest deleted, or an app user made a guest (only their `uid` leaves the entry, `memberUids` and `memberIdsByUid`). The owner never renames anyone or attaches a uid.
   2. **Rename self**: a member changes only `members[memberIdsByUid[me]].name`.
   3. **Leave**: a non-owner member removes exactly their own uid from `memberUids` / `memberIdsByUid` and the `uid` field from their own member entry (name and `joinedAt` stay); nothing else.
   4. **Join**: a non-member; `get(joinAttempts/me).code == invite.code` and `invite.expiresAt > now()`; adds exactly `me` to `memberUids` and `memberIdsByUid`; the target member entry is either new (`{name, uid: me, joinedAt}`) or an existing guest (no `uid`) that only gains `uid: me` and a `name`; nothing else changes.

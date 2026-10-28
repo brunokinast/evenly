@@ -142,11 +142,16 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
   // EXP-7 hint: "Each person pays X" (equal split only).
   let hint = "";
   if (f.cents && !isCustom && parts.length) {
-    const base = Math.floor(f.cents / parts.length);
-    const extra = f.cents - base * parts.length;
-    const to = parts.includes(f.payerId) ? f.payerId : parts[0]!;
-    hint = extra
-      ? t("form.eachPaysExtra", { amount: money(base, cur), extra: money(extra, cur), name: name(to) })
+    // From the shares Save would write (BAL-2), so the hint can't drift from them.
+    const shares = equalShares(f.cents, parts, f.payerId);
+    const base = Math.min(...parts.map((id) => shares[id]!));
+    const to = parts.find((id) => shares[id]! > base);
+    hint = to
+      ? t("form.eachPaysExtra", {
+          amount: money(base, cur),
+          extra: money(shares[to]! - base, cur),
+          name: name(to),
+        })
       : t("form.eachPays", { amount: money(base, cur) });
   }
 

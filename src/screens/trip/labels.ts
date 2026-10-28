@@ -1,4 +1,5 @@
 import { person, type Person } from "@/domain/members";
+import { splitsAll } from "@/domain/balances";
 import type { Expense } from "@/domain/types";
 import { t } from "@/i18n";
 import type { TripView } from "./TripScreen";
@@ -13,7 +14,9 @@ export const label = (view: TripView, id: string) =>
 /** Expense row caption: "Split between all" / "Split between 3" / "Custom split". */
 export function splitLabel(view: TripView, e: Expense) {
   if (e.split === "custom") return t("split.custom");
-  const ids = Object.keys(e.shares);
-  const all = ids.length === view.trip.members.length && view.trip.members.every((m) => m.id in e.shares);
-  return all ? t("split.all") : t("split.n", { n: ids.length });
+  const all = splitsAll(
+    e,
+    view.trip.members.map((m) => m.id),
+  );
+  return all ? t("split.all") : t("split.n", { n: Object.keys(e.shares).length });
 }

@@ -4,7 +4,7 @@ import { showToast } from "@/app/toast";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { GroupHeader, IconTile, ListGroup, Row } from "@/components/List";
-import { balances, settlements, totalSpent, type Payment } from "@/domain/balances";
+import { balances, paymentsInListOrder, totalSpent, type Payment } from "@/domain/balances";
 import { byListOrder } from "@/domain/members";
 import { locale, money, t } from "@/i18n";
 import { cn } from "@/lib/cn";
@@ -19,10 +19,7 @@ export function BalancesTab({ view }: { view: TripView }) {
   const { bal, pays } = useMemo(() => {
     const order = trip.members.map((m) => m.id);
     const bal = balances(order, expenses);
-    // BAL-8: payments in the MEM-6 order of the payer, then of the receiver.
-    const by = byListOrder(view.listed);
-    const pays = settlements(bal, order).sort((a, b) => by(a.from, b.from) || by(a.to, b.to));
-    return { bal, pays };
+    return { bal, pays: paymentsInListOrder(bal, order, view.listed) };
   }, [trip.members, expenses, view.listed]);
 
   const total = totalSpent(expenses);
@@ -137,7 +134,7 @@ function Stat({ k, v }: { k: string; v: string }) {
   return (
     <div className="flex min-w-0 flex-col gap-0.5 rounded-card border border-border bg-surface px-3 py-2.5">
       <span className="truncate text-tag font-normal text-fg-muted">{k}</span>
-      <span className="truncate text-[17px] leading-6 font-bold">{v}</span>
+      <span className="truncate text-heading">{v}</span>
     </div>
   );
 }

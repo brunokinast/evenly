@@ -9,8 +9,8 @@ Old app (≈9k lines of Dart) features: anonymous auth, trips with a currency, 6
 ## Decided stack
 
 - **React + Vite + TypeScript**: one UI codebase.
-- **Tailwind + shadcn/ui**: consistent design, accessible HTML.
-- **Firebase** (same project): Hosting, Firestore, Auth. Free Spark plan, so no Cloud Functions. Permissions and integrity are enforced by Security Rules, plus transactions and batched writes.
+- **Tailwind** with the design tokens only, and our own small components (shadcn/ui was planned, then not needed).
+- **Firebase** (same project): Hosting, Firestore, Auth. Free Spark plan, so no Cloud Functions. Permissions and integrity are enforced by Security Rules on single writes and batched writes (no transactions, ADR 0002).
 - **PWA** (`vite-plugin-pwa`): installs on iPhone.
 - **Capacitor**: native Android APK. Sign-in goes through the native Firebase SDK (`@capacitor-firebase/authentication`) so Kotlin can act as the user later.
 - **Vitest + Firebase Emulator**: tests for logic and Security Rules. Playwright (already connected) for screenshot checks.
@@ -34,7 +34,7 @@ Read the old repo for behavior only. Write:
 
 A verification pass re-checks every spec against the old code, to catch anything invented or missed.
 
-### Status (2026-10-27)
+### Status (2026-10-28)
 
 - Phases 0–1 done (specs reviewed and decided by the user; see `specs/open-questions.md`).
 - **Clean room from here on**: phases 2+ run in fresh sessions opened in this repo, with no access to the old app (enforced by `.claude/settings.json` deny rules and `CLAUDE.md`). Exception: Phase 6 migration uses only `specs/migration-source.md`.
@@ -51,7 +51,20 @@ A verification pass re-checks every spec against the old code, to catch anything
 - Design pass 2 (2026-10-28, branch `design-pass-2`, asked by the user): Balances tab order (balances, your payments, other payments), field buttons follow the field's curve, cleaner Expense details (centered amount, "Paid by", shares only, Edit at the bottom), Edit expense opens without the keyboard (EXP-9), Add expense button only on the Expenses tab.
 - Brand (2026-10-28, branch `brand`, designed with the user from their old custom icon): split-coin app icon and a logo (coin + "Evenly" in Nunito 800 as outlines); PDF header uses the logo (design.md "Brand"). Same branch: Welcome shows the logo (W2), Profile/Edit expense open without the keyboard, Enter in New trip and Add expense only closes the keyboard, creating a trip stays on Home, the empty amount keeps the caret at the end, and the Date and time sheet uses the app's own calendar, time wheels and time shortcuts instead of Android's dialogs (EXP-17).
 - Phase 5 must also: share/save the PDF through Capacitor (Filesystem + Share plugins), since the Android WebView can't share files or download blob links (PDF-4); handle the hardware back button with the Capacitor App plugin (sheets, discard changes).
-- Next: the user's end-to-end check on the phone, then Phase 5 (Android/Capacitor).
+- Repo pass (2026-10-28, branch `repo-pass`, a fresh-agent audit): trip delete also removes malformed expenses; sign-in "Try again" recovers from a failed start (ID-6); only a rules denial reads as "too many attempts"; owner edits in the rules are limited to adding/deleting a guest or making an app user a guest, named in `editedMember` (no renaming others, no re-linking uids); member names 2–50 in the rules (ID-3); invites can't outlive about an hour; two new type roles (`heading`, `code`) replace one-off sizes; dead keys/config/deps removed; docs synced; CI runs the e2e suite.
+- The user's end-to-end check on the phone passed (2026-10-28).
+- Next: Phase 5 (Android/Capacitor). Checklist from the repo pass:
+  1. Emulator host: `src/data/firebase.ts` uses `location.hostname` (= `localhost` in the WebView); make the emulator host configurable (LAN IP, or `10.0.2.2` on the Android emulator) and allow cleartext to it in the Android network config.
+  2. Native Firebase config: `google-services.json`; release builds must set `VITE_FIREBASE_*` so the app doesn't think it's on the emulators.
+  3. PDF-4: save/share the PDF with the Filesystem and Share plugins (blob `<a download>` and `navigator.share({ files })` don't work in the WebView).
+  4. Invite Share: `@capacitor/share` (the WebView has no `navigator.share`, so it silently copies).
+  5. Hardware back: `App.addListener("backButton")` drives the sheet stack (`Sheet.tsx`, `src/app/nav.ts`), and leaving Add/Edit expense with unsaved changes asks "Discard changes?" (expenses flow 5; today Back leaves without asking).
+  6. Service worker: don't register it on native, so an updated APK never serves stale code.
+  7. Install: set `APK_URL` in `src/app/install.ts` once the APK is hosted.
+  8. Verify on device: the lost-trip check compares JSON strings of the query and document listeners (`src/data/trips.ts`), snapshot error semantics and the offline cache (ADR 0002).
+  9. Keyboard and layout: the Keyboard plugin's resize mode vs our `--kb` handling, status/navigation bar colors and safe areas.
+  10. PDF fonts: jsPDF's Helvetica is Latin only; names in other scripts need an embedded font.
+- Still untested (no automated test yet): EXP-8 failure path, PDF-2 and PDF-5, APP-5 (accessibility). BAL-4 and INV-12 are absences by design.
 
 ### 2. Design → `specs/design.md` + a mockup page
 

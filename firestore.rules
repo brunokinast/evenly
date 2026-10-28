@@ -25,7 +25,9 @@ service cloud.firestore {
         && d.ownerUid in d.memberUids;
     }
     function validInviteField(inv) {
-      return inv == null || (inv.keys().hasOnly(['code', 'expiresAt']) && inv.code is string && inv.expiresAt is int);
+      // A code lives about an hour (INV-1); never longer, so it can't be made permanent.
+      return inv == null || (inv.keys().hasOnly(['code', 'expiresAt']) && inv.code is string && inv.expiresAt is int
+        && inv.expiresAt < now() + 4200000);
     }
 
     function validTripCreate(d) {
@@ -42,20 +44,54 @@ service cloud.firestore {
         && d.memberIdsByUid.keys() == [me()]
         && d.members.keys() == [mid]
         && d.members[mid].keys().hasOnly(['name', 'uid', 'joinedAt'])
-        && validName(d.members[mid].name, 1)
+        && validName(d.members[mid].name, 2)
         && d.members[mid].uid == me()
         && d.members[mid].joinedAt == d.createdAt
         && d.invite == null;
     }
 
-    // Case 1: the owner edits name, members, membership and the invite. Membership can only shrink.
+    // Case 1: the owner edits the trip name and the invite, and changes at most one member entry, named in
+    // `editedMember` (rules can't loop over map keys): add a guest, delete a guest, or turn an app user
+    // into a guest (MEM-5). No other entry, name or uid changes.
     function ownerEdit(before, after) {
       return before.ownerUid == me()
-        && after.diff(before).affectedKeys().hasOnly(['name', 'members', 'memberUids', 'memberIdsByUid', 'invite'])
+        && after.diff(before).affectedKeys().hasOnly(['name', 'members', 'memberUids', 'memberIdsByUid', 'invite', 'editedMember'])
         && validName(after.name, 1)
-        && after.memberUids.toSet().difference(before.memberUids.toSet()).size() == 0
         && validMembersInvariant(after)
-        && validInviteField(after.invite);
+        && validInviteField(after.invite)
+        && (after.members.diff(before.members).affectedKeys().size() == 0
+              ? sameMembership(before, after)
+              : after.editedMember is string
+                && after.members.diff(before.members).affectedKeys() == [after.editedMember].toSet()
+                && (guestAdded(before, after, after.editedMember)
+                    || guestDeleted(before, after, after.editedMember)
+                    || madeGuest(before, after, after.editedMember)));
+    }
+    function sameMembership(before, after) {
+      return after.memberUids == before.memberUids && after.memberIdsByUid == before.memberIdsByUid;
+    }
+    function guestAdded(before, after, id) {
+      return !(id in before.members)
+        && after.members[id].keys().hasOnly(['name', 'joinedAt'])
+        && after.members[id].keys().hasAll(['name', 'joinedAt'])
+        && validName(after.members[id].name, 2)
+        && near(after.members[id].joinedAt)
+        && sameMembership(before, after);
+    }
+    function guestDeleted(before, after, id) {
+      return id in before.members && !('uid' in before.members[id]) && !(id in after.members)
+        && sameMembership(before, after);
+    }
+    // The entry keeps its name and joinedAt and loses only its uid, which leaves the trip.
+    function madeGuest(before, after, id) {
+      return id in before.members && 'uid' in before.members[id] && id in after.members
+        && before.memberIdsByUid[before.members[id].uid] == id
+        && after.members[id].diff(before.members[id]).affectedKeys() == ['uid'].toSet()
+        && !('uid' in after.members[id])
+        && after.memberUids.toSet() == before.memberUids.toSet().difference([before.members[id].uid].toSet())
+        && after.memberUids.size() == before.memberUids.size() - 1
+        && after.memberIdsByUid.diff(before.memberIdsByUid).affectedKeys() == [before.members[id].uid].toSet()
+        && !(before.members[id].uid in after.memberIdsByUid);
     }
 
     // Case 2: a member renames their own entry.
@@ -65,7 +101,7 @@ service cloud.firestore {
         && after.diff(before).affectedKeys().hasOnly(['members'])
         && after.members.diff(before.members).affectedKeys().hasOnly([mid])
         && after.members[mid].diff(before.members[mid]).affectedKeys().hasOnly(['name'])
-        && validName(after.members[mid].name, 1);
+        && validName(after.members[mid].name, 2);
     }
 
     // Case 3: a non-owner member leaves; their entry stays as a guest with the same name and joinedAt.
@@ -99,7 +135,7 @@ service cloud.firestore {
         && after.members.diff(before.members).affectedKeys() == [mid].toSet()
         && entry.keys().hasOnly(['name', 'uid', 'joinedAt'])
         && entry.uid == me()
-        && validName(entry.name, 1)
+        && validName(entry.name, 2)
         && (mid in before.members
               ? !('uid' in before.members[mid]) && entry.joinedAt == before.members[mid].joinedAt
               : near(entry.joinedAt));

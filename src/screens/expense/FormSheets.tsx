@@ -11,7 +11,7 @@ import { listOrder, type Person } from "@/domain/members";
 import { formatPlain } from "@/domain/money";
 import { customShares } from "@/domain/split";
 import type { Trip } from "@/domain/types";
-import { dayDateLabel, locale, money, t, timeLabel } from "@/i18n";
+import { dayDateLabel, hourLabel, locale, minuteLabel, money, t, timeLabel } from "@/i18n";
 import { cn } from "@/lib/cn";
 
 type Common = { trip: Trip; people: Map<string, Person>; myId: string };
@@ -180,13 +180,9 @@ const midnight = (ms: number) => {
   const d = new Date(ms);
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 };
-const pad = (n: number) => String(n).padStart(2, "0");
 const timeAt = (h: number, m: number) => timeLabel(new Date(2000, 0, 1, h, m).getTime());
-// 24h languages show "20", 12h ones "8 PM".
-const hourFmt = new Intl.DateTimeFormat(locale, { hour: "numeric" });
-const h23 = hourFmt.resolvedOptions().hourCycle === "h23";
-const HOURS = Array.from({ length: 24 }, (_, h) => (h23 ? pad(h) : hourFmt.format(new Date(2000, 0, 1, h))));
-const MINUTES = Array.from({ length: 60 }, (_, m) => pad(m));
+const HOURS = Array.from({ length: 24 }, (_, h) => hourLabel(h));
+const MINUTES = Array.from({ length: 60 }, (_, m) => minuteLabel(m));
 const SHORTCUTS = [
   ["form.breakfast", 8, 0],
   ["form.lunch", 12, 30],
@@ -235,7 +231,7 @@ function WhenForm({ value, onPick }: { value: number; onPick: (ms: number) => vo
           <div className="relative flex items-center justify-center gap-1">
             <div aria-hidden className="absolute inset-x-0 top-[88px] h-11 rounded-ctl bg-surface" />
             <Wheel label={t("form.hour")} options={HOURS} value={h} onChange={setH} />
-            <span aria-hidden className="relative text-[24px] font-extrabold">
+            <span aria-hidden className="relative text-title">
               :
             </span>
             <Wheel label={t("form.minute")} options={MINUTES} value={m} onChange={setM} />

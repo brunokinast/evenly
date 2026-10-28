@@ -13,3 +13,10 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm run build
+      # Phone-viewport checks: most screen ACs are only covered here. Playwright starts the emulators and
+      # the dev server itself.
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with: { name: e2e-results, path: test-results/ }

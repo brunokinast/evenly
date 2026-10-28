@@ -59,8 +59,8 @@ export function Wheel(props: {
           aria-selected={i === value}
           onClick={() => pick(i)}
           className={cn(
-            "grid h-11 snap-center place-items-center text-[24px] transition-colors",
-            i === value ? "font-extrabold text-fg" : "text-fg-muted",
+            "grid h-11 snap-center place-items-center text-title transition-colors",
+            i === value ? "text-fg" : "font-normal text-fg-muted",
           )}
         >
           {o}

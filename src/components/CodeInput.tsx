@@ -23,7 +23,7 @@ export function CodeInput({ value, onChange, label, disabled }: Props) {
           key={i}
           aria-hidden
           className={cn(
-            "grid h-14 min-w-0 place-items-center rounded-ctl border-2 border-transparent bg-surface-2 text-[24px] font-bold",
+            "grid h-14 min-w-0 place-items-center rounded-ctl border-2 border-transparent bg-surface-2 text-title",
             i === value.length && "border-accent",
           )}
         >

@@ -39,14 +39,7 @@ export function TopBar({ title, leading, actions, large }: Props) {
           )}
         >
           {leading}
-          <h1
-            className={cn(
-              "min-w-0 flex-1 truncate",
-              leading ? "text-[18px] leading-6 font-bold" : "text-title",
-            )}
-          >
-            {title}
-          </h1>
+          <h1 className={cn("min-w-0 flex-1 truncate", leading ? "text-heading" : "text-title")}>{title}</h1>
           {actions}
         </header>
       )}

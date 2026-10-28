@@ -51,8 +51,22 @@ export function dayLabel(ms: number) {
 /** "Today, Oct 26", "Yesterday, Oct 25", or "Mon, Oct 19" (EXP-17). */
 export function dayDateLabel(ms: number) {
   const ago = daysAgo(dayKey(ms), Date.now());
-  return ago <= 1 ? `${dayLabel(ms)}, ${shortDate(ms)}` : shortDay.format(ms);
+  return ago <= 1 ? t("date.dayAndDate", { day: dayLabel(ms), date: shortDate(ms) }) : shortDay.format(ms);
 }
 
 /** "Today, 8:15 PM". */
-export const whenLabel = (ms: number) => `${dayLabel(ms)}, ${timeLabel(ms)}`;
+export const whenLabel = (ms: number) => t("date.dayAndTime", { day: dayLabel(ms), time: timeLabel(ms) });
+
+const clock = dtf({ minute: "numeric", second: "2-digit", timeZone: "UTC" });
+/** "59:30": a countdown under an hour (INV-1). */
+export const countdownLabel = (seconds: number) => clock.format(Math.min(seconds, 3599) * 1000);
+
+const twoDigits = new Intl.NumberFormat(locale, { minimumIntegerDigits: 2 });
+const hourOnly = dtf({ hour: "numeric" });
+/** Hour picker rows: "08" in 24h languages, "8 AM" in 12h ones. */
+export const hourLabel = (h: number) =>
+  hourOnly.resolvedOptions().hourCycle === "h23"
+    ? twoDigits.format(h)
+    : hourOnly.format(new Date(2000, 0, 1, h));
+/** Minute picker rows: "05". */
+export const minuteLabel = (m: number) => twoDigits.format(m);

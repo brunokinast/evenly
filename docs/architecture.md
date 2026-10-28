@@ -20,8 +20,9 @@ screens ──► components
 ```
 src/
   app/          entry, routes, providers (session gate, theme, i18n, offline banner, toasts)
-  screens/      one folder per screen: welcome, home, trip (tabs), expense-form, not-found
-  components/   ui/ = shadcn primitives; the rest = shared app pieces (Sheet, MoneyInput, CodeInput, Avatar, AmountText…)
+  screens/      one folder per screen: welcome, home, trip (tabs), expense (add/edit form and its sheets), NotFound
+  components/   shared app pieces (Button/ButtonRow, Sheet, TextField, SubmitField, MoneyInput, CodeInput, Avatar, Calendar, Wheel…)
+  lib/          small helpers with no app knowledge (cn: class merging that knows the design tokens)
   domain/       pure TypeScript, no React, no Firebase: money, split, balances, settlements, member names, validation
   data/         Firebase setup, auth, live hooks, write commands
   i18n/         en.ts, pt-BR.ts, t(), number/date formatting
@@ -75,7 +76,7 @@ Pure functions with unit tests named after the acceptance criteria:
 
 ## i18n and formatting
 
-- `en.ts` is the source dictionary; `pt-BR.ts` must have the same keys (a TypeScript type checks it). `t(key, vars)` with plural forms via `Intl.PluralRules`. No i18n library.
+- `en.ts` is the source dictionary; `pt-BR.ts` must have the same keys (a TypeScript type checks it). `t(key, vars)`; `tn()` picks `.one` for exactly 1 and `.other` otherwise (both languages' needs; Intl's Portuguese rules would call 0 singular). No i18n library.
 - Language: device language, fallback English (APP-1). Amounts: `Intl.NumberFormat` in the user's language with the trip currency's symbol (EXP-2, KI-8). Dates and times: `Intl.DateTimeFormat`.
 
 ## Theme and design
