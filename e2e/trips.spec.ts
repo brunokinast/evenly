@@ -287,3 +287,39 @@ test("PDF-1 PDF-3 export downloads the trip summary", async ({ browser }) => {
   await ana.getByRole("button", { name: "Export as PDF" }).click();
   expect((await download).suggestedFilename()).toBe("Lisbon_2026_summary.pdf");
 });
+
+test("ID-5 MEM-3 a new name shows live for the other members", async ({ browser }) => {
+  const ana = await newUser(browser, "Ana");
+  const bia = await newUser(browser, "Bia");
+  await createTrip(ana, "Lagos");
+  await join(bia, await inviteCode(ana), "Lagos");
+  await bia.getByRole("button", { name: "Back to your trips" }).click();
+  await bia.getByRole("button", { name: "Profile" }).click();
+  await bia.getByRole("textbox", { name: "Your name" }).fill("Beatriz");
+  await bia.getByRole("textbox", { name: "Your name" }).press("Enter");
+  await expect(ana.getByRole("tabpanel").getByText("Beatriz")).toBeVisible();
+});
+
+test.describe("in Portuguese", () => {
+  test.use({ locale: "pt-BR" });
+
+  test("APP-1 EXP-2 texts and amounts follow the device language", async ({ page }, info) => {
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: "Qual é o seu nome?" })).toBeVisible();
+    await page.getByRole("textbox", { name: "Seu nome" }).fill("Ana");
+    await page.keyboard.press("Enter");
+    await page.getByRole("button", { name: "Nova viagem" }).click();
+    // TRIP-3: PT-BR defaults to BRL.
+    await expect(page.getByRole("button", { name: "BRL", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await page.getByRole("textbox", { name: "Nome da viagem" }).fill("Floripa");
+    await page.keyboard.press("Enter");
+    await page.getByRole("tab", { name: "Despesas" }).click();
+    await page.getByRole("button", { name: "Nova despesa" }).click();
+    await page.keyboard.type("123456");
+    await expect(page.getByRole("textbox", { name: "Valor" })).toHaveValue(/^R\$\s1\.234,56$/);
+    await page.screenshot({ path: info.outputPath("expense-pt.png") });
+  });
+});
