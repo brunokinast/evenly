@@ -2,7 +2,6 @@
 //   node scripts/android.mjs dev      emulator-mode web build pointed at this PC's LAN IP, debug APK
 //                                     ("Evenly Dev"), installed on a connected device/emulator if any
 //   node scripts/android.mjs release  production web build, signed release APK in android/evenly.apk
-//   node scripts/android.mjs publish  copies that APK into dist/ (Hosting predeploy, after the web build)
 //   node scripts/android.mjs key      creates the release key (android/release.jks + key.properties)
 import { spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, writeFileSync } from "node:fs";
@@ -54,13 +53,10 @@ if (mode === "key") {
   run("npm run build");
   run("npx cap sync android");
   run(`${gradlew} assembleRelease`, { cwd: "android" });
-  // Outside dist/, which every web build empties; Hosting's predeploy copies it in (mode "publish").
+  // Outside dist/, which every web build empties. Published as a GitHub Release asset (ADR 0005).
   copyFileSync("android/app/build/outputs/apk/release/app-release.apk", APK);
-  console.log(`\nRelease APK: ${APK} (deploys to /evenly.apk)`);
-} else if (mode === "publish") {
-  if (existsSync(APK)) copyFileSync(APK, "dist/evenly.apk");
-  else console.log(`No ${APK} yet: deploying without the APK.`);
+  console.log(`\nRelease APK: ${APK} (publish: a GitHub Release, see ADR 0005)`);
 } else {
-  console.log("Usage: node scripts/android.mjs dev | release | publish | key");
+  console.log("Usage: node scripts/android.mjs dev | release | key");
   process.exit(1);
 }
