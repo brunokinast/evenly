@@ -142,10 +142,12 @@ Home: 1 query listener (my trips). Trip: trip doc + expenses listener. Rule `get
 
 ## Migration (Phase 6)
 
-Lower priority than a clean, fast model: the model is never bent to fit old data. A local Admin SDK script (`scripts/migrate.mjs`, see the Phase 6 handoff in `docs/rebuild-plan.md`) rewrites the old shape (`specs/migration-source.md`) in place, after saving a JSON backup of everything to disk, and then deletes the old leftovers (`trips/*/members`, `users`).
+Lower priority than a clean, fast model: the model is never bent to fit old data. A local Admin SDK script (`scripts/migrate.ts`, run with `npx tsx`; pure mapping in `scripts/migration/map.ts` with unit tests; see the Phase 6 handoff in `docs/rebuild-plan.md`) rewrites the old shape (`specs/migration-source.md`) in place, after saving a JSON backup of everything to disk, and then deletes the old leftovers (`trips/*/members`, `users`).
 
 - Only trips with at least one expense are migrated (user's choice, 2026-10-28); the others are deleted with the leftovers and kept only in the backup.
 - Old trip → `trips/{same tripId}` (whole document replaced): `title` → `name`, `iconName` → `icon` (default `luggage`), `currency`, `ownerUid`, `createdAt` → ms. `invite: null` (old codes aren't carried over).
-- Old member docs → `members` entries with the **same memberIds**. `uid` → the same `uid` + name from `users/{uid}.displayName` (linked to the user's new identity later by `scripts/relink.mjs`, see the Phase 6 handoff); `manualName` → guest; neither → guest named "Unknown". `joinedAt` from `createdAt`.
+- Old member docs → `members` entries with the **same memberIds**. `uid` → the same `uid` + name from `users/{uid}.displayName` (linked to the user's new identity later by `scripts/relink.ts`, which also takes the name from their new Auth profile; see the Phase 6 handoff); `manualName` → guest; neither → guest named "Unknown". `joinedAt` from `createdAt`.
 - Old expense → same id: `amount_cents` → `amountCents`, `payer_member_id` → `payerId`, `participant_member_ids` → equal `shares` per BAL-2 (in member order), `split: "equal"`, `spentAt`/`createdAt`/`updatedAt` from `createdAt`, `createdByUid` → `createdBy`.
-- Check: per-trip balances, old vs new, must match.
+- Repairs (each printed as a warning in the dry run): an icon that isn't a TRIP-4 id → `luggage`; a member id used by an expense but with no member document → guest "Unknown" (the rules want payer and participants to be members); an owner with no member document → added as a member; an expense with no valid amount, payer or participants → not migrated (kept in the backup); names and descriptions cut to their maximum length.
+- Trips already in the new shape (`memberUids` present) are left alone, so a re-run is safe.
+- Check: per-trip balances, old (exact `amount / participants`) vs new (whole cents), must match within the rounding cents; after `--apply` the script reads everything back and compares again.

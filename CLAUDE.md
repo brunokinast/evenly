@@ -42,6 +42,8 @@ Any feature, bug or change request goes through the `change-workflow` skill (`.c
 - `npm run android:dev`: debug APK "Evenly Dev" against the emulators on this PC's LAN IP, installed on a connected device/AVD (`emulator -avd Medium_Phone_API_36.1`). Needs the emulators running (`preview:lan`). Drive its WebView from Playwright with `adb forward tcp:9222 localabstract:webview_devtools_remote_<pid>` + `chromium.connectOverCDP`; Playwright's `click()` can hang there, so click through `page.evaluate`.
 - `npm run android:release`: signed release APK → `android/evenly.apk`, which `firebase deploy` copies to `/evenly.apk` after its own production build (talks to the real project: don't install it for testing). Signing key: `android/release.jks` + `android/key.properties`, gitignored, never regenerate (ADR 0003).
 
+- `npx tsx scripts/migrate.ts` / `scripts/relink.ts` (Phase 6): dry run by default, `--apply` writes, `--emulator` uses the local emulators. Without `--emulator` they talk to the **real project** with the `firebase login` credentials: only with the user's OK. Backups go to `backups/` (gitignored).
+
 ## Gotchas
 
 - Call `await firebaseReady` (`src/data/firebase.ts`) before any Firebase plugin call.
