@@ -153,6 +153,19 @@ Steps (each needs the user's OK before touching the real project):
 5. Loose ends: an embedded PDF font for names in non-Latin scripts (Phase 5 open item 3). Update this status section and the docs.
 6. **Last, whenever the two old users come** (the user says when): they uninstall the old app, install the new one and enter their names. Then `npx tsx scripts/relink.ts oldUid=newUid …` (`--users` lists the Auth users) (dry run first) swaps each old UID for the new one in every trip it appears in (member `uid`, `memberUids`, `memberIdsByUid` keys, `ownerUid`, expenses' `createdBy`), one batch per trip. List the Auth users (Admin SDK `listUsers`, newest first, with names) and confirm the pairs with the user before applying. The new identity must not already be a member of that trip (if it is, ask the user).
 
+### 6b. Performance (asked by the user, 2026-10-28, before `main` on GitHub)
+
+Goal: the app opens fast (first time and every time after), data shows fast, and adding an expense feels instant. Findings, numbers and decisions go in `docs/performance.md`.
+
+Targets (mid-range phone, mobile network): returning launch → trips ≤ 1.0 s (web and Android); Home → trip with expenses ≤ 0.3 s; Add expense → can type ≤ 0.15 s; Save → back on the trip ≤ 0.1 s; tap expense / tab / sheet ≤ 0.1 s; first open → name screen ≤ 2.5 s.
+
+1. Baseline without any fix (two draft fixes parked on their own commit: Auth without Google's popup library, Firebase files preloaded).
+2. Tooling: in-app timing marks (`src/app/perf.ts`); lab harness `scripts/perf.mjs` (production build on the emulators, Lighthouse mobile CPU throttling, "slow 4G" and "good 4G", data sizes empty / typical 3 trips·6 people·40 expenses / big 8·150 / stress 20·1000, 5 runs, medians, JSON in `perf-results/`); Android runner (debug APK, `am start -W` + the marks over the WebView's DevTools); a hidden `?perf` panel showing the marks on a real phone (iPhone included) against the real project, read-only.
+3. Measure every journey (first open, name → Home, returning launch cold and resumed, Home → trip, tabs, Add expense, Save, edit/delete, join, create trip, PDF, a change from another member) × platform (web, Android app, iPhone spot checks) × data size. Diagnose slow ones with the download waterfall, bundle composition, Chrome traces, React Profiler and Firestore logging (cache vs server, bridge snapshot sizes, rules `get()`s).
+4. Findings table to the user (cost, cause, fix, gain, risk, behavior change?). Behavior changes (e.g. Save closing before the server confirms) need the user's OK, the spec, and an ADR if they bend a `CLAUDE.md` rule.
+5. One fix per commit with before/after numbers; drop what doesn't move them. Then a real-phone check by the user.
+6. Docs (`architecture.md`, this plan, CLAUDE.md commands), merge, deploy, APK.
+
 ### 7. Gemini (later)
 
 - A Kotlin AppFunctions service, e.g. `addExpense`, writing through the native Firestore SDK.
