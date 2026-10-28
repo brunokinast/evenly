@@ -63,6 +63,9 @@ try {
     console.log(`run ${run + 1}/${RUNS}`);
     await oneRun();
   }
+  if ((await writeTime()) > 150) {
+    console.warn("WARNING: the emulator slowed down during the run; write timings are unreliable.");
+  }
 } finally {
   await browser.close();
   await env.cleanup();
@@ -181,6 +184,15 @@ async function oneRun() {
   );
   await waitText(page, "Perf from Ana");
   record("other member's expense → on screen", Date.now() - t0);
+  const arrived = await page.evaluate(
+    (t) =>
+      performance
+        .getEntriesByName("evenly:snapshot:expenses:server")
+        .map((e) => performance.timeOrigin + e.startTime)
+        .find((at) => at >= t),
+    t0,
+  );
+  if (arrived) record("  other member's expense: snapshot arrived", arrived - t0);
 
   // Create trip: Home → New trip → sheet closed and the trip listed (TRIP-1: stays on Home).
   await page.goBack();
@@ -404,9 +416,20 @@ async function waitForServer() {
 
 /**
  * A Firestore emulator that has run for hours (many e2e/perf sessions) can take ~2 s per write, which would
- * swamp every write timing here; a fresh one takes ~20 ms. Refuse to measure on a slow one.
+ * swamp every write timing here; a fresh one takes ~20 ms (it degrades again after a few e2e/perf runs).
+ * Refuse to measure on a slow one.
  */
 async function checkEmulator() {
+  const slowest = await writeTime();
+  if (slowest > 150) {
+    await env.cleanup();
+    server.kill();
+    throw new Error(`The Firestore emulator takes ${slowest} ms per write: restart it (npm run emulators).`);
+  }
+}
+
+/** The slowest of three plain writes (after a warm-up one). */
+async function writeTime() {
   const times = [];
   await env.withSecurityRulesDisabled(async (ctx) => {
     for (let i = 0; i < 4; i++) {
@@ -415,10 +438,5 @@ async function checkEmulator() {
       times.push(Date.now() - t);
     }
   });
-  const slowest = Math.max(...times.slice(1));
-  if (slowest > 300) {
-    await env.cleanup();
-    server.kill();
-    throw new Error(`The Firestore emulator takes ${slowest} ms per write: restart it (npm run emulators).`);
-  }
+  return Math.max(...times.slice(1));
 }
