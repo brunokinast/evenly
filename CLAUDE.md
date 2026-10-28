@@ -23,6 +23,11 @@ This is a clean-room rebuild. Never read, search or reference the old app (`../e
 - Follow `specs/design.md` tokens; no literal colors.
 - Previews go on a local LAN server for the user's phone, never published to claude.ai.
 
+## Git
+
+- Remote `origin` = github.com/brunokinast/evenly. Our base branch is **`evenly-v2`**: branch from it, merge back into it, push it. It will later replace `main`.
+- `main` (and any other branch on the remote) holds the old app: never fetch, check out, diff, log or merge it. The remote is configured to fetch only `evenly-v2`; keep it that way.
+
 ## Workflow
 
 Any feature, bug or change request goes through the `change-workflow` skill (`.claude/skills/change-workflow/`). Hooks: Prettier runs after each edit; the Stop hook runs `npm run check` and blocks until it passes.

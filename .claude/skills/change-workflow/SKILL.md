@@ -17,7 +17,7 @@ The user doesn't write code and won't remember this process. Follow every step; 
 5. **See it**: run the Playwright check (`npm run emulators` in the background when data is needed, then `npm run e2e`) and look at the screenshots against `specs/design.md`, light and dark.
 6. **Review** in a fresh subagent: give it the diff and the spec, ask for correctness against the ACs only (skip style). Then run a reuse/simplify pass. Fix what holds up.
 7. **Update docs** in the same change: specs, `docs/data-model.md`, a new ADR if a durable decision changed (ADRs are append-only), `docs/rebuild-plan.md` status, and `CLAUDE.md` for anything learned that the code can't show. Remove dead code.
-8. **Commit** on a branch (`git checkout -b <short-name>`), spec and code together. Show the user the evidence: test summary and screenshots (serve on the LAN, never publish to claude.ai).
-9. **Merge** into `master` only when the user says OK.
+8. **Commit** on a branch made from `evenly-v2` (`git checkout -b <short-name> evenly-v2`), spec and code together. Show the user the evidence: test summary and screenshots (serve on the LAN, never publish to claude.ai).
+9. **Merge** into `evenly-v2` only when the user says OK, then `git push`. Never touch the remote's `main` (old app).
 
 The Stop hook runs `npm run check`; "done" means it passes.

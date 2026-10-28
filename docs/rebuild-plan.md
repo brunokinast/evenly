@@ -43,6 +43,7 @@ A verification pass re-checks every spec against the old code, to catch anything
 - Phase 3 done (2026-10-27): `docs/architecture.md`, `docs/data-model.md`, ADR 0002 (data layer via Capacitor Firebase plugins, no transactions), updated `CLAUDE.md`. In review the user chose: a member who leaves or is removed becomes a guest (MEM-5, INV-11).
 - **User preference: a good, fast structure beats compatibility with the old app.** Migrating old data (Phase 6) is optional and never shapes the new model.
 - Phase 3b + scaffold done (2026-10-27, branch `phase-4-scaffold`): Vite 8, React 19, TS 6.0, Tailwind 4 with design tokens, Capacitor Firebase plugins (emulators in dev), PWA, Vitest (unit + rules on the emulator), Playwright, ESLint layer rules, Prettier/Stop hooks, `change-workflow` skill, GitHub Actions CI. `firestore.rules` is deny-all until each slice adds its rules.
+- Code lives on GitHub `brunokinast/evenly`, branch `evenly-v2` (only that branch is fetched; `main` is the old app, off limits). `evenly-v2` replaces `main` at cutover (Phase 6).
 - Next: slice 1, identity (ID-*), then trips.
 
 ### 2. Design → `specs/design.md` + a mockup page
