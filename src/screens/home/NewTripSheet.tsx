@@ -24,7 +24,7 @@ function lastCurrency() {
   }
 }
 
-/** TRIP-1..4, TRIP-10: name + Enter creates the trip; icon and currency have defaults. */
+/** TRIP-1..4, TRIP-10: icon and currency have defaults; Enter on the name only closes the keyboard. */
 export function NewTripSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <Sheet open={open} onClose={onClose} title={t("newTrip.title")}>
@@ -74,6 +74,13 @@ function NewTripForm() {
         placeholder={t("newTrip.name")}
         autoFocus
         enterKeyHint="done"
+        onKeyDown={(e) => {
+          // TRIP-10: Enter closes the keyboard so the icon and currency are in view; Create creates.
+          if (e.key === "Enter") {
+            e.preventDefault();
+            e.currentTarget.blur();
+          }
+        }}
         value={name}
         onChange={(e) => {
           setName(e.target.value);

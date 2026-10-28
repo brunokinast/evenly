@@ -16,12 +16,14 @@ export async function newUser(browser: Browser, name: string): Promise<Page> {
   return page;
 }
 
-/** TRIP-10: name + Enter creates the trip (default icon and currency, or the ones given). */
+/** TRIP-10: name, Enter (closes the keyboard), then Create trip (default icon and currency, or the ones given). */
 export async function createTrip(page: Page, name: string, currency?: string) {
   await page.getByRole("button", { name: "New trip" }).click();
   await page.getByRole("textbox", { name: "Trip name" }).fill(name);
   if (currency) await page.getByRole("button", { name: currency, exact: true }).click();
   await page.getByRole("textbox", { name: "Trip name" }).press("Enter");
+  await expect(page.getByRole("textbox", { name: "Trip name" })).not.toBeFocused();
+  await page.getByRole("button", { name: "Create trip" }).click();
   await expect(page.getByRole("heading", { name })).toBeVisible();
 }
 

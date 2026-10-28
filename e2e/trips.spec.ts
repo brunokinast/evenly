@@ -21,7 +21,7 @@ test("TRIP-1 TRIP-10 a new trip opens on Members with the invite card and tops H
 test("TRIP-2 a trip name is required", async ({ browser }) => {
   const ana = await newUser(browser, "Ana");
   await ana.getByRole("button", { name: "New trip" }).click();
-  await ana.getByRole("textbox", { name: "Trip name" }).press("Enter");
+  await ana.getByRole("button", { name: "Create trip" }).click();
   await expect(ana.getByRole("alert")).toHaveText("Enter a trip name.");
 });
 
@@ -355,7 +355,7 @@ test.describe("in Portuguese", () => {
       "true",
     );
     await page.getByRole("textbox", { name: "Nome da viagem" }).fill("Floripa");
-    await page.keyboard.press("Enter");
+    await page.getByRole("button", { name: "Criar viagem" }).click();
     await page.getByRole("tab", { name: "Despesas" }).click();
     await page.getByRole("button", { name: "Nova despesa" }).click();
     await page.keyboard.type("123456");

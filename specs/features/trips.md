@@ -17,7 +17,7 @@ A trip groups members and expenses. It has a name, an icon and a currency. The p
 - **TRIP-1** Given a user creates a trip, then it appears at the top of their Home immediately, and they're its owner and first member.
 - **TRIP-2** A trip name is required (trimmed, non-empty).
 - **TRIP-3** Currency is chosen at creation from BRL, USD, EUR, GBP, defaulting to the one matching the user's language (PT-BR → BRL, otherwise the last one they used, else USD). It can't be changed afterwards.
-- **TRIP-10** Create trip opens with the name field focused and the keyboard up; icon and currency have defaults, so name + Enter creates the trip.
+- **TRIP-10** Create trip opens with the name field focused and the keyboard up; icon and currency have defaults. Enter on the name closes the keyboard (so the icon and currency are in view to change); the Create trip button creates it.
 - **TRIP-11** The owner can rename the trip; the new name shows live for all members.
 - **TRIP-4** Icon is chosen from: luggage, flight, beach, camping, restaurant, home, celebration, sports, music, shopping, car, boat, mountain, city, work, school.
 - **TRIP-5** Home shows exactly the trips the user is a member of: no more, no less. It updates live when the user joins, leaves or is removed, or when a trip is deleted.
