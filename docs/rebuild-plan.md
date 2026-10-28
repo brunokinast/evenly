@@ -34,7 +34,9 @@ A verification pass re-checks every spec against the old code, to catch anything
 - **Clean room from here on**: phases 2+ run in fresh sessions opened in this repo, with no access to the old app (enforced by `.claude/settings.json` deny rules and `CLAUDE.md`). Exception: Phase 6 migration uses only `specs/migration-source.md`.
 - Phase 2 done (2026-10-27): `specs/design.md` + `specs/design-mockup.html` (view it locally, see design.md). The mockup review changed some specs (expense details sheet, date + time, custom split auto-fill, grouped suggested payments, Invite in the trip top bar).
 - Previews are served on the local network, never published to claude.ai (user preference).
-- Next: Phase 3.
+- Phase 3 done (2026-10-27): `docs/architecture.md`, `docs/data-model.md`, ADR 0002 (data layer via Capacitor Firebase plugins, no transactions), updated `CLAUDE.md`. In review the user chose: a member who leaves or is removed becomes a guest (MEM-5, INV-11).
+- **User preference: a good, fast structure beats compatibility with the old app.** Migrating old data (Phase 6) is optional and never shapes the new model.
+- Next: Phase 3b + scaffold (Phase 4 start).
 
 ### 2. Design → `specs/design.md` + a mockup page
 - Design tokens (color, type, spacing, radius), component rules and mobile patterns (bottom tab bar, bottom sheets, safe areas, tap targets).

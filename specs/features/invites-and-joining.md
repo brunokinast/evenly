@@ -19,5 +19,5 @@ The owner invites friends with a short-lived 6-digit code, created on demand. Fr
 - **INV-8** Given the owner generates a new code, then the previous code fails INV-4 immediately.
 - **INV-9** Code guessing is limited: a user gets a limited number of failed attempts per time window.
 - **INV-10** Only the owner can create codes.
-- **INV-11** A user who left or was removed can rejoin with a new valid code; they rejoin as a new member with no expenses (see MEM-5).
+- **INV-11** A user who left or was removed can rejoin with a new valid code. Their former place is now a guest (MEM-5), so they can claim it back (MEM-7) with its expenses, or join as a new member.
 - **INV-12** No shareable join links; code only.

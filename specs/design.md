@@ -88,7 +88,7 @@ Inputs are never smaller than 16px (prevents iOS zoom on focus).
 ## Where actions live
 - **Invite**: labeled button in the trip top bar (owner).
 - **"⋯" menu** (owner): Add guest (jumps to the Members tab and focuses the guest field), Rename trip, Delete trip. Non-owners see Leave trip.
-- **Remove member** (owner): tap a member row → member sheet → "Remove from trip". When they're in expenses, the button is disabled and the sheet says why (MEM-5).
+- **Remove member** (owner): tap a member row → member sheet → "Remove from trip". Removing an app user turns them into a guest, and the sheet says so. A guest who is in expenses can't be removed: the button is disabled and the sheet says why (MEM-5).
 - **Claim a guest** (MEM-7): in the Join sheet, under the trip preview: "Are you one of these? (optional)" with the guest names as choice pills; the button becomes "Join as <name>".
 - **Export as PDF**: end of the Balances tab.
 
