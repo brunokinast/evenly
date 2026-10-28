@@ -46,7 +46,8 @@ if (mode === "key") {
   run(`${gradlew} assembleDebug`, { cwd: "android" });
   const apk = "android/app/build/outputs/apk/debug/app-debug.apk";
   const devices = spawnSync(`${adb} devices`, { shell: true, encoding: "utf8" }).stdout ?? "";
-  if (/\tdevice\b/.test(devices)) run(`${adb} install -r ${apk}`);
+  // A frozen AVD makes `adb install` hang forever: give up after 2 minutes (restart the AVD then).
+  if (/\tdevice\b/.test(devices)) run(`${adb} install -r ${apk}`, { timeout: 120_000 });
   console.log(`\nDebug APK (emulators at ${host}): ${apk}`);
 } else if (mode === "release") {
   if (!existsSync("android/key.properties")) throw new Error("No release key: run `npm run android:key`.");

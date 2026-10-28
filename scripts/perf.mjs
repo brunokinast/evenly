@@ -4,6 +4,7 @@
 //   node scripts/perf.mjs                → builds dist-perf/, serves it, runs, prints medians,
 //                                          writes perf-results/<time>.json
 //   options: --no-build  --runs 5  --size typical|big|stress  --network slow|good  --label "after X"
+//            --only live,create,pdf,relaunch   (optional journeys; while iterating on one fix, fewer = faster)
 // Times come from the page's own clock (performance.now) and the app's marks (src/lib/perf.ts), so they
 // include rendering, not Playwright's overhead.
 import { spawn, spawnSync } from "node:child_process";
@@ -18,6 +19,10 @@ const RUNS = Number(opt("--runs", 5));
 const SIZE = opt("--size", "big");
 const NETWORK = opt("--network", "slow");
 const LABEL = opt("--label", "");
+/** --only live,create,pdf,relaunch: the optional journeys to run (default all). First open, launch, trip, tabs,
+ * Add expense, Save and details always run: everything else builds on them. */
+const ONLY = opt("--only", "live,create,pdf,relaunch").split(",");
+const want = (journey) => ONLY.includes(journey);
 const PORT = 4173;
 const URL = `http://localhost:${PORT}`;
 
@@ -173,7 +178,16 @@ async function oneRun() {
   await page.keyboard.press("Escape");
   await page.waitForTimeout(500);
 
-  // Another member's change arriving live (written straight to the emulator).
+  if (want("live")) await otherMember(page);
+  if (want("create")) await createTrip(page);
+  if (want("pdf")) await exportPdf(page);
+  await page.close();
+  if (want("relaunch")) await relaunch(context);
+  await context.close();
+}
+
+/** Another member's change arriving live (written straight to the emulator). */
+async function otherMember(page) {
   const tripId = new globalThis.URL(page.url()).pathname.split("/")[2];
   const t0 = Date.now();
   await env.withSecurityRulesDisabled((ctx) =>
@@ -193,14 +207,15 @@ async function oneRun() {
     t0,
   );
   if (arrived) record("  other member's expense: snapshot arrived", arrived - t0);
+}
 
-  // Create trip: Home → New trip → sheet closed and the trip listed (TRIP-1: stays on Home).
-  await page.goBack();
-  await waitText(page, "Your trips", "h1");
+/** Create trip: Home → New trip → sheet closed and the trip listed (TRIP-1: stays on Home). */
+async function createTrip(page) {
+  await toHome(page);
   await page.getByRole("button", { name: "New trip" }).click();
   await page.getByRole("textbox", { name: "Trip name" }).fill("Perf new trip");
   await page.keyboard.press("Enter");
-  t = await clickText(page, "dialog[open] button", "Create trip");
+  const t = await clickText(page, "dialog[open] button", "Create trip");
   await page.waitForFunction(
     () =>
       !document.querySelector("dialog[open]") &&
@@ -210,8 +225,11 @@ async function oneRun() {
   );
   record("Create trip → listed on Home", (await now(page)) - t);
   await breakdown(page, "Create trip", ["snapshot:trips:cache", "snapshot:trips:server"], t);
+}
 
-  // PDF export of the main trip (the first one loads the PDF code).
+/** PDF export of the main trip (the first one loads the PDF code). */
+async function exportPdf(page) {
+  await toHome(page);
   await clickText(page, "main button", "Perf main trip");
   await waitText(page, "Perf main trip", "h1");
   await page.getByRole("tab", { name: "Balances" }).click();
@@ -221,12 +239,13 @@ async function oneRun() {
   await page.getByRole("button", { name: "Export as PDF" }).click();
   await download;
   record("Export PDF → file ready (first time)", Date.now() - d0);
-  await page.close();
+}
 
-  // Relaunch, then a trip already seen on this device (its expenses are in the offline cache).
-  page = await open(context);
+/** Relaunch, then a trip already seen on this device (its expenses are in the offline cache). */
+async function relaunch(context) {
+  const page = await open(context);
   await waitMark(page, "painted:home");
-  t = await clickText(page, "main button", "Perf main trip");
+  const t = await clickText(page, "main button", "Perf main trip");
   await waitMark(page, "painted:trip");
   record("Home → trip seen before (after relaunch)", (await markAt(page, "painted:trip")) - t);
   await breakdown(
@@ -235,7 +254,17 @@ async function oneRun() {
     ["snapshot:trip:cache", "snapshot:expenses:cache", "snapshot:trip:server", "snapshot:expenses:server"],
     t,
   );
-  await context.close();
+}
+
+/** Back (like Android back) until Home. */
+async function toHome(page) {
+  for (let i = 0; i < 5; i++) {
+    if ((await page.evaluate(() => document.querySelector("h1")?.textContent?.trim())) === "Your trips")
+      return;
+    await page.goBack();
+    await page.waitForTimeout(300);
+  }
+  throw new Error("couldn't get back to Home");
 }
 
 /** A new tab with the phone's CPU and network. */
