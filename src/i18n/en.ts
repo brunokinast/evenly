@@ -2,7 +2,6 @@
 // Count-dependent texts come in pairs ".one" / ".other" (see tn() in index.ts).
 export const en = {
   "common.done": "Done",
-  "common.notNow": "Not now",
   "common.tryAgain": "Try again",
   "common.continue": "Continue",
   "common.cancel": "Cancel",

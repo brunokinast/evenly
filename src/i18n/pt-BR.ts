@@ -2,7 +2,6 @@ import type { MessageKey } from "./en";
 
 export const ptBR: Record<MessageKey, string> = {
   "common.done": "Pronto",
-  "common.notNow": "Agora não",
   "common.tryAgain": "Tentar de novo",
   "common.continue": "Continuar",
   "common.cancel": "Cancelar",
