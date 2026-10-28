@@ -18,7 +18,12 @@ export function ProfileSheet({ open, name, onClose, onInstall }: Props) {
   // While a name is saving, only Done's own completion closes the sheet (a "discard" can't race the save).
   const [saving, setSaving] = useState(false);
   return (
-    <Sheet open={open} onClose={() => !saving && onClose()} title={t("profile.title")}>
+    <Sheet
+      open={open}
+      onClose={() => !saving && onClose()}
+      title={t("profile.title")}
+      focusField={false} // ID-9: no keyboard on open
+    >
       {/* Remounted on each open, so a discarded edit doesn't come back. */}
       {open && <ProfileForm name={name} onClose={onClose} onInstall={onInstall} onSaving={setSaving} />}
     </Sheet>
@@ -46,7 +51,6 @@ function ProfileForm({
       <TextField
         label={t("name.label")}
         showLabel
-        autoFocus
         enterKeyHint="done"
         autoCapitalize="words"
         value={form.value}

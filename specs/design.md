@@ -67,7 +67,7 @@ Inputs are never smaller than 16px (prevents iOS zoom on focus).
 - **Add expense button**: floating, bottom-right above the tab bar, marigold, "+ Add expense". Shown only on the Expenses tab, where the new expense will appear.
 - **Bottom sheets** for small choices and short forms (payer, split, date, invite code, profile, join, trip menu, new trip): drag handle, title, content, max 85% height, dismiss by tapping the backdrop or swiping down. The sheet keeps focus inside while open. An open sheet **updates in place** when something inside it changes (toggling a person, switching split mode); it never closes and reopens. Single-choice pickers (payer, date) close on pick.
 - **Full screens** only for Add/Edit expense (needs the keyboard and the whole screen) and Welcome.
-- **Keyboard first**: screens with a text input focus it on open (EXP-9, TRIP-10, ID-8, INV-3). Exception: Edit expense opens without focus (EXP-9), since there is no single field to guess.
+- **Keyboard first**: screens with a text input focus it on open (EXP-9, TRIP-10, ID-8, INV-3). Exceptions: Edit expense (EXP-9) and the Profile sheet (ID-9) open without focus, since there is no single field to guess.
 - **The keyboard closes once typing is done**: a sheet without a text field takes focus off the field underneath (the pickers opened from Add expense), and Join drops the keyboard as soon as a code is found (INV-3). Fields meant for repeated entry (Add guest) keep it.
 - **The keyboard never covers the field being typed in.** The app shell's height follows the visible viewport (`interactive-widget=resizes-content` for Android, `visualViewport` for iOS), so bottom bars and sheets sit directly above the keyboard, and a focused field is scrolled into view.
 - **Offline banner** (APP-6): a slim `--fg` on `--surface-2` bar under the top bar, "You're offline. Changes will be possible when you reconnect." Network actions are disabled while it shows.
@@ -138,14 +138,14 @@ Short and functional: sheets slide 200ms ease-out, toasts fade, pressed rows dar
 
 ## Screen inventory
 
-| Screen                                                                                                             | Kind                     | Opens with focus on     |
-| ------------------------------------------------------------------------------------------------------------------ | ------------------------ | ----------------------- |
-| Welcome                                                                                                            | full screen              | name                    |
-| Home (trips, empty state)                                                                                          | full screen              | —                       |
-| Trip: Expenses / Balances / Members tabs                                                                           | full screen with tab bar | —                       |
-| Add / Edit expense                                                                                                 | full screen              | amount                  |
-| Expense details, New trip, Join trip, Invite, Profile, Trip menu, payer/split/date-and-time pickers, confirmations | bottom sheets            | the first input, if any |
-| Trip not found                                                                                                     | full screen              | —                       |
+| Screen                                                                                                             | Kind                     | Opens with focus on                         |
+| ------------------------------------------------------------------------------------------------------------------ | ------------------------ | ------------------------------------------- |
+| Welcome                                                                                                            | full screen              | name                                        |
+| Home (trips, empty state)                                                                                          | full screen              | —                                           |
+| Trip: Expenses / Balances / Members tabs                                                                           | full screen with tab bar | —                                           |
+| Add / Edit expense                                                                                                 | full screen              | amount                                      |
+| Expense details, New trip, Join trip, Invite, Profile, Trip menu, payer/split/date-and-time pickers, confirmations | bottom sheets            | the first input, if any (not Profile: ID-9) |
+| Trip not found                                                                                                     | full screen              | —                                           |
 
 ## Viewing the mockup
 

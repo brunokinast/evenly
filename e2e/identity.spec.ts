@@ -63,7 +63,9 @@ test("ID-9 Done saves the name; closing the sheet otherwise keeps the old one", 
   const profile = page.getByRole("button", { name: "Profile" });
 
   await profile.click();
-  await expect(nameField(page)).toBeFocused();
+  // ID-9: no keyboard on open; tapping the field gives it.
+  await expect(nameField(page)).not.toBeFocused();
+  await nameField(page).click();
   await nameField(page).fill("Bia");
   await page.keyboard.press("Escape");
   await profile.click();
