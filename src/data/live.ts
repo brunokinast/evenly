@@ -73,11 +73,11 @@ function subscribe(
 }
 
 /**
- * Starts a key's listener now, without a screen using it yet (e.g. on touch-down, before the tap opens the
- * screen that will): kept for the usual idle time if nothing ends up using it.
+ * Keeps a key's listener running without a screen showing it (e.g. Home holding its top trips, so opening one
+ * finds the data ready). Returns the release; after it the usual idle time applies.
  */
-export function warmLive<T>(key: string, start: (emit: (value: Live<T>) => void) => () => void) {
-  subscribe(key, start as never, () => {})();
+export function holdLive<T>(key: string, start: (emit: (value: Live<T>) => void) => () => void) {
+  return subscribe(key, start as never, () => {});
 }
 
 /** Current value of a live key, if something is listening (used by writes that need the latest data). */

@@ -55,6 +55,13 @@ Web, big trip (8 people, 150 expenses), slow network, medians, ms. Fresh emulato
 Android (AVD, debug APK, relative): Save 1159 → ~170; cold start → trips ~4.4 s → ~2.7 s, mostly the restarted AVD (the native early start, F5, didn't measurably help and was reverted).
 Open: another member's change arrives ~0.4 s later on the throttled slow network since F1 (≈ the same on the good network); likely the emulator's HTTP/1.1 under throttling: check on a real phone.
 
+## Typical trips (2026-10-28, user's focus: small trips, launch, loading, adding an expense)
+
+Web, typical trip (6 people, 40 expenses), slow network, CPU 4×, median of 3, ms: returning launch → trips 735 (Auth's server check of the saved login takes ~300 of it, see below); first visit to a trip 678 (expenses from the server); trip seen before 141; Add expense → form 28; Save → listed 85; name entered → Home 1190; first open → name 2259 (downloading 317 kB).
+
+- **F9 done**: Home holds its top 3 trips' listeners (`holdTrip`), so opening one finds the data ready: first visit on a device 692 → 133. Trips the server doesn't have yet (just created here) aren't held: the server would refuse the listen and the trip would look lost.
+- **Web launch waits on Auth**: on start the Auth JS SDK always re-checks the stored user with the server (`accounts:lookup`, plus a token refresh when the saved token is over an hour old) before the first auth state, and Firestore waits for that user even to read its offline cache. The native SDKs don't (Android: auth-ready ~130 ms on the S25). Only a copy of Home's list kept outside Firestore would avoid it on the web: it bends the "no manual caches" rule, so it needs the user's OK and an ADR.
+
 ## Findings
 
 | #   | Where                                        | Cost (big, slow)                                    | Cause (evidence)                                                                                                                                                                                                                                        | Proposed fix                                                                                                                                                                           | Behavior change?                                                            |

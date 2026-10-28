@@ -5,7 +5,7 @@ import { sortMembers } from "@/domain/members";
 import type { Expense, Member, Trip } from "@/domain/types";
 import { FirebaseFirestore, firebaseReady } from "./firebase";
 import { mark, source } from "@/lib/perf";
-import { peekLive, useLive, warmLive, type Live } from "./live";
+import { peekLive, useLive, holdLive, type Live } from "./live";
 
 // Live hooks for on-screen data (docs/architecture.md). Each is one shared Firestore listener.
 
@@ -53,6 +53,10 @@ function listen(attach: () => Promise<string>) {
  */
 const lostTrips = new Map<string, string>(); // tripId → raw JSON of the version we lost access to
 const rawOf = new WeakMap<Trip, string>();
+const unconfirmed = new WeakSet<Trip>(); // Home's trips with a local write the server hasn't confirmed yet
+
+/** False while the server may not have this trip (just created here): listening to it there would be refused. */
+export const onServer = (trip: Trip) => !unconfirmed.has(trip);
 let lostVersion = 0;
 const lostListeners = new Set<() => void>();
 
@@ -122,6 +126,7 @@ function useMyTripsQuery(uid: string): Live<Trip[]> {
           .map((s) => {
             const trip = toTrip(s.id, s.data!);
             rawOf.set(trip, rawJson(s.data));
+            if (s.metadata?.hasPendingWrites) unconfirmed.add(trip);
             return trip;
           });
         emit({ status: "ready", data: trips.sort((a, b) => b.createdAt - a.createdAt) });
@@ -153,10 +158,19 @@ export function useExpenses(tripId: string): Live<Expense[]> {
   return useLive(`expenses/${tripId}`, expensesListener(tripId));
 }
 
-/** F6 (docs/performance.md): a trip's listeners start on touch-down, ~0.1 s before the tap opens it. */
+/** F9 (docs/performance.md): Home keeps its top trips' listeners running, so opening one shows it at once.
+ * Returns the release. */
+export function holdTrip(tripId: string) {
+  const releases = [
+    holdLive(`trip/${tripId}`, tripListener(tripId)),
+    holdLive(`expenses/${tripId}`, expensesListener(tripId)),
+  ];
+  return () => releases.forEach((release) => release());
+}
+
+/** F6: a trip's listeners start on touch-down, ~0.1 s before the tap opens it (for trips Home doesn't hold). */
 export function warmTrip(tripId: string) {
-  warmLive(`trip/${tripId}`, tripListener(tripId));
-  warmLive(`expenses/${tripId}`, expensesListener(tripId));
+  holdTrip(tripId)();
 }
 
 const expensesListener = (tripId: string) => (emit: (value: Live<Expense[]>) => void) =>
