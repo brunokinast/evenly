@@ -155,6 +155,8 @@ Steps (each needs the user's OK before touching the real project):
 
 ### 6b. Performance (asked by the user, 2026-10-28, before `main` on GitHub)
 
+**Status (2026-10-28)**: steps 1–5 and 7 done on branch `perf` (tooling, baseline, F1–F4, F6–F8, R1–R4; F5 reverted; R5 deferred to the real phone); results and decisions in `docs/performance.md`. Left: step 6 (real phone, with the user), then merge, deploy, APK.
+
 Goal: the app opens fast (first time and every time after), data shows fast, and adding an expense feels instant. Findings, numbers and decisions go in `docs/performance.md`.
 
 Targets (mid-range phone, mobile network): returning launch → trips ≤ 1.0 s (web and Android); Home → trip with expenses ≤ 0.3 s; Add expense → can type ≤ 0.15 s; Save → back on the trip ≤ 0.1 s; tap expense / tab / sheet ≤ 0.1 s; first open → name screen ≤ 2.5 s.

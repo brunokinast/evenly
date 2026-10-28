@@ -19,6 +19,7 @@ This is a clean-room rebuild. Never read, search or reference the old app (`../e
 - Only `src/data/` imports Firebase. `src/domain/` is pure TypeScript.
 - Everything on screen is live: data comes from the shared listener hooks in `src/data/`. No one-off reads for on-screen data, no manual caches, no writing to local state after a write.
 - Every write is one document or one batched write that the Security Rules validate. No Cloud Functions, no transactions.
+- Writes that change existing documents aren't awaited by screens (local-first, EXP-8/APP-9; `docs/architecture.md`); in `src/data/` use `FirebaseFirestore`/`FirebaseAuthentication` from `./firebase`, not from the plugin packages.
 - Money is integer cents; times are integer ms. Format with `Intl`, never by hand.
 - Follow `specs/design.md` tokens; no literal colors.
 - Previews go on a local LAN server for the user's phone, never published to claude.ai.
@@ -42,7 +43,7 @@ Any feature, bug or change request goes through the `change-workflow` skill (`.c
 - `npm run android:dev`: debug APK "Evenly Dev" against the emulators on this PC's LAN IP, installed on a connected device/AVD (`emulator -avd Medium_Phone_API_36.1`). Needs the emulators running (`preview:lan`). Drive its WebView from Playwright with `adb forward tcp:9222 localabstract:webview_devtools_remote_<pid>` + `chromium.connectOverCDP`; Playwright's `click()` can hang there, so click through `page.evaluate`.
 - `npm run android:release`: signed release APK → `android/evenly.apk` (talks to the real project: don't install it for testing). It ships as a GitHub Release asset (ADR 0005): raise `versionCode`/`versionName` in `android/app/build.gradle`, then `gh release create vX.Y android/evenly.apk --repo brunokinast/evenly --target evenly-v2` (gh is at `C:\Program Files\GitHub CLI\gh.exe`). Signing key: `android/release.jks` + `android/key.properties`, gitignored, never regenerate (ADR 0003).
 
-- `node scripts/perf.mjs` / `node scripts/perf-android.mjs` (Phase 6b): timings on a production build (web) or the debug APK (Android) against the emulators; marks in `src/lib/perf.ts`; `?perf` shows them on a real phone. How to read them and the findings: `docs/performance.md`. Restart a long-running emulator first (it slows to ~2 s per write).
+- `node scripts/perf.mjs` / `node scripts/perf-android.mjs` (Phase 6b): timings on a production build (web) or the debug APK (Android) against the emulators; marks in `src/lib/perf.ts`; `?perf` shows them on a real phone. How to read them and the findings: `docs/performance.md`. A long-running emulator slows to 0.4–2 s per write: clearing its data fixes it (`scripts/perf.mjs` does that, re-seeding the demo trip). `node scripts/android.mjs dev --js-sdk`: a debug APK running the Firebase JS SDK instead of the native plugins (R5 comparison).
 - `npx tsx scripts/migrate.ts` / `scripts/relink.ts` (Phase 6): dry run by default, `--apply` writes, `--emulator` uses the local emulators. Without `--emulator` they talk to the **real project** with the `firebase login` credentials: only with the user's OK. Backups go to `backups/` (gitignored).
 
 ## Gotchas

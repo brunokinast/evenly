@@ -1,9 +1,8 @@
 import { useSyncExternalStore } from "react";
-import { FirebaseAuthentication, type User } from "@capacitor-firebase/authentication";
-import { Capacitor } from "@capacitor/core";
+import type { User } from "@capacitor-firebase/authentication";
 import { renameMeInTrips } from "./commands";
 import { mark } from "@/lib/perf";
-import { firebaseReady, usesEmulators } from "./firebase";
+import { FirebaseAuthentication, firebaseReady, nativeFirebase, usesEmulators } from "./firebase";
 import { myTripsForWrite } from "./trips";
 
 export type Session =
@@ -55,7 +54,7 @@ async function start() {
     else void signIn(true);
   });
   listening = true;
-  if (Capacitor.isNativePlatform()) void afterReload(() => heard);
+  if (nativeFirebase) void afterReload(() => heard);
 }
 
 /**

@@ -1,9 +1,9 @@
 import { useMemo, useSyncExternalStore } from "react";
-import { FirebaseFirestore, type DocumentData } from "@capacitor-firebase/firestore";
+import type { DocumentData } from "@capacitor-firebase/firestore";
 import { isWellFormed } from "@/domain/balances";
 import { sortMembers } from "@/domain/members";
 import type { Expense, Member, Trip } from "@/domain/types";
-import { firebaseReady } from "./firebase";
+import { FirebaseFirestore, firebaseReady } from "./firebase";
 import { mark, source } from "@/lib/perf";
 import { peekLive, useLive, warmLive, type Live } from "./live";
 

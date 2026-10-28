@@ -36,6 +36,25 @@ Returning launch, where the time goes (big, slow): JS ready 208 → Firebase set
 
 Android app (AVD on this PC, debug APK, emulators on the LAN, big trip; **relative only**: the AVD draws without a GPU and the debug build logs every bridge call): Android launch (`am start`) 2457, then in the page: JS ready 1055 → Firebase 1316 → signed in 1349 → **trips from cache 1923**; Home → trip seen before 920; Add expense 61; **Save 1159 (server 921)**.
 
+## After the pass (2026-10-28)
+
+Web, big trip (8 people, 150 expenses), slow network, medians, ms. Fresh emulator, nothing else running.
+
+| Journey                                     |                Before |   After | Target                                                    |
+| ------------------------------------------- | --------------------: | ------: | --------------------------------------------------------- |
+| First open → name screen                    |                  3763 |    2275 | ≤ 2500 ✓                                                  |
+| Returning launch → trips on screen          |                  1147 |    ~720 | ≤ 1000 ✓                                                  |
+| Home → trip seen before                     |                   295 |    ~250 | ≤ 300 ✓                                                   |
+| Add expense → form ready                    |                    41 |      33 | ≤ 150 ✓                                                   |
+| **Save → back on the trip, expense listed** |               **663** | **173** | ≤ 100 (rendering the 150-row list is most of what's left) |
+| Tap expense → details                       |                   102 |      46 | ≤ 100 ✓                                                   |
+| Tab → Expenses                              |                   133 |     100 | ≤ 100 ✓                                                   |
+| Rename trip / remove member / leave         | waited for the server | at once |                                                           |
+
+1000 expenses: Save 1410 → 720, details 362 → 71; the Expenses tab (~540) and opening the trip (~1.3 s from cache) still build every row: windowing the list would fix that if trips that large appear.
+Android (AVD, debug APK, relative): Save 1159 → ~170; cold start → trips ~4.4 s → ~2.7 s, mostly the restarted AVD (the native early start, F5, didn't measurably help and was reverted).
+Open: another member's change arrives ~0.4 s later on the throttled slow network since F1 (≈ the same on the good network); likely the emulator's HTTP/1.1 under throttling: check on a real phone.
+
 ## Findings
 
 | #   | Where                                        | Cost (big, slow)                                    | Cause (evidence)                                                                                                                                                                                                                                        | Proposed fix                                                                                                                                                                           | Behavior change?                                                            |
@@ -93,3 +112,5 @@ What the docs and reports say, and what it means for Evenly.
 Turning off the debug build's bridge logging (`loggingBehavior: "none"`) changed nothing (758 ms to open the trip). The native Firestore path plus the bridge is ~3× slower at reading data than the JS SDK in the same WebView. (Start-up isn't compared: the Chrome run reloads a tab in a warm browser; the APK cold start includes Android and WebView start-up, ~1.7 s on the AVD.)
 
 **Proposal R5**: run the Firebase JS SDK on Android too (drop the Capacitor Firebase plugins): one code path on every platform, faster data on Android, a smaller APK. Cost: the anonymous identity lives in the native SDK and can't be handed to the JS SDK without a backend, so every Android user gets a new identity once and needs a relink (`scripts/relink.ts`, as done before). Needs an ADR and the user's OK. **Decision (2026-10-28): not now**; revisit after the real-phone measurements (rebuild-plan 6b step 6).
+
+Both as APKs on the same AVD (`node scripts/android.mjs dev --js-sdk` vs `npm run android:dev`), big trip: cold start → trips (page clock) 1213 → 1007 ms, Home → trip 760 → 431 ms, Save 162 → 187 ms (noise). The JS-SDK build reaches the emulators over plain HTTP from the app's https://localhost page, so that build alone allows mixed content (`capacitor.config.ts`); against the real project everything is HTTPS.
