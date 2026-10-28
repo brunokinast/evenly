@@ -139,5 +139,6 @@ export async function setDisplayName(name: string) {
   await FirebaseAuthentication.updateProfile({ displayName: name });
   const { user } = await FirebaseAuthentication.getCurrentUser();
   if (user) set(fromUser(user));
-  await renameMeInTrips(await myTripsForWrite(myUid()), name);
+  // APP-9: the Auth profile needs the server, but the trips' copies show at once and sync in the background.
+  void renameMeInTrips(await myTripsForWrite(myUid()), name).catch(() => {});
 }

@@ -319,6 +319,52 @@ test("EXP-8 Save and Delete take effect at once, before the server confirms", as
   await expect(ana.getByText("Expense deleted")).toBeVisible();
 });
 
+test("APP-9 remove, rename, delete and leave take effect before the server confirms", async ({
+  browser,
+}) => {
+  const ana = await newUser(browser, "Ana");
+  const bia = await newUser(browser, "Bia");
+  await createTrip(ana, "Rio");
+  await join(bia, await inviteCode(ana), "Rio");
+  await ana.getByRole("button", { name: "Back to your trips" }).click();
+  await createTrip(ana, "Lisboa"); // waits for the server (APP-9)
+  // From here the server never answers a write: each change must still show at once.
+  await ana.route(/Write\/channel/, () => {});
+  await bia.route(/Write\/channel/, () => {});
+  const fast = { timeout: 2000 };
+
+  await ana.getByRole("textbox", { name: "Guest name" }).fill("Gus");
+  await ana.getByRole("textbox", { name: "Guest name" }).press("Enter");
+  await ana.getByRole("button", { name: /Gus/ }).click();
+  await ana.getByRole("button", { name: "Remove from trip" }).click();
+  await ana
+    .getByRole("dialog", { name: "Remove Gus?" })
+    .getByRole("button", { name: "Remove from trip" })
+    .click();
+  await expect(ana.getByRole("tabpanel").getByText("Gus")).toBeHidden(fast);
+
+  await ana.getByRole("button", { name: "Trip options" }).click();
+  await ana.getByRole("button", { name: "Rename trip" }).click();
+  await ana.getByRole("textbox", { name: "Trip name" }).fill("Lisboa 2026");
+  await ana.getByRole("textbox", { name: "Trip name" }).press("Enter");
+  await expect(ana.getByRole("heading", { name: "Lisboa 2026" })).toBeVisible(fast);
+
+  await ana.getByRole("button", { name: "Trip options" }).click();
+  await ana.getByRole("button", { name: "Delete trip" }).click();
+  await ana
+    .getByRole("dialog", { name: "Delete trip?" })
+    .getByRole("button", { name: "Delete trip" })
+    .click();
+  await expect(ana.getByRole("heading", { name: "Your trips" })).toBeVisible(fast);
+  await expect(ana.getByRole("main").getByText("Lisboa 2026")).toBeHidden(fast);
+
+  await bia.getByRole("button", { name: "Trip options" }).click();
+  await bia.getByRole("button", { name: "Leave trip" }).click();
+  await bia.getByRole("dialog", { name: "Leave trip?" }).getByRole("button", { name: "Leave trip" }).click();
+  await expect(bia.getByRole("heading", { name: "Your trips" })).toBeVisible(fast);
+  await expect(bia.getByRole("main").getByText("Rio")).toBeHidden(fast);
+});
+
 test("MEM-5 MEM-9 TRIP-11 TRIP-7 leave, remove, rename and delete, live", async ({ browser }) => {
   const ana = await newUser(browser, "Ana");
   const bia = await newUser(browser, "Bia");

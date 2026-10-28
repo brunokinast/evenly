@@ -191,7 +191,8 @@ function MemberSheet({
         disabled={!online}
         onClose={() => setConfirming(false)}
         onConfirm={async () => {
-          await removeMember(view.trip, member!);
+          // APP-9: off the list at once; a refusal comes back as a notice.
+          removeMember(view.trip, member!).catch(() => showToast(t("common.notSaved")));
           showToast(t("member.removed", { name: p!.name }));
           setConfirming(false);
           onClose();

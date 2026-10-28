@@ -10,6 +10,8 @@ export const ptBR: Record<MessageKey, string> = {
   "common.edit": "Editar",
   "common.add": "Adicionar",
   "common.error": "Algo deu errado. Verifique sua conexão e tente de novo.",
+  "common.notSaved":
+    "Não foi possível salvar essa alteração: talvez você não tenha mais acesso a esta viagem.",
   "common.you": "Você",
   "offline.banner": "Você está offline. Será possível fazer alterações quando reconectar.",
 

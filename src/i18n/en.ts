@@ -10,6 +10,7 @@ export const en = {
   "common.edit": "Edit",
   "common.add": "Add",
   "common.error": "Something went wrong. Check your connection and try again.",
+  "common.notSaved": "Couldn't save that change: you may no longer have access to this trip.",
   "common.you": "You",
   "offline.banner": "You're offline. Changes will be possible when you reconnect.",
 

@@ -190,6 +190,7 @@ export function TripScreen({ tripId, tab: tabParam }: { tripId: string; tab?: st
               setFocusGuest((n) => n + 1);
             }}
             onLeaving={() => (leaving.current = true)}
+            onLeft={() => void goHome(navigate)}
           />
         </>
       )}
