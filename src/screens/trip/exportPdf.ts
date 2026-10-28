@@ -76,14 +76,11 @@ export async function exportTripPdf(view: TripView) {
     rule(y);
   };
 
-  // Header: the app mark, "Evenly · Trip summary", the trip name and its facts.
-  doc.setFillColor(...C.accent);
-  doc.roundedRect(M, y, 26, 26, 6, 6, "F");
-  doc.setFillColor(...C.accentFg);
-  doc.roundedRect(M + 7.5, y + 9.2, 11, 2.6, 1.3, 1.3, "F");
-  doc.roundedRect(M + 7.5, y + 14.2, 11, 2.6, 1.3, 1.3, "F");
-  y += 17.5;
-  text("Evenly", M + 36, { size: 12, bold: true });
+  // Header: the Evenly logo, "Trip summary", the trip name and its facts.
+  const logo = await loadLogo();
+  if (logo) doc.addImage(logo, "PNG", M, y, (LOGO_H * 432) / 120, LOGO_H);
+  y += LOGO_H / 2 + 4;
+  if (!logo) text("Evenly", M, { size: 14, bold: true });
   text(t("pdf.summary"), W - M, { size: 10, color: C.muted, right: true });
   y += 42;
   doc.setFont("helvetica", "bold");
@@ -249,6 +246,18 @@ export async function exportTripPdf(view: TripView) {
   }
 
   await deliver(doc.output("blob"), pdfFileName(trip.name), trip.name);
+}
+
+const LOGO_H = 28;
+
+/** public/logo.png (rendered from logo.svg by scripts/make-icons.mjs; 432×120). Null if it can't load. */
+async function loadLogo(): Promise<Uint8Array | null> {
+  try {
+    const res = await fetch("/logo.png");
+    return res.ok ? new Uint8Array(await res.arrayBuffer()) : null;
+  } catch {
+    return null;
+  }
 }
 
 /** A small "→" drawn with lines (the PDF's built-in font has no arrow glyph). */

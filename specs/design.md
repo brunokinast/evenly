@@ -111,11 +111,17 @@ Inputs are never smaller than 16px (prevents iOS zoom on focus).
 - **Claim a guest** (MEM-7): in the Join sheet, under the trip preview: "Are you one of these? (optional)" with the guest names as choice pills; the button becomes "Join as <name>".
 - **Export as PDF**: end of the Balances tab.
 
+## Brand
+
+- **App icon** (`public/icon.svg`): a marigold rounded tile with a coin in `--accent-fg`: a ring with a "$" inside, split by a diagonal cut (−14°) whose two halves slide slightly apart. At each end of the cut, two short round-ended lines (a longer one and a shorter one, mirrored on the other side) fly outward, as if the coin was just split. Strokes are round-ended and heavy, so it reads at 16px.
+- **Logo** (`public/logo.svg`): the same coin without the tile, then "Evenly" in Nunito ExtraBold (800), stored as outlines (no font is loaded for it). Used where the brand is shown at larger size (the PDF header).
+- `scripts/make-icons.mjs` renders the PNGs (install icons, full-bleed tiles for iOS and maskable Android icons, and the PDF logo) from those two files.
+
 ## PDF
 
 An A4 report in the light theme's token values (Helvetica, since the PDF can't use the app font):
 
-- **Header**: the app mark (marigold rounded square with "=") and "Evenly" in bold, "Trip summary" muted on the right; then the trip name (22pt bold, wraps) and "Created <date> · <currency> · <n> members · <n> expenses".
+- **Header**: the Evenly logo (see Brand), "Trip summary" muted on the right; then the trip name (22pt bold, wraps) and "Created <date> · <currency> · <n> members · <n> expenses".
 - **Summary**: three tiles on `--surface-2`: Total spent, Per person, Expenses.
 - **Suggested payments**: "Ana → Bia" rows with the amount right-aligned, or "All settled! No payments needed."
 - **People**: a table in the MEM-6 order: name (with "Guest"), paid, share, balance ("Gets back" in `--positive`, "Owes" in `--negative`, "Settled" muted).
