@@ -10,7 +10,7 @@ export async function newUser(browser: Browser, name: string): Promise<Page> {
   });
   const page = await context.newPage();
   await page.goto("/");
-  await page.getByRole("textbox", { name: "Your name" }).fill(name);
+  await page.getByRole("textbox", { name: "What's your name?" }).fill(name);
   await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { name: "Your trips" })).toBeVisible();
   return page;

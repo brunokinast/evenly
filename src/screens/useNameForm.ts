@@ -10,6 +10,7 @@ export function useNameForm(initial: string, onSaved?: () => void) {
   const [busy, setBusy] = useState(false);
 
   async function submit() {
+    if (busy) return;
     const check = checkName(value);
     if (!check.ok) {
       setError(t(check.error === "tooShort" ? "name.tooShort" : "name.tooLong"));

@@ -305,8 +305,8 @@ test.describe("in Portuguese", () => {
 
   test("APP-1 EXP-2 texts and amounts follow the device language", async ({ page }, info) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Qual é o seu nome?" })).toBeVisible();
-    await page.getByRole("textbox", { name: "Seu nome" }).fill("Ana");
+    await expect(page.getByRole("heading", { name: "Boas-vindas ao Evenly" })).toBeVisible();
+    await page.getByRole("textbox", { name: "Qual é o seu nome?" }).fill("Ana");
     await page.keyboard.press("Enter");
     await page.getByRole("button", { name: "Nova viagem" }).click();
     // TRIP-3: PT-BR defaults to BRL.

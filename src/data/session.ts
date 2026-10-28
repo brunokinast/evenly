@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { FirebaseAuthentication, type User } from "@capacitor-firebase/authentication";
 import { renameMeInTrips } from "./commands";
-import { firebaseReady } from "./firebase";
+import { firebaseReady, usesEmulators } from "./firebase";
 import { currentTrips } from "./trips";
 
 export type Session =
@@ -57,6 +57,22 @@ export function useMe(): { uid: string; name: string } {
   const s = useSession();
   if (s.status !== "ready" || !s.name) throw new Error("useMe() outside the session gate");
   return { uid: s.uid, name: s.name };
+}
+
+/** True on the local emulators, where testing helpers may show. */
+export const canResetForTesting = usesEmulators;
+
+/**
+ * Testing only (local emulators): forget this identity and this device's settings, back to Welcome.
+ * The old identity stays in its trips, as a member nobody can sign in as.
+ */
+export async function resetForTesting() {
+  try {
+    localStorage.clear();
+  } catch {
+    // Storage blocked: nothing to clear.
+  }
+  await FirebaseAuthentication.signOut(); // authStateChange → a new anonymous identity → Welcome
 }
 
 /** ID-6 "Try again". */

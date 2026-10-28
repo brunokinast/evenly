@@ -35,7 +35,8 @@ Any feature, bug or change request goes through the `change-workflow` skill (`.c
 ## Commands
 
 - `npm run check`: typecheck + lint + unit tests + rules tests (starts the Firestore emulator; needs Java).
-- `npm run emulators` (auth + Firestore, project `demo-evenly`) and `npm run dev:lan`: local app for the phone at `http://<LAN IP>:5173`. Without `VITE_FIREBASE_*` env vars the app always uses the emulators.
+- `npm run preview:lan`: emulators (data kept in `.emulator-data/`) + demo trip + dev server for the phone at `http://<LAN IP>:5173`. Demo trip: join with code **123456** (`scripts/seed-demo.mjs`; `npm run demo:reset` rewrites it). On the emulators the Profile sheet has "Reset account (testing)": new identity, back to Welcome. Without `VITE_FIREBASE_*` env vars the app always uses the emulators.
+- `npm run emulators`: just the emulators, empty (used by e2e).
 - `npm run e2e`: Playwright phone-viewport checks; screenshots in `test-results/`.
 - `npm run build`: production build + APP-4 bundle budget (startup JS ≤ 350 kB gzip).
 

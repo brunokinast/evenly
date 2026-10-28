@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { ChevronRight, Smartphone } from "lucide-react";
+import { ChevronRight, RotateCcw, Smartphone } from "lucide-react";
 import { useInstall } from "@/app/install";
 import { setTheme, useTheme, type ThemeChoice } from "@/app/theme";
 import { Button } from "@/components/Button";
 import { Segmented } from "@/components/Segmented";
 import { Sheet } from "@/components/Sheet";
 import { TextField } from "@/components/TextField";
+import { canResetForTesting, resetForTesting } from "@/data/session";
 import { t } from "@/i18n";
 import { useNameForm } from "../useNameForm";
 
@@ -76,6 +77,13 @@ function ProfileForm({
       <Button type="submit" variant="primary" busy={form.busy} className="w-full">
         {t("common.done")}
       </Button>
+      {canResetForTesting && (
+        // Local testing only; never shown with the real database.
+        <Button variant="destructive" className="w-full" onClick={() => void resetForTesting()}>
+          <RotateCcw aria-hidden />
+          Reset account (testing)
+        </Button>
+      )}
     </form>
   );
 }

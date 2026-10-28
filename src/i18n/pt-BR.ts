@@ -19,6 +19,7 @@ export const ptBR: Record<MessageKey, string> = {
   "connect.title": "Não foi possível conectar",
   "connect.body": "Verifique sua conexão com a internet e tente de novo.",
 
+  "welcome.hello": "Boas-vindas ao Evenly",
   "welcome.title": "Qual é o seu nome?",
   "welcome.body": "Seus amigos veem o nome nas viagens que vocês compartilham. Não precisa de conta.",
   "name.label": "Seu nome",
