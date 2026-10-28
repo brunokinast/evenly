@@ -156,6 +156,12 @@ test("APP-3 Android gets the APK, with the note to uninstall the old app first",
     "https://github.com/brunokinast/evenly/releases/latest/download/evenly.apk",
   );
   await page.screenshot({ path: info.outputPath("apk-sheet.png") });
+  // The tap opens the download in a new tab (another site ignores `download`), and the sheet closes.
+  await page.context().route("https://github.com/**", (route) => route.fulfill({ body: "apk" }));
+  const tabOpened = page.context().waitForEvent("page");
+  await sheet.getByRole("link", { name: "Download" }).click();
+  await (await tabOpened).waitForURL(/releases\/latest\/download\/evenly\.apk/);
+  await expect(sheet).toBeHidden();
 });
 
 test("APP-8 a 50-character name keeps the layout at 320px wide", async ({ page }, info) => {

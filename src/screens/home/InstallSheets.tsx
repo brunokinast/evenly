@@ -44,7 +44,15 @@ export function InstallSheets({ open, onClose }: { open: InstallSheet; onClose: 
       <Sheet open={open === "apk"} onClose={onClose} title={t("install.apk.title")}>
         <p className="text-caption text-fg-muted">{t("install.apk.body")}</p>
         {apkUrl && (
-          <a href={apkUrl} download onClick={onClose} className={buttonClass("primary")}>
+          // Another site (GitHub, ADR 0005) ignores `download`: a new tab starts the download there, and
+          // closing the sheet (a history step back) can't cancel it.
+          <a
+            href={apkUrl}
+            target="_blank"
+            rel="noopener"
+            onClick={onClose}
+            className={buttonClass("primary")}
+          >
             <Download className="size-5" aria-hidden />
             {t("install.apk.download")}
           </a>
