@@ -61,6 +61,8 @@ A verification pass re-checks every spec against the old code, to catch anything
 - **Cutover done (2026-10-28, branch `cutover`)**: the migration ran on the real project (backup `backups/evenly-app-6f5f2-2026-10-28T14-09-32-583Z.json`, local only): Gramado (13 expenses) and Porto de Galinhas (43) migrated with their old UIDs, 3 empty trips and `users` deleted, balances read back. New rules, indexes and the web app deployed to https://evenly-app-6f5f2.web.app. The old app is locked out.
   - Firebase Hosting refuses executable files (`.apk`) on the Spark plan, so the APK is a GitHub Release asset instead (ADR 0005): release `v1.0`, and `APK_URL` points at `releases/latest/download/evenly.apk`. The install note says to uninstall the old app first (ADR 0004). `evenly.kinast.com.br` is a custom domain of the same Hosting site, so it switched with the deploy.
   - CI was failing on a real race (Back right after a sheet closed skipped the "Discard changes?" guard); fixed in `Sheet.tsx`.
+  - Duda relinked (2026-10-28): old `JQETQzGn…` → new `c3UayD2m…` (Android app) in both trips. Bruno's browser kept the old web sign-in (same origin), so Bruno is already `SqM5…`; relink Bruno only if they move to the APK.
+  - Fixes after cutover: a Welcome name now reaches existing trips (ID-5, Android 1.1); the APK link opens in a new tab.
   - Still to do: steps 3–6 of the handoff (check on the phone, `main` on GitHub, PDF font, relink the two old users).
 - Still untested (no automated test yet): EXP-8 failure path, PDF-2 and PDF-5, APP-5 (accessibility). BAL-4 and INV-12 are absences by design.
 
