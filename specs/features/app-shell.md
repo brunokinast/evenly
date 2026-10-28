@@ -8,7 +8,7 @@
   - Android: "Get the Android app" downloads the APK, with a short note on allowing the install and on uninstalling the old Evenly app first (same app ID, another key; ADR 0004), and that the app starts fresh: trips in the browser won't be in it (ID-10). The APK is the latest GitHub Release's asset (ADR 0005).
   - iPhone/iPad Safari: opens the 3 steps (Share → Add to Home Screen → Add), with a note that the Home Screen app starts fresh: trips in Safari won't be in it (ID-10).
   - Other browsers that offer an install prompt: "Install app" triggers it. Where none of these apply, the row is hidden.
-- **APP-7** Given Home has no trips and the app isn't running installed, an install card sits under the empty-state message: "Get Evenly on your home screen", "Opens instantly, like any other app.", the APP-3 action for this device, and "Not now", which hides the card on this device for good. The card is never shown once the user has a trip.
+- **APP-7** Home never shows an install card or prompt. Installing is suggested once, before the name (ID-10), and stays available from Profile (APP-3). (Replaces the Home install card, removed 2026-10-28 by the user's choice.)
 - **APP-8** Long text never breaks the layout. Names and trip names (up to 50 characters) stay on one line with "…" in rows, bars and pills, and wrap in sheet headers and details. No horizontal scrolling at any width down to 320px.
 - **APP-4** First load on a phone is fast: Home is usable within ~2 s on a typical 4G connection, and cached opens are near-instant (budget to be confirmed in architecture).
 - **APP-6** Online only. When offline, a clear banner says so and actions that need the network are disabled.
@@ -16,4 +16,4 @@
 
 ## Notes
 
-- An installed app (iPhone home-screen app, Android APK) keeps its own storage, so it starts with a new identity (see identity notes). That's why APP-7 only recommends installing before the user has any trips.
+- An installed app (iPhone home-screen app, Android APK) keeps its own storage, so it starts with a new identity (see identity notes). That's why installing is suggested before the name (ID-10), not later on Home.

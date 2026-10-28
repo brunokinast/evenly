@@ -64,6 +64,7 @@ A verification pass re-checks every spec against the old code, to catch anything
   - Duda relinked (2026-10-28): old `JQETQzGn…` → `c3UayD2m…` in both trips, then again to `LOoDNtJ7…` (she reinstalled as the web app; the first sign-in didn't carry over). Bruno's browser kept the old web sign-in (same origin), so Bruno was already `SqM5…`; relinked to `D4jna4GD…` when Bruno installed the APK.
   - Fixes after cutover: a Welcome name now reaches existing trips (ID-5, Android 1.1); the APK link opens in a new tab.
   - ID-10 (branch `ios-home-first`, asked by the user after Duda's Safari → Home Screen identity split): before the name, iPhone Safari suggests adding to the Home Screen first and Android browsers suggest the APK first, with "Continue in Safari / the browser" (remembered). e2e tests start past it (`skippedInstallFirst` storage state).
+  - APP-7 (branch `no-home-install`, user's choice): the Home install card is gone; install is suggested only before the name (ID-10) and from Profile (APP-3).
   - Still to do: steps 3–6 of the handoff (check on the phone, `main` on GitHub, PDF font, relink the two old users).
 - Still untested (no automated test yet): EXP-8 failure path, PDF-2 and PDF-5, APP-5 (accessibility). BAL-4 and INV-12 are absences by design.
 

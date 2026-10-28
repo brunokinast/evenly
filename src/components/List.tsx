@@ -94,21 +94,12 @@ export function IconTile({ children, small }: { children: ReactNode; small?: boo
   );
 }
 
-/** Centered message with an icon tile and optional action (specs/design.md "Empty states"). */
-export function EmptyState({
-  icon,
-  text,
-  children,
-}: {
-  icon: ReactNode;
-  text: string;
-  children?: ReactNode;
-}) {
+/** Centered message with an icon tile (specs/design.md "Empty states"). */
+export function EmptyState({ icon, text }: { icon: ReactNode; text: string }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4 px-3 py-8 text-center">
       {icon}
       <p className="max-w-80 text-caption text-fg-muted">{text}</p>
-      {children}
     </div>
   );
 }
