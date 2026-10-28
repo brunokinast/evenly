@@ -88,37 +88,42 @@ export function useMyTrips(uid: string): Live<Trip[]> {
   );
 }
 
-/** My trips as Home shows them, for writes that touch all of them (ID-5). Empty if Home never loaded. */
-export function currentTrips(uid: string): Trip[] {
+/**
+ * My trips, for writes that touch all of them (ID-5): Home's live list, or, before Home ever loaded (the
+ * Welcome name of a user who already has trips, e.g. migrated), one read of the same query. Not on screen.
+ */
+export async function myTripsForWrite(uid: string): Promise<Trip[]> {
   const live = peekLive<Trip[]>(`myTrips/${uid}`);
-  return live?.status === "ready" ? withoutLost(live.data) : [];
+  if (live?.status === "ready") return withoutLost(live.data);
+  await firebaseReady;
+  const { snapshots } = await FirebaseFirestore.getCollection(myTripsQuery(uid));
+  return snapshots.filter((s) => s.data).map((s) => toTrip(s.id, s.data!));
 }
+
+const myTripsQuery = (uid: string) => ({
+  reference: "trips",
+  compositeFilter: {
+    type: "and" as const,
+    queryConstraints: [
+      { type: "where" as const, fieldPath: "memberUids", opStr: "array-contains" as const, value: uid },
+    ],
+  },
+});
 
 function useMyTripsQuery(uid: string): Live<Trip[]> {
   return useLive(`myTrips/${uid}`, (emit) =>
     listen(() =>
-      FirebaseFirestore.addCollectionSnapshotListener(
-        {
-          reference: "trips",
-          compositeFilter: {
-            type: "and",
-            queryConstraints: [
-              { type: "where", fieldPath: "memberUids", opStr: "array-contains", value: uid },
-            ],
-          },
-        },
-        (event, error) => {
-          if (error || !event) return emit({ status: "gone" });
-          const trips = event.snapshots
-            .filter((s) => s.data)
-            .map((s) => {
-              const trip = toTrip(s.id, s.data!);
-              rawOf.set(trip, rawJson(s.data));
-              return trip;
-            });
-          emit({ status: "ready", data: trips.sort((a, b) => b.createdAt - a.createdAt) });
-        },
-      ),
+      FirebaseFirestore.addCollectionSnapshotListener(myTripsQuery(uid), (event, error) => {
+        if (error || !event) return emit({ status: "gone" });
+        const trips = event.snapshots
+          .filter((s) => s.data)
+          .map((s) => {
+            const trip = toTrip(s.id, s.data!);
+            rawOf.set(trip, rawJson(s.data));
+            return trip;
+          });
+        emit({ status: "ready", data: trips.sort((a, b) => b.createdAt - a.createdAt) });
+      }),
     ),
   );
 }

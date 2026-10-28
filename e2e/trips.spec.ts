@@ -395,6 +395,48 @@ test("ID-5 MEM-3 a new name shows live for the other members", async ({ browser 
   await expect(ana.getByRole("tabpanel").getByText("Beatriz")).toBeVisible();
 });
 
+test("ID-5 a name entered on Welcome reaches trips the user already has (migrated users)", async ({
+  browser,
+}) => {
+  const ana = await newUser(browser, "Ana");
+  const bia = await newUser(browser, "Bia");
+  await createTrip(ana, "Tavira");
+  await join(bia, await inviteCode(ana), "Tavira");
+  // A migrated user: member of trips, but no name in the sign-in profile (the old app kept it elsewhere).
+  const uid = await bia.evaluate(
+    () =>
+      new Promise<string>((resolve, reject) => {
+        const open = indexedDB.open("firebaseLocalStorageDb");
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const store = open.result
+            .transaction("firebaseLocalStorage", "readwrite")
+            .objectStore("firebaseLocalStorage");
+          const all = store.getAll();
+          all.onsuccess = () => {
+            const row = all.result.find((r) => r.value?.uid);
+            store.put({ ...row, value: { ...row.value, displayName: undefined } });
+            store.transaction.oncomplete = () => resolve(row.value.uid);
+          };
+        };
+      }),
+  );
+  const res = await fetch(
+    "http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/projects/demo-evenly/accounts:update",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer owner" },
+      body: JSON.stringify({ localId: uid, deleteAttribute: ["DISPLAY_NAME"] }),
+    },
+  );
+  expect(res.ok).toBe(true);
+  await bia.goto("/");
+  await bia.getByRole("textbox", { name: "What's your name?" }).fill("Beatriz");
+  await bia.keyboard.press("Enter");
+  await expect(bia.getByRole("heading", { name: "Your trips" })).toBeVisible();
+  await expect(ana.getByRole("tabpanel").getByText("Beatriz")).toBeVisible();
+});
+
 test.describe("in Portuguese", () => {
   test.use({ locale: "pt-BR" });
 

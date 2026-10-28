@@ -3,7 +3,7 @@ import { FirebaseAuthentication, type User } from "@capacitor-firebase/authentic
 import { Capacitor } from "@capacitor/core";
 import { renameMeInTrips } from "./commands";
 import { firebaseReady, usesEmulators } from "./firebase";
-import { currentTrips } from "./trips";
+import { myTripsForWrite } from "./trips";
 
 export type Session =
   | { status: "loading" }
@@ -121,5 +121,5 @@ export async function setDisplayName(name: string) {
   await FirebaseAuthentication.updateProfile({ displayName: name });
   const { user } = await FirebaseAuthentication.getCurrentUser();
   if (user) set(fromUser(user));
-  await renameMeInTrips(currentTrips(myUid()), name);
+  await renameMeInTrips(await myTripsForWrite(myUid()), name);
 }
