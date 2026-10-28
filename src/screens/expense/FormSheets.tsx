@@ -178,7 +178,8 @@ export function WhenSheet(p: {
 function WhenForm({ value, onPick }: { value: number; onPick: (ms: number) => void }) {
   const [day, setDay] = useState(dayKey(value));
   const [time, setTime] = useState(timeKey(value));
-  const [error, setError] = useState(false);
+  // EXP-11: say what is wrong: a missing date, a missing time, or a moment in the future.
+  const [error, setError] = useState<"form.noDate" | "form.noTime" | "form.future" | null>(null);
   const [today] = useState(() => dayKey(Date.now()));
   const field =
     "min-h-12 w-full min-w-0 rounded-ctl border border-transparent bg-surface-2 px-3.5 text-body focus:border-accent focus:outline-none";
@@ -187,9 +188,10 @@ function WhenForm({ value, onPick }: { value: number; onPick: (ms: number) => vo
       className="flex flex-col gap-3"
       onSubmit={(e) => {
         e.preventDefault();
-        if (!day || !time) return setError(true);
+        if (!day) return setError("form.noDate");
+        if (!time) return setError("form.noTime");
         const ms = fromKeys(day, time);
-        if (ms > Date.now()) return setError(true);
+        if (ms > Date.now()) return setError("form.future");
         onPick(ms);
       }}
     >
@@ -201,7 +203,7 @@ function WhenForm({ value, onPick }: { value: number; onPick: (ms: number) => vo
           value={day}
           onChange={(e) => {
             setDay(e.target.value);
-            setError(false);
+            setError(null);
           }}
           className={field}
         />
@@ -211,14 +213,14 @@ function WhenForm({ value, onPick }: { value: number; onPick: (ms: number) => vo
           value={time}
           onChange={(e) => {
             setTime(e.target.value);
-            setError(false);
+            setError(null);
           }}
           className={field}
         />
       </div>
       {error && (
         <p role="alert" className="text-caption text-negative">
-          {t("form.future")}
+          {t(error)}
         </p>
       )}
       <Button type="submit" variant="primary" className="w-full">

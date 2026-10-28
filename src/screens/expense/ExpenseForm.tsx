@@ -190,7 +190,7 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
             enterKeyHint="next"
             cents={f.cents}
             format={(c) => money(c, cur)}
-            placeholder={money(0, cur)}
+            zero
             onCents={(cents) => {
               // EXP-13: a new total resets a custom split to equal.
               if (isCustom && cents !== f.cents) showToast(t("form.splitReset"));
@@ -206,7 +206,10 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
                 descRef.current?.focus(); // EXP-9
               }
             }}
-            className="w-full min-w-0 bg-transparent text-center text-amount tracking-[-0.01em] caret-accent placeholder:text-fg-muted focus:outline-none"
+            className={cn(
+              "w-full min-w-0 bg-transparent text-center text-amount tracking-[-0.01em] caret-accent focus:outline-none",
+              !f.cents && "text-fg-muted",
+            )}
           />
           <span className="min-h-5 text-caption text-fg-muted">{hint}</span>
         </label>

@@ -59,6 +59,7 @@ export const ptBR: Record<MessageKey, string> = {
   "newTrip.icon": "Ícone",
   "newTrip.currency": "Moeda (não pode ser alterada depois)",
   "newTrip.create": "Criar viagem",
+  "newTrip.created": "{trip} criada",
   "tripName.empty": "Digite um nome para a viagem.",
   "tripName.tooLong": "Use no máximo 50 caracteres.",
 
@@ -203,6 +204,8 @@ export const ptBR: Record<MessageKey, string> = {
   "form.dateTime": "Data e hora",
   "form.date": "Data da despesa",
   "form.time": "Hora da despesa",
+  "form.noDate": "Escolha uma data.",
+  "form.noTime": "Escolha uma hora.",
   "form.future": "A data e a hora não podem estar no futuro.",
   "form.added": "Despesa adicionada",
   "form.updated": "Despesa atualizada",

@@ -24,7 +24,15 @@ export async function createTrip(page: Page, name: string, currency?: string) {
   await page.getByRole("textbox", { name: "Trip name" }).press("Enter");
   await expect(page.getByRole("textbox", { name: "Trip name" })).not.toBeFocused();
   await page.getByRole("button", { name: "Create trip" }).click();
+  // Creating stays on Home (trips.md flow 3); open the trip on Members, where the tests continue.
+  await expect(page.getByText(`${name} created`)).toBeVisible();
+  await page
+    .getByRole("main")
+    .getByRole("button", { name: new RegExp(name) })
+    .first()
+    .click();
   await expect(page.getByRole("heading", { name })).toBeVisible();
+  await tab(page, "Members");
 }
 
 export const tab = (page: Page, name: "Expenses" | "Balances" | "Members") =>

@@ -58,6 +58,7 @@ export const en = {
   "newTrip.icon": "Icon",
   "newTrip.currency": "Currency (can't be changed later)",
   "newTrip.create": "Create trip",
+  "newTrip.created": "{trip} created",
   "tripName.empty": "Enter a trip name.",
   "tripName.tooLong": "Use at most 50 characters.",
 
@@ -202,6 +203,8 @@ export const en = {
   "form.dateTime": "Date and time",
   "form.date": "Expense date",
   "form.time": "Expense time",
+  "form.noDate": "Pick a date.",
+  "form.noTime": "Pick a time.",
   "form.future": "The date and time can't be in the future.",
   "form.added": "Expense added",
   "form.updated": "Expense updated",

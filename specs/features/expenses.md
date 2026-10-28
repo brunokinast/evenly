@@ -31,7 +31,7 @@ An expense records that one member paid an amount on behalf of some members (the
 - **EXP-8** Saving shows progress and prevents double submission; on failure the form keeps its input and shows the error.
 - **EXP-9** Opening Add expense focuses the amount field with the numeric keyboard visible; pressing Enter/Next moves to description; Enter on description closes the keyboard (so Paid by, Split and When are in view to change); Save saves. Opening Edit expense focuses nothing (the keyboard stays down), since it isn't known what the user wants to change.
 - **EXP-10** With only amount and description entered, Save creates an expense paid by the current user, split equally between all members, dated now.
-- **EXP-11** Date and time default to now and can't be in the future.
+- **EXP-11** Date and time default to now and can't be in the future. Done with an empty date or time says which one is missing ("Pick a date." / "Pick a time."), not the future message.
 - **EXP-12** In a custom split, typed amounts are kept as typed; participants without a typed amount share the rest equally (leftover cents per BAL-2). Shares must sum exactly to the total; a participant whose share is 0 is not a participant.
 - **EXP-13** Changing the total of a custom-split expense resets it to an equal split between the same participants, with a short notice.
 - **EXP-14** The expense list is grouped by date and ordered newest first by date and time, within and across groups.

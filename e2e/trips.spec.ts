@@ -1,12 +1,17 @@
 import { expect, test } from "@playwright/test";
 import { addExpense, createTrip, inviteCode, join, newUser, tab } from "./helpers";
 
-test("TRIP-1 TRIP-10 a new trip opens on Members with the invite card and tops Home", async ({
+test("TRIP-1 TRIP-10 creating a trip stays on Home with it on top; Members shows the invite card", async ({
   browser,
 }, info) => {
   const ana = await newUser(browser, "Ana");
-  await createTrip(ana, "Older trip");
-  await ana.getByRole("button", { name: "Back to your trips" }).click();
+  // trips.md flow 3: creating stays on Home, with the new trip listed and a notice.
+  await ana.getByRole("button", { name: "New trip" }).click();
+  await ana.getByRole("textbox", { name: "Trip name" }).fill("Older trip");
+  await ana.getByRole("button", { name: "Create trip" }).click();
+  await expect(ana.getByText("Older trip created")).toBeVisible();
+  await expect(ana.getByRole("heading", { name: "Your trips" })).toBeVisible();
+  await expect(ana.getByRole("main").getByText("Older trip")).toBeVisible();
   await createTrip(ana, "Lisbon");
   await expect(ana.getByRole("tab", { name: "Members" })).toHaveAttribute("aria-selected", "true");
   await expect(ana.getByText("Invite friends")).toBeVisible();
@@ -209,6 +214,21 @@ test("EXP BAL expenses, details, custom split, edit, delete and balances, live f
   await expect(bia.getByText("All settled! No payments needed.")).toBeVisible();
 });
 
+test("EXP-11 an empty date or time says which is missing", async ({ browser }) => {
+  const ana = await newUser(browser, "Ana");
+  await createTrip(ana, "Prazo", "BRL");
+  await tab(ana, "Expenses");
+  await ana.getByRole("button", { name: "Add expense" }).click();
+  await ana.getByRole("button", { name: /When/ }).click();
+  await ana.getByLabel("Expense date").fill("");
+  await ana.getByRole("button", { name: "Done" }).click();
+  await expect(ana.getByRole("alert")).toHaveText("Pick a date.");
+  await ana.getByLabel("Expense date").fill("2020-01-01");
+  await ana.getByLabel("Expense time").fill("");
+  await ana.getByRole("button", { name: "Done" }).click();
+  await expect(ana.getByRole("alert")).toHaveText("Pick a time.");
+});
+
 test("EXP-14 expenses are grouped by day, newest first, with a total", async ({ browser }, info) => {
   const ana = await newUser(browser, "Ana");
   await createTrip(ana, "Serra", "BRL");
@@ -360,6 +380,10 @@ test.describe("in Portuguese", () => {
     );
     await page.getByRole("textbox", { name: "Nome da viagem" }).fill("Floripa");
     await page.getByRole("button", { name: "Criar viagem" }).click();
+    await page
+      .getByRole("main")
+      .getByRole("button", { name: /Floripa/ })
+      .click();
     await page.getByRole("tab", { name: "Despesas" }).click();
     await page.getByRole("button", { name: "Nova despesa" }).click();
     await page.keyboard.type("123456");

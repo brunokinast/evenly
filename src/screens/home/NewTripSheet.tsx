@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
-import { openTrip } from "@/app/nav";
 import { useOnline } from "@/app/online";
+import { showToast } from "@/app/toast";
 import { Button } from "@/components/Button";
 import { Segmented } from "@/components/Segmented";
 import { Sheet } from "@/components/Sheet";
@@ -28,15 +27,14 @@ function lastCurrency() {
 export function NewTripSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <Sheet open={open} onClose={onClose} title={t("newTrip.title")}>
-      {open && <NewTripForm />}
+      {open && <NewTripForm onDone={onClose} />}
     </Sheet>
   );
 }
 
-function NewTripForm() {
+function NewTripForm({ onDone }: { onDone: () => void }) {
   const me = useMe();
   const online = useOnline();
-  const [, navigate] = useLocation();
   const [name, setName] = useState("");
   const [icon, setIcon] = useState<TripIcon>("luggage");
   const [currency, setCurrency] = useState<Currency>(() => defaultCurrency(locale, lastCurrency()));
@@ -48,13 +46,15 @@ function NewTripForm() {
     if (!check.ok) return setError(t(check.error === "empty" ? "tripName.empty" : "tripName.tooLong"));
     setBusy(true);
     try {
-      const id = await createTrip({ name: check.name, icon, currency, myName: me.name });
+      await createTrip({ name: check.name, icon, currency, myName: me.name });
       try {
         localStorage.setItem(LAST_CURRENCY, currency);
       } catch {
         // Storage blocked: no remembered currency.
       }
-      await openTrip(navigate, `/trip/${id}/members`);
+      // Stay on Home: the new trip tops the list (TRIP-1); a notice confirms it.
+      showToast(t("newTrip.created", { trip: check.name }));
+      onDone();
     } catch {
       setError(t("common.error"));
       setBusy(false);
