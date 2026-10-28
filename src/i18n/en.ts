@@ -220,6 +220,8 @@ export const en = {
   "form.added": "Expense added",
   "form.updated": "Expense updated",
   "form.deleted": "Expense deleted",
+  "form.notSaved": "Couldn't save “{description}”: you may no longer have access to this trip.",
+  "form.notDeleted": "Couldn't delete “{description}”: you may no longer have access to this trip.",
   "form.splitReset": "Split reset to equal",
   "form.discardTitle": "Discard changes?",
   "form.discardBody": "Your changes to this expense will be lost.",

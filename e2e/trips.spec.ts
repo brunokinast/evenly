@@ -291,6 +291,34 @@ test("EXP-14 expenses are grouped by day, newest first, with a total", async ({ 
   await ana.screenshot({ path: info.outputPath("expenses-list.png") });
 });
 
+test("EXP-8 Save and Delete take effect at once, before the server confirms", async ({ browser }) => {
+  const ana = await newUser(browser, "Ana");
+  await createTrip(ana, "Local first");
+  await tab(ana, "Expenses");
+  // From here the server never answers a write: the change must still show at once (synced later).
+  await ana.route(/Write\/channel/, () => {});
+  await ana.getByRole("button", { name: "Add expense" }).click();
+  await ana.keyboard.type("1500");
+  await ana.keyboard.press("Enter");
+  await ana.keyboard.type("Taxi");
+  await ana.keyboard.press("Enter");
+  await ana.getByRole("button", { name: "Save" }).click();
+  await expect(ana.getByRole("tab", { name: "Expenses" })).toBeVisible({ timeout: 2000 });
+  await expect(ana.getByText("Taxi")).toBeVisible({ timeout: 2000 });
+  await expect(ana.getByText("Expense added")).toBeVisible();
+
+  await ana.getByText("Taxi").click();
+  await ana.getByRole("dialog").getByRole("button", { name: "Edit" }).click();
+  await ana.getByRole("button", { name: "Delete expense" }).click();
+  await ana
+    .getByRole("dialog", { name: "Delete expense?" })
+    .getByRole("button", { name: "Delete expense" })
+    .click();
+  await expect(ana.getByRole("tab", { name: "Expenses" })).toBeVisible({ timeout: 2000 });
+  await expect(ana.getByText("Taxi")).toBeHidden({ timeout: 2000 });
+  await expect(ana.getByText("Expense deleted")).toBeVisible();
+});
+
 test("MEM-5 MEM-9 TRIP-11 TRIP-7 leave, remove, rename and delete, live", async ({ browser }) => {
   const ana = await newUser(browser, "Ana");
   const bia = await newUser(browser, "Bia");

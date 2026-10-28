@@ -222,6 +222,10 @@ export const ptBR: Record<MessageKey, string> = {
   "form.added": "Despesa adicionada",
   "form.updated": "Despesa atualizada",
   "form.deleted": "Despesa excluída",
+  "form.notSaved":
+    "Não foi possível salvar “{description}”: talvez você não tenha mais acesso a esta viagem.",
+  "form.notDeleted":
+    "Não foi possível excluir “{description}”: talvez você não tenha mais acesso a esta viagem.",
   "form.splitReset": "Divisão voltou a ser igual",
   "form.discardTitle": "Descartar alterações?",
   "form.discardBody": "As alterações nesta despesa serão perdidas.",
