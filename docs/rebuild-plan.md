@@ -29,6 +29,11 @@ Read the old repo for behavior only. Write:
 
 A verification pass re-checks every spec against the old code, to catch anything invented or missed.
 
+### Status (2026-10-27)
+- Phases 0–1 done (specs reviewed and decided by the user; see `specs/open-questions.md`).
+- **Clean room from here on**: phases 2+ run in fresh sessions opened in this repo, with no access to the old app (enforced by `.claude/settings.json` deny rules and `CLAUDE.md`). Exception: Phase 6 migration uses only `specs/migration-source.md`.
+- Next: Phase 2.
+
 ### 2. Design → `specs/design.md` + a mockup page
 - Design tokens (color, type, spacing, radius), component rules and mobile patterns (bottom tab bar, bottom sheets, safe areas, tap targets).
 - Mockups of Home, Trip and Add Expense, published as a page you can open on your phone.
