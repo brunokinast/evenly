@@ -36,6 +36,7 @@ trips/{tripId}/expenses/{expenseId}
 ```
 
 Notes:
+
 - The owner is also a member document (with `uid == ownerUid`).
 - Member IDs are referenced by expenses; the migration must preserve or remap them.
 - Some members may have neither `uid` nor `manualName` (shown as "Unknown").

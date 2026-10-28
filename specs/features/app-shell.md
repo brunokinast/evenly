@@ -1,6 +1,7 @@
 # App shell: language, theme, install
 
 ## Acceptance criteria
+
 - **APP-1** Languages: English and Portuguese (Brazil). The app follows the device language and falls back to English.
 - **APP-2** Theme: light, dark or system (default). The choice is remembered on the device.
 - **APP-3** Web: the app is installable as a PWA. On browsers that support an install prompt, Home's menu offers "Install app". On iOS Safari it shows the 3 steps (Share → Add to Home Screen → Add).

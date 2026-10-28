@@ -6,5 +6,18 @@
       "Edit(//c/Users/bruno/Documents/git/evenly/**)",
       "Edit(../evenly/**)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [{ "type": "command", "command": "node .claude/hooks/format.mjs" }]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [{ "type": "command", "command": "node .claude/hooks/check.mjs", "timeout": 600 }]
+      }
+    ]
   }
 }

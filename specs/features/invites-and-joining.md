@@ -1,14 +1,17 @@
 # Invites and joining
 
 ## Description
+
 The owner invites friends with a short-lived 6-digit code, created on demand. Friends type or paste it to join.
 
 ## Flows
+
 1. **Invite** (owner only): tap "Invite" on the trip → a fresh code is shown with a countdown (valid 1 hour), plus Copy and Share. Share opens the system share sheet with: `Join my trip "<name>" on Evenly! Use invite code: <code>`. Tapping "Invite" again while a code is valid shows the same code, with an option to generate a new one.
 2. **Join**: from Home → "Join trip" → enter or paste the code → preview of the trip (name, icon, currency) → if the trip has guests, optionally "Are you one of these?" (see MEM-7) → "Join" → the user lands in the trip.
 3. **Already a member**: the preview says "You're already a member of <trip>" and offers "Open trip".
 
 ## Acceptance criteria
+
 - **INV-1** A code is exactly 6 digits and unique among currently valid codes.
 - **INV-2** A code exists only after the owner taps "Invite" and is valid for **1 hour**. A trip has at most one valid code at a time.
 - **INV-3** The join screen opens with the keyboard up, accepts only digits (max 6) and submits automatically at 6 digits. Paste extracts the first 6 digits from the clipboard text.

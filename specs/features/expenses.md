@@ -1,11 +1,13 @@
 # Expenses
 
 ## Description
+
 An expense records that one member paid an amount on behalf of some members (the participants). By default it's split equally and dated now (date and time).
 
 **Speed is the priority.** Adding a typical expense must take one screen, two fields and one tap. Every other field has a sensible default and stays out of the way until needed.
 
 ## Flows
+
 1. **Expense list** (trip screen): grouped by date, newest first by date and time. Each item shows the payer (as their avatar), the description and the amount, plus a second line with the time and the split ("Split between all", "Split between <n>" or "Custom split"). The total spent is shown at the top. Tapping an item opens its details.
 2. **Expense details**: the description, amount, date and time, who paid, each participant's share and the current user's share ("Your share X" or "You're not in this split"). An Edit button opens the edit screen.
 3. **Add expense** (one screen): opens with the **amount field focused and the numeric keyboard up**.
@@ -18,6 +20,7 @@ An expense records that one member paid an amount on behalf of some members (the
 6. **Delete expense**: from the edit screen, after confirming.
 
 ## Acceptance criteria
+
 - **EXP-1** Description is required (trimmed). Amount is required and > 0. Payer is required. At least one participant is required.
 - **EXP-2** Amount entry fills from the right in cents (typing 1234 shows 12.34). It's formatted in the **user's language** style (PT-BR `1.234,56`, EN `1,234.56`) with the trip currency's symbol (R$, $, €, £).
 - **EXP-3** Given a member adds, edits or deletes an expense, then every member viewing the trip sees the change live, and balances update live.

@@ -1,9 +1,11 @@
 # Trips
 
 ## Description
+
 A trip groups members and expenses. It has a name, an icon and a currency. The person who creates it is its **owner**.
 
 ## Flows
+
 1. **Home** lists every trip the user belongs to (owned or joined), newest first. Each item shows the icon, name, currency and creation date.
 2. **Empty state**: with no trips, Home explains what to do and offers "New trip" and "Join trip".
 3. **Create trip**: name (required), icon (one of a fixed set, default luggage) and currency (BRL, USD, EUR, GBP). After creating it, the user lands on the trip, where they can invite friends.
@@ -11,6 +13,7 @@ A trip groups members and expenses. It has a name, an icon and a currency. The p
 5. **Trip settings (owner only)**: invite (see invites spec), add a guest, rename the trip, delete the trip. Members see "Leave trip".
 
 ## Acceptance criteria
+
 - **TRIP-1** Given a user creates a trip, then it appears at the top of their Home immediately, and they're its owner and first member.
 - **TRIP-2** A trip name is required (trimmed, non-empty).
 - **TRIP-3** Currency is chosen at creation from BRL, USD, EUR, GBP, defaulting to the one matching the user's language (PT-BR → BRL, otherwise the last one they used, else USD). It can't be changed afterwards.
