@@ -166,5 +166,9 @@ addEventListener("popstate", () => {
   }
   if (entry === null || history.state?.evenlySheet === entry) return;
   entry = null;
+  // Something stays open under the closing sheet (another sheet, a guard): its entry comes back now, not
+  // after the unmount, so a quick second Back still reaches it.
+  const under = stack.length > 1;
   stack.at(-1)?.();
+  if (under) pushEntry();
 });
