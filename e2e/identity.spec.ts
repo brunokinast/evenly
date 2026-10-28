@@ -145,11 +145,17 @@ test.describe("on an iPhone", () => {
   });
 });
 
-test("APP-3 no install offered on Android while there's no APK and no browser prompt", async ({ page }) => {
+test("APP-3 Android gets the APK, with the note to uninstall the old app first", async ({ page }, info) => {
   await enterName(page, "Ana");
-  await expect(page.getByRole("region", { name: "Get Evenly on your home screen" })).toBeHidden();
-  await page.getByRole("button", { name: "Profile" }).click();
-  await expect(page.getByRole("button", { name: "Install app" })).toBeHidden();
+  const card = page.getByRole("region", { name: "Get Evenly on your home screen" });
+  await card.getByRole("button", { name: "Get the Android app" }).click();
+  const sheet = page.getByRole("dialog", { name: "Get the Android app" });
+  await expect(sheet.getByText("If you have the old Evenly app, uninstall it first.")).toBeVisible();
+  await expect(sheet.getByRole("link", { name: "Download" })).toHaveAttribute(
+    "href",
+    "https://github.com/brunokinast/evenly/releases/latest/download/evenly.apk",
+  );
+  await page.screenshot({ path: info.outputPath("apk-sheet.png") });
 });
 
 test("APP-8 a 50-character name keeps the layout at 320px wide", async ({ page }, info) => {

@@ -2,8 +2,8 @@ import { useSyncExternalStore } from "react";
 import { Capacitor } from "@capacitor/core";
 import { installMethod, type InstallMethod } from "@/domain/install";
 
-// APP-3 / APP-7: the release APK's download URL. Not on Firebase Hosting: the free plan refuses .apk files.
-const APK_URL: string | null = null;
+// APP-3 / APP-7: the latest GitHub Release's APK (Firebase Hosting refuses .apk files on the free plan).
+const APK_URL: string | null = "https://github.com/brunokinast/evenly/releases/latest/download/evenly.apk";
 const DISMISS_KEY = "evenly.installCardDismissed";
 
 type PromptEvent = Event & { prompt(): Promise<void>; userChoice: Promise<{ outcome: string }> };
