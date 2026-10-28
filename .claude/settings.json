@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(//c/Users/bruno/Documents/git/evenly/**)",
+      "Read(../evenly/**)",
+      "Edit(//c/Users/bruno/Documents/git/evenly/**)",
+      "Edit(../evenly/**)"
+    ]
+  }
+}
