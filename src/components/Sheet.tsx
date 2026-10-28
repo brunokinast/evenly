@@ -4,6 +4,10 @@ type Props = {
   open: boolean;
   onClose: () => void;
   title: string;
+  /** Under the title, e.g. the expense's date and time. */
+  subtitle?: string;
+  /** Top-right of the header, e.g. a small Edit button. */
+  action?: ReactNode;
   children: ReactNode;
 };
 
@@ -12,7 +16,7 @@ type Props = {
  * swipe down, Escape and Android back. A native <dialog> keeps focus inside and focuses the first input
  * (give it `autoFocus`). Content updates in place while open.
  */
-export function Sheet({ open, onClose, title, children }: Props) {
+export function Sheet({ open, onClose, title, subtitle, action, children }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
   const close = useRef(onClose);
   useEffect(() => {
@@ -70,7 +74,13 @@ export function Sheet({ open, onClose, title, children }: Props) {
         onPointerCancel={onPointerUp}
       >
         <div aria-hidden className="mx-auto mb-1 h-1 w-9 rounded bg-border" />
-        <h2 className="pt-1.5 pb-2.5 text-[18px] leading-6 font-bold text-balance break-words">{title}</h2>
+        <div className="flex items-start gap-3 pt-1.5 pb-2.5">
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <h2 className="text-[18px] leading-6 font-bold text-balance break-words">{title}</h2>
+            {subtitle && <p className="text-caption text-fg-muted">{subtitle}</p>}
+          </div>
+          {action && <div onPointerDown={(e) => e.stopPropagation()}>{action}</div>}
+        </div>
       </div>
       <div className="flex min-h-0 flex-col gap-3 overflow-y-auto px-4 pb-[max(20px,env(safe-area-inset-bottom))]">
         {children}

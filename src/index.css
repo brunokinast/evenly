@@ -171,3 +171,11 @@
     animation: none;
   }
 }
+.toast {
+  animation: fade-in 200ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+}

@@ -6,7 +6,8 @@ import { gzipSync } from "node:zlib";
 import { join } from "node:path";
 
 const BUDGET = 350 * 1024;
-const ON_DEMAND = []; // e.g. /^pdf-/
+// PDF export (jsPDF and the helpers it imports lazily) loads only when "Export as PDF" is tapped.
+const ON_DEMAND = [/^exportPdf-/, /^index\.es-/, /^html2canvas-/, /^purify\.es-/];
 
 const dir = join("dist", "assets");
 const files = readdirSync(dir).filter((f) => f.endsWith(".js") && !ON_DEMAND.some((re) => re.test(f)));

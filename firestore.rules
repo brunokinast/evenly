@@ -8,7 +8,8 @@ service cloud.firestore {
     function signedIn() { return request.auth != null; }
     function me() { return request.auth.uid; }
     function now() { return request.time.toMillis(); }
-    function near(ms) { return ms is int && ms > now() - 60000 && ms < now() + 60000; }
+    // Client clocks drift; times written by the client may be up to 10 minutes off.
+    function near(ms) { return ms is int && ms > now() - 600000 && ms < now() + 600000; }
     function tripAt(tripId) { return get(/databases/$(database)/documents/trips/$(tripId)).data; }
     function tripAfter(tripId) { return getAfter(/databases/$(database)/documents/trips/$(tripId)).data; }
     function isMember(t) { return signedIn() && me() in t.memberUids; }
@@ -124,7 +125,7 @@ service cloud.firestore {
             && d.description is string && d.description.size() >= 1 && d.description.size() <= 100
             && d.amountCents is int && d.amountCents >= 1 && d.amountCents <= 10000000000
             && d.split in ['equal', 'custom']
-            && d.spentAt is int && d.spentAt <= now() + 300000
+            && d.spentAt is int && d.spentAt <= now() + 600000
             && d.payerId in trip().members
             && d.shares is map && d.shares.size() > 0
             && d.shares.keys().hasOnly(trip().members.keys())
@@ -149,7 +150,7 @@ service cloud.firestore {
           && ownerOf(d.tripId)
           && t.invite.code == code
           && t.invite.expiresAt == d.expiresAt
-          && d.expiresAt > now() + 3540000 && d.expiresAt < now() + 3660000
+          && d.expiresAt > now() + 3000000 && d.expiresAt < now() + 4200000
           && d.name == t.name && d.icon == t.icon && d.currency == t.currency
           && d.guests is map;
       }

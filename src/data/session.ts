@@ -1,6 +1,9 @@
 import { useSyncExternalStore } from "react";
 import { FirebaseAuthentication, type User } from "@capacitor-firebase/authentication";
+import type { Trip } from "@/domain/types";
+import { renameMeInTrips } from "./commands";
 import { firebaseReady } from "./firebase";
+import { peekLive } from "./live";
 
 export type Session =
   | { status: "loading" }
@@ -50,17 +53,32 @@ export function useSession(): Session {
   );
 }
 
+/** The signed-in user with a name, for screens behind the session gate. */
+export function useMe(): { uid: string; name: string } {
+  const s = useSession();
+  if (s.status !== "ready" || !s.name) throw new Error("useMe() outside the session gate");
+  return { uid: s.uid, name: s.name };
+}
+
 /** ID-6 "Try again". */
 export function retrySignIn() {
   return signIn();
 }
 
+/** The signed-in user's id. Only called by writes, which run after the session gate. */
+export function myUid(): string {
+  if (session.status !== "ready") throw new Error("Not signed in");
+  return session.uid;
+}
+
 /**
- * ID-1..3, ID-5: saves the display name in the Auth profile. The Auth profile has no change listener,
- * so this is the one place that re-reads after a write. (Trips slice: also batch-update the trip copies.)
+ * ID-1..3, ID-5: saves the display name in the Auth profile, then its copies in my trips (one batch).
+ * The Auth profile has no change listener, so this is the one place that re-reads after a write.
  */
 export async function setDisplayName(name: string) {
   await FirebaseAuthentication.updateProfile({ displayName: name });
   const { user } = await FirebaseAuthentication.getCurrentUser();
   if (user) set(fromUser(user));
+  const trips = peekLive<Trip[]>(`myTrips/${myUid()}`);
+  if (trips?.status === "ready") await renameMeInTrips(trips.data, name);
 }

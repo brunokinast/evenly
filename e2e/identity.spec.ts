@@ -105,6 +105,8 @@ test("APP-2 theme choice applies instantly and is remembered", async ({ page }, 
   await expect(page.locator("html")).toHaveClass(/dark/);
   await page.screenshot({ path: info.outputPath("profile-dark.png") });
   await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toBeHidden();
+  await page.waitForFunction(() => !history.state?.evenlySheet);
   await page.reload();
   await expect(page.getByRole("heading", { name: "Your trips" })).toBeVisible();
   await expect(page.locator("html")).toHaveClass(/dark/);
