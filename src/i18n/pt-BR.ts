@@ -46,11 +46,6 @@ export const ptBR: Record<MessageKey, string> = {
   "theme.dark": "Escuro",
 
   "install.row": "Instalar app",
-  "install.cardTitle": "Tenha o Evenly na tela inicial",
-  "install.cardBody": "Abre na hora, como qualquer outro app.",
-  "install.action.apk": "Baixar o app Android",
-  "install.action.ios": "Adicionar à Tela de Início",
-  "install.action.prompt": "Instalar app",
   "install.ios.title": "Adicionar à Tela de Início",
   "install.ios.step1": "Toque em Compartilhar na barra do navegador.",
   "install.ios.step2": "Role para baixo e toque em Adicionar à Tela de Início.",

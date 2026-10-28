@@ -45,11 +45,6 @@ export const en = {
   "theme.dark": "Dark",
 
   "install.row": "Install app",
-  "install.cardTitle": "Get Evenly on your home screen",
-  "install.cardBody": "Opens instantly, like any other app.",
-  "install.action.apk": "Get the Android app",
-  "install.action.ios": "Add to Home Screen",
-  "install.action.prompt": "Install app",
   "install.ios.title": "Add to Home Screen",
   "install.ios.step1": "Tap Share in the browser's toolbar.",
   "install.ios.step2": "Scroll down and tap Add to Home Screen.",

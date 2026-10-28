@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { installMethod, showInstallCard, showInstallFirst, type InstallContext } from "./install";
+import { installMethod, showInstallFirst, type InstallContext } from "./install";
 
 const ANDROID =
   "Mozilla/5.0 (Linux; Android 17; Pixel 9) AppleWebKit/537.36 Chrome/140.0 Mobile Safari/537.36";
@@ -47,15 +47,6 @@ describe("installMethod", () => {
   it("APP-3 other browsers use their install prompt, else nothing", () => {
     expect(installMethod(ctx({ canPrompt: true }))).toBe("prompt");
     expect(installMethod(ctx({ userAgent: MAC }))).toBeNull();
-  });
-});
-
-describe("showInstallCard", () => {
-  it("APP-7 shows only with no trips, an install method, and not dismissed", () => {
-    expect(showInstallCard("ios", 0, false)).toBe(true);
-    expect(showInstallCard("ios", 1, false)).toBe(false);
-    expect(showInstallCard("ios", 0, true)).toBe(false);
-    expect(showInstallCard(null, 0, false)).toBe(false);
   });
 });
 

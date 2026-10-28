@@ -172,34 +172,26 @@ test.describe("on an iPhone", () => {
   const { userAgent, viewport } = devices["iPhone 15"];
   test.use({ userAgent, viewport });
 
-  test("APP-7 APP-3 install card shows the Add to Home Screen steps; Not now hides it for good", async ({
+  test("APP-7 APP-3 Home shows no install card; Profile's Install app opens the Add to Home Screen steps", async ({
     page,
   }, info) => {
     await enterName(page, "Ana");
-    const card = page.getByRole("region", { name: "Get Evenly on your home screen" });
-    await expect(card).toBeVisible();
-    await page.screenshot({ path: info.outputPath("home-install-card.png") });
-    await card.getByRole("button", { name: "Add to Home Screen" }).click();
-    await expect(page.getByRole("dialog", { name: "Add to Home Screen" })).toBeVisible();
-    await page.screenshot({ path: info.outputPath("ios-steps.png") });
-    await page.getByRole("button", { name: "Done" }).click();
-
+    await expect(page.getByText("No trips yet.", { exact: false })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Get Evenly on your home screen" })).toHaveCount(0);
+    await page.screenshot({ path: info.outputPath("home-empty-ios.png") });
     await page.getByRole("button", { name: "Profile" }).click();
-    await expect(page.getByRole("button", { name: "Install app" })).toBeVisible();
-    await page.keyboard.press("Escape");
-
-    await card.getByRole("button", { name: "Not now" }).click();
-    await expect(card).toBeHidden();
-    await page.reload();
-    await expect(page.getByRole("heading", { name: "Your trips" })).toBeVisible();
-    await expect(card).toBeHidden();
+    await page.getByRole("button", { name: "Install app" }).click();
+    const steps = page.getByRole("dialog", { name: "Add to Home Screen" });
+    await expect(steps).toBeVisible();
+    await expect(steps.getByText("trips you have here in Safari won't be in it")).toBeVisible();
+    await page.screenshot({ path: info.outputPath("ios-steps.png") });
   });
 });
 
 test("APP-3 Android gets the APK, with the note to uninstall the old app first", async ({ page }, info) => {
   await enterName(page, "Ana");
-  const card = page.getByRole("region", { name: "Get Evenly on your home screen" });
-  await card.getByRole("button", { name: "Get the Android app" }).click();
+  await page.getByRole("button", { name: "Profile" }).click();
+  await page.getByRole("button", { name: "Install app" }).click();
   const sheet = page.getByRole("dialog", { name: "Get the Android app" });
   await expect(sheet.getByText("If you have the old Evenly app, uninstall it first.")).toBeVisible();
   await expect(sheet.getByRole("link", { name: "Download" })).toHaveAttribute(

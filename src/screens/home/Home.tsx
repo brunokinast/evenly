@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { openTrip } from "@/app/nav";
-import { ChevronRight, Luggage, Plus, Smartphone, Ticket } from "lucide-react";
-import { dismissInstallCard, useInstall } from "@/app/install";
+import { ChevronRight, Luggage, Plus, Ticket } from "lucide-react";
+import { useInstall } from "@/app/install";
 import { useOnline } from "@/app/online";
 import { Avatar } from "@/components/Avatar";
 import { Button, ButtonRow } from "@/components/Button";
@@ -13,7 +13,6 @@ import { TopBar } from "@/components/TopBar";
 import { TripTile } from "@/components/TripIcon";
 import { useMe } from "@/data/session";
 import { useMyTrips } from "@/data/trips";
-import { showInstallCard } from "@/domain/install";
 import { longDate, t } from "@/i18n";
 import { InstallSheets, startInstall, type InstallSheet } from "./InstallSheets";
 import { JoinSheet } from "./JoinSheet";
@@ -79,32 +78,7 @@ export function Home() {
               </IconTile>
             }
             text={t("home.empty")}
-          >
-            {install.method && showInstallCard(install.method, list.length, install.dismissed) && (
-              <section
-                aria-label={t("install.cardTitle")}
-                className="mt-2 flex w-full flex-col gap-3 rounded-card bg-surface p-4 text-left"
-              >
-                <div className="flex items-center gap-3">
-                  <IconTile>
-                    <Smartphone />
-                  </IconTile>
-                  <div className="min-w-0 flex-1">
-                    <h2 className="text-row">{t("install.cardTitle")}</h2>
-                    <p className="text-caption text-fg-muted">{t("install.cardBody")}</p>
-                  </div>
-                </div>
-                <ButtonRow>
-                  <Button variant="secondary" onClick={runInstall}>
-                    {t(`install.action.${install.method}`)}
-                  </Button>
-                  <Button variant="quiet" onClick={dismissInstallCard}>
-                    {t("common.notNow")}
-                  </Button>
-                </ButtonRow>
-              </section>
-            )}
-          </EmptyState>
+          />
         )}
       </main>
 

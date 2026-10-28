@@ -2,15 +2,13 @@ import { useSyncExternalStore } from "react";
 import { Capacitor } from "@capacitor/core";
 import { installMethod, type InstallMethod } from "@/domain/install";
 
-// APP-3 / APP-7: the latest GitHub Release's APK (Firebase Hosting refuses .apk files on the free plan).
+// APP-3 / ID-10: the latest GitHub Release's APK (Firebase Hosting refuses .apk files on the free plan).
 const APK_URL: string | null = "https://github.com/brunokinast/evenly/releases/latest/download/evenly.apk";
-const DISMISS_KEY = "evenly.installCardDismissed";
 const SKIP_FIRST_KEY = "evenly.installFirstSkipped";
 
 type PromptEvent = Event & { prompt(): Promise<void>; userChoice: Promise<{ outcome: string }> };
 
 let deferred: PromptEvent | null = null;
-let dismissed = readFlag(DISMISS_KEY);
 let firstSkipped = readFlag(SKIP_FIRST_KEY);
 let state = compute();
 const listeners = new Set<() => void>();
@@ -47,7 +45,7 @@ function compute() {
     canPrompt: deferred !== null,
     apkUrl: APK_URL,
   });
-  return { method, dismissed, firstSkipped, apkUrl: APK_URL };
+  return { method, firstSkipped, apkUrl: APK_URL };
 }
 
 function refresh() {
@@ -81,13 +79,6 @@ export async function promptInstall() {
   await deferred.prompt();
   await deferred.userChoice;
   deferred = null;
-  refresh();
-}
-
-/** APP-7 "Not now": hides the Home card on this device for good. */
-export function dismissInstallCard() {
-  dismissed = true;
-  saveFlag(DISMISS_KEY);
   refresh();
 }
 
