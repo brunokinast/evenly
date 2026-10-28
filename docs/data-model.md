@@ -140,10 +140,11 @@ Rules can't loop over a map, so these are client-side only. The UI, domain tests
 
 Home: 1 query listener (my trips). Trip: trip doc + expenses listener. Rule `get()` calls count as reads once per request. With ~10-person groups, a month's use stays far under the Spark free limits (50k reads / 20k writes per day).
 
-## Migration (Phase 6, optional)
+## Migration (Phase 6)
 
-Lower priority than a clean, fast model: the model is never bent to fit old data. If done, a local Admin SDK script rewrites the old shape (`specs/migration-source.md`) in place, after saving a JSON backup of everything to disk, and then deletes the old leftovers (`trips/*/members`, `users`).
+Lower priority than a clean, fast model: the model is never bent to fit old data. A local Admin SDK script (`scripts/migrate.mjs`, see the Phase 6 handoff in `docs/rebuild-plan.md`) rewrites the old shape (`specs/migration-source.md`) in place, after saving a JSON backup of everything to disk, and then deletes the old leftovers (`trips/*/members`, `users`).
 
+- Only trips with at least one expense are migrated (user's choice, 2026-10-28); the others are deleted with the leftovers and kept only in the backup.
 - Old trip → `trips/{same tripId}` (whole document replaced): `title` → `name`, `iconName` → `icon` (default `luggage`), `currency`, `ownerUid`, `createdAt` → ms. `invite: null` (old codes aren't carried over).
 - Old member docs → `members` entries with the **same memberIds**. `uid` → `uid` + name from `users/{uid}.displayName`; `manualName` → guest; neither → guest named "Unknown". `joinedAt` from `createdAt`.
 - Old expense → same id: `amount_cents` → `amountCents`, `payer_member_id` → `payerId`, `participant_member_ids` → equal `shares` per BAL-2 (in member order), `split: "equal"`, `spentAt`/`createdAt`/`updatedAt` from `createdAt`, `createdByUid` → `createdBy`.
