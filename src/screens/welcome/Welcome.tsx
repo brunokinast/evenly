@@ -20,7 +20,12 @@ export function Welcome() {
           void form.submit();
         }}
       >
-        <img src="/icon.svg" alt="" className="mb-5 size-18 rounded-[20px] shadow-float" />
+        {/* The logo in the theme's text color: public/logo.svg used as a mask over --fg. */}
+        <span
+          role="img"
+          aria-label="Evenly"
+          className="mb-6 h-16 w-[230px] bg-fg [mask:url(/logo.svg)_center/contain_no-repeat]"
+        />
         <h1 className="text-title">{t("welcome.hello")}</h1>
         <label htmlFor={id} className="mt-8 mb-2 text-caption font-semibold text-fg-muted">
           {t("welcome.title")}
