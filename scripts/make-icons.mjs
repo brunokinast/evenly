@@ -1,5 +1,5 @@
 // Renders public/icon.svg to the PNG sizes iOS and Android install prompts need and to the Android app's
-// launcher and launch-screen icons, and public/logo.svg to the PNG the PDF header uses (jsPDF can't draw SVG). Run after changing the icon or the logo.
+// launcher and launch-screen icons, and public/logo.svg to the PNG the PDF header uses (pdf-lib can't draw an SVG file). Run after changing the icon or the logo.
 import { mkdirSync, readFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 

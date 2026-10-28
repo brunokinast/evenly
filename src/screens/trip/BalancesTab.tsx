@@ -31,7 +31,7 @@ export function BalancesTab({ view }: { view: TripView }) {
   async function exportPdf() {
     setExporting(true);
     try {
-      const { exportTripPdf } = await import("./exportPdf");
+      const { exportTripPdf } = await import("./pdf/exportPdf");
       await exportTripPdf(view);
     } catch {
       showToast(t("balances.exportFailed"));

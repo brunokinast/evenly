@@ -124,7 +124,7 @@ Inputs are never smaller than 16px (prevents iOS zoom on focus).
 
 ## PDF
 
-An A4 report in the light theme's token values (Helvetica, since the PDF can't use the app font):
+An A4 report in the light theme's token values, set in Noto Sans (the app font has no Greek or Cyrillic), with Noto fonts for other scripts and emoji per character (PDF-6):
 
 - **Header**: the Evenly logo (see Brand), "Trip summary" muted on the right; then the trip name (22pt bold, wraps) and "Created <date> · <currency> · <n> members · <n> expenses".
 - **Summary**: three tiles on `--surface-2`: Total spent, Per person, Expenses.

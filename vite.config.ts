@@ -6,6 +6,9 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
+  // The PDF export's libraries load only on export; pre-bundle them at dev-server start, or discovering them
+  // then reloads every open page (breaks e2e tests running in parallel).
+  optimizeDeps: { include: ["pdf-lib", "fontkit", "woff2-encoder/decompress"] },
   plugins: [
     react(),
     tailwindcss(),

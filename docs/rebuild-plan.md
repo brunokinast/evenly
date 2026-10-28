@@ -56,7 +56,7 @@ A verification pass re-checks every spec against the old code, to catch anything
 - Phase 5 still open:
   1. Install `android/evenly.apk` on the user's phone and try it against the real project. Needs the new rules deployed to the real project first (Phase 6 decision: the old app still uses it).
   2. Install: set `APK_URL` in `src/app/install.ts` once the APK is on Hosting (Phase 6 deploy).
-  3. PDF fonts: jsPDF's Helvetica is Latin only; names in other scripts need an embedded font.
+  3. ~~PDF fonts~~: done (PDF-6, ADR 0006).
 - Phase 6 step 1 (2026-10-28, branch `migration`): `scripts/migrate.ts` and `scripts/relink.ts` (run with `npx tsx`; `firebase-admin` uses the `firebase login` credentials, no key file). Unit tests for the mapping and relink; checked on the emulators with a synthetic old-shape backup: restore, dry run, apply (one trip kept, the empty one and `users` deleted, balances read back), relink of the old owner to a new app user, and the trip showed live on Home and in the trip screen. Next: the dry run on the real project (read only), with the user's OK.
 - **Cutover done (2026-10-28, branch `cutover`)**: the migration ran on the real project (backup `backups/evenly-app-6f5f2-2026-10-28T14-09-32-583Z.json`, local only): Gramado (13 expenses) and Porto de Galinhas (43) migrated with their old UIDs, 3 empty trips and `users` deleted, balances read back. New rules, indexes and the web app deployed to https://evenly-app-6f5f2.web.app. The old app is locked out.
   - Firebase Hosting refuses executable files (`.apk`) on the Spark plan, so the APK is a GitHub Release asset instead (ADR 0005): release `v1.0`, and `APK_URL` points at `releases/latest/download/evenly.apk`. The install note says to uninstall the old app first (ADR 0004). `evenly.kinast.com.br` is a custom domain of the same Hosting site, so it switched with the deploy.
@@ -65,7 +65,9 @@ A verification pass re-checks every spec against the old code, to catch anything
   - Fixes after cutover: a Welcome name now reaches existing trips (ID-5, Android 1.1); the APK link opens in a new tab.
   - ID-10 (branch `ios-home-first`, asked by the user after Duda's Safari → Home Screen identity split): before the name, iPhone Safari suggests adding to the Home Screen first and Android browsers suggest the APK first, with "Continue in Safari / the browser" (remembered). e2e tests start past it (`skippedInstallFirst` storage state).
   - APP-7 (branch `no-home-install`, user's choice): the Home install card is gone; install is suggested only before the name (ID-10) and from Profile (APP-3).
-  - Still to do: steps 3–6 of the handoff (check on the phone, `main` on GitHub, PDF font, relink the two old users).
+  - PDF-6 (branch `pdf-font`, option chosen by the user after a web search): pdf-lib + fontkit, bundled Noto Sans, other scripts and emoji from Google Fonts per export with only the characters used (ADR 0006).
+  - Still to do: `main` on GitHub.
+- Seen on the emulators (2026-10-28, not investigated): the first write after several quick guest additions can take ~4 s in the browser (the rules evaluate in ~20 ms; later writes take ~20 ms). Check on the real project before treating it as a bug.
 - Still untested (no automated test yet): EXP-8 failure path, PDF-2 and PDF-5, APP-5 (accessibility). BAL-4 and INV-12 are absences by design.
 
 ### 2. Design → `specs/design.md` + a mockup page
