@@ -13,7 +13,7 @@
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
     "test": "vitest run --project unit",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-evenly \"vitest run --project rules\"",
+    "test:rules": "node scripts/test-rules.mjs",
     "e2e": "playwright test",
     "check": "npm run typecheck && npm run lint && npm run test && npm run test:rules"
   },

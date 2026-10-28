@@ -1,10 +1,210 @@
 rules_version = '2';
 
-// Design: docs/data-model.md ("Security Rules design"). Each slice adds its collection's rules with tests in tests/rules/.
+// Design and reasons: docs/data-model.md ("Security Rules design"). Tests: tests/rules/.
+// Times are int ms, money int cents. Everything not allowed here is denied.
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if false;
+
+    function signedIn() { return request.auth != null; }
+    function me() { return request.auth.uid; }
+    function now() { return request.time.toMillis(); }
+    function near(ms) { return ms is int && ms > now() - 60000 && ms < now() + 60000; }
+    function tripAt(tripId) { return get(/databases/$(database)/documents/trips/$(tripId)).data; }
+    function tripAfter(tripId) { return getAfter(/databases/$(database)/documents/trips/$(tripId)).data; }
+    function isMember(t) { return signedIn() && me() in t.memberUids; }
+    function validName(n, min) { return n is string && n.size() >= min && n.size() <= 50; }
+    function attempt() { return get(/databases/$(database)/documents/joinAttempts/$(me())).data; }
+    function hasAttempt() { return exists(/databases/$(database)/documents/joinAttempts/$(me())); }
+
+    // ---------- trips ----------
+    function validMembersInvariant(d) {
+      return d.memberUids is list
+        && d.memberUids.size() == d.memberUids.toSet().size()
+        && d.memberIdsByUid.keys().toSet() == d.memberUids.toSet()
+        && d.ownerUid in d.memberUids;
+    }
+    function validInviteField(inv) {
+      return inv == null || (inv.keys().hasOnly(['code', 'expiresAt']) && inv.code is string && inv.expiresAt is int);
+    }
+
+    function validTripCreate(d) {
+      let mid = d.memberIdsByUid[me()];
+      return d.keys().hasOnly(['name', 'icon', 'currency', 'ownerUid', 'createdAt', 'members', 'memberIdsByUid', 'memberUids', 'invite'])
+        && d.keys().hasAll(['name', 'icon', 'currency', 'ownerUid', 'createdAt', 'members', 'memberIdsByUid', 'memberUids', 'invite'])
+        && validName(d.name, 1)
+        && d.icon in ['luggage', 'flight', 'beach', 'camping', 'restaurant', 'home', 'celebration', 'sports', 'music',
+                      'shopping', 'car', 'boat', 'mountain', 'city', 'work', 'school']
+        && d.currency in ['BRL', 'USD', 'EUR', 'GBP']
+        && d.ownerUid == me()
+        && near(d.createdAt)
+        && d.memberUids == [me()]
+        && d.memberIdsByUid.keys() == [me()]
+        && d.members.keys() == [mid]
+        && d.members[mid].keys().hasOnly(['name', 'uid', 'joinedAt'])
+        && validName(d.members[mid].name, 1)
+        && d.members[mid].uid == me()
+        && d.members[mid].joinedAt == d.createdAt
+        && d.invite == null;
+    }
+
+    // Case 1: the owner edits name, members, membership and the invite. Membership can only shrink.
+    function ownerEdit(before, after) {
+      return before.ownerUid == me()
+        && after.diff(before).affectedKeys().hasOnly(['name', 'members', 'memberUids', 'memberIdsByUid', 'invite'])
+        && validName(after.name, 1)
+        && after.memberUids.toSet().difference(before.memberUids.toSet()).size() == 0
+        && validMembersInvariant(after)
+        && validInviteField(after.invite);
+    }
+
+    // Case 2: a member renames their own entry.
+    function renameSelf(before, after) {
+      let mid = before.memberIdsByUid[me()];
+      return isMember(before)
+        && after.diff(before).affectedKeys().hasOnly(['members'])
+        && after.members.diff(before.members).affectedKeys().hasOnly([mid])
+        && after.members[mid].diff(before.members[mid]).affectedKeys().hasOnly(['name'])
+        && validName(after.members[mid].name, 1);
+    }
+
+    // Case 3: a non-owner member leaves; their entry stays as a guest with the same name and joinedAt.
+    function leave(before, after) {
+      let mid = before.memberIdsByUid[me()];
+      return isMember(before)
+        && before.ownerUid != me()
+        && after.diff(before).affectedKeys().hasOnly(['members', 'memberUids', 'memberIdsByUid'])
+        && after.memberUids.toSet() == before.memberUids.toSet().difference([me()].toSet())
+        && after.memberUids.size() == before.memberUids.size() - 1
+        && after.memberIdsByUid.diff(before.memberIdsByUid).affectedKeys() == [me()].toSet()
+        && !(me() in after.memberIdsByUid)
+        && after.members.diff(before.members).affectedKeys() == [mid].toSet()
+        && after.members[mid].diff(before.members[mid]).affectedKeys() == ['uid'].toSet()
+        && !('uid' in after.members[mid]);
+    }
+
+    // Case 4: a non-member joins with the trip's valid code: a new entry, or claims a guest (MEM-7).
+    function join(before, after) {
+      let mid = after.memberIdsByUid[me()];
+      let entry = after.members[mid];
+      return signedIn()
+        && !(me() in before.memberUids)
+        && before.invite != null
+        && before.invite.expiresAt > now()
+        && hasAttempt() && attempt().code == before.invite.code
+        && after.diff(before).affectedKeys().hasOnly(['members', 'memberUids', 'memberIdsByUid'])
+        && after.memberUids.toSet() == before.memberUids.toSet().union([me()].toSet())
+        && after.memberUids.size() == before.memberUids.size() + 1
+        && after.memberIdsByUid.diff(before.memberIdsByUid).affectedKeys() == [me()].toSet()
+        && after.members.diff(before.members).affectedKeys() == [mid].toSet()
+        && entry.keys().hasOnly(['name', 'uid', 'joinedAt'])
+        && entry.uid == me()
+        && validName(entry.name, 1)
+        && (mid in before.members
+              ? !('uid' in before.members[mid]) && entry.joinedAt == before.members[mid].joinedAt
+              : near(entry.joinedAt));
+    }
+
+    match /trips/{tripId} {
+      allow read: if signedIn() && me() in resource.data.memberUids;
+      allow create: if signedIn() && validTripCreate(request.resource.data);
+      allow delete: if signedIn() && resource.data.ownerUid == me();
+      allow update: if signedIn() && (
+        ownerEdit(resource.data, request.resource.data)
+        || renameSelf(resource.data, request.resource.data)
+        || leave(resource.data, request.resource.data)
+        || join(resource.data, request.resource.data)
+      );
+
+      // ---------- expenses ----------
+      match /expenses/{expenseId} {
+        function trip() { return tripAt(tripId); }
+        function validExpense(d) {
+          return d.keys().hasOnly(['description', 'amountCents', 'payerId', 'shares', 'split', 'spentAt', 'createdBy', 'createdAt', 'updatedAt'])
+            && d.keys().hasAll(['description', 'amountCents', 'payerId', 'shares', 'split', 'spentAt', 'createdBy', 'createdAt', 'updatedAt'])
+            && d.description is string && d.description.size() >= 1 && d.description.size() <= 100
+            && d.amountCents is int && d.amountCents >= 1 && d.amountCents <= 10000000000
+            && d.split in ['equal', 'custom']
+            && d.spentAt is int && d.spentAt <= now() + 300000
+            && d.payerId in trip().members
+            && d.shares is map && d.shares.size() > 0
+            && d.shares.keys().hasOnly(trip().members.keys())
+            && near(d.updatedAt);
+        }
+        allow read, delete: if isMember(trip());
+        allow create: if isMember(trip()) && validExpense(request.resource.data)
+          && request.resource.data.createdBy == me() && near(request.resource.data.createdAt);
+        allow update: if isMember(trip()) && validExpense(request.resource.data)
+          && request.resource.data.createdBy == resource.data.createdBy
+          && request.resource.data.createdAt == resource.data.createdAt;
+      }
+    }
+
+    // ---------- invites ----------
+    match /invites/{code} {
+      function ownerOf(tripId) { return tripAt(tripId).ownerUid == me(); }
+      function freshInvite(d) {
+        let t = tripAfter(d.tripId);
+        return d.keys().hasOnly(['tripId', 'expiresAt', 'name', 'icon', 'currency', 'guests'])
+          && d.tripId is string
+          && ownerOf(d.tripId)
+          && t.invite.code == code
+          && t.invite.expiresAt == d.expiresAt
+          && d.expiresAt > now() + 3540000 && d.expiresAt < now() + 3660000
+          && d.name == t.name && d.icon == t.icon && d.currency == t.currency
+          && d.guests is map;
+      }
+      // Guest list change by a joiner claiming guest g, or a leaver adding their own new guest entry.
+      function guestsOnly(before, after) {
+        return after.diff(before).affectedKeys().hasOnly(['guests']);
+      }
+      function claimed(before, after) {
+        let g = tripAfter(before.tripId).memberIdsByUid[me()];
+        return guestsOnly(before, after)
+          && g in before.guests
+          && after.guests.diff(before.guests).affectedKeys() == [g].toSet()
+          && !(g in after.guests)
+          && tripAfter(before.tripId).members[g].uid == me();
+      }
+      function leftAsGuest(before, after) {
+        let g = tripAt(before.tripId).memberIdsByUid[me()];
+        return guestsOnly(before, after)
+          && after.guests.diff(before.guests).affectedKeys() == [g].toSet()
+          && !(g in before.guests)
+          && after.guests[g] == tripAt(before.tripId).members[g].name
+          && !('uid' in tripAfter(before.tripId).members[g]);
+      }
+
+      allow get: if signedIn() && hasAttempt() && attempt().code == code;
+      allow create: if signedIn() && freshInvite(request.resource.data);
+      allow update: if signedIn() && (
+        (resource.data.expiresAt <= now() && freshInvite(request.resource.data))
+        || (ownerOf(resource.data.tripId)
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'guests'])
+              && request.resource.data.guests is map)
+        || claimed(resource.data, request.resource.data)
+        || leftAsGuest(resource.data, request.resource.data)
+      );
+      allow delete: if signedIn() && ownerOf(resource.data.tripId);
+    }
+
+    // ---------- join attempts (INV-9: 10 per 15 minutes) ----------
+    match /joinAttempts/{uid} {
+      function validAttempt(d) {
+        return d.keys().hasOnly(['code', 'count', 'windowStart']) && d.code is string && d.code.size() == 6
+          && d.count is int && d.windowStart is int;
+      }
+      function newWindow(d) { return d.count == 1 && near(d.windowStart); }
+      function sameWindow(before, d) {
+        return now() < before.windowStart + 900000
+          && d.windowStart == before.windowStart
+          && d.count == before.count + 1 && d.count <= 10;
+      }
+      allow read: if signedIn() && uid == me();
+      allow create: if signedIn() && uid == me() && validAttempt(request.resource.data) && newWindow(request.resource.data);
+      allow update: if signedIn() && uid == me() && validAttempt(request.resource.data) && (
+        sameWindow(resource.data, request.resource.data)
+        || (now() >= resource.data.windowStart + 900000 && newWindow(request.resource.data))
+      );
     }
   }
 }
