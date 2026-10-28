@@ -40,7 +40,7 @@ Any feature, bug or change request goes through the `change-workflow` skill (`.c
 - `npm run e2e`: Playwright phone-viewport checks; screenshots in `test-results/`.
 - `npm run build`: production build (real project via `.env.production`) + APP-4 bundle budget (startup JS ≤ 350 kB gzip).
 - `npm run android:dev`: debug APK "Evenly Dev" against the emulators on this PC's LAN IP, installed on a connected device/AVD (`emulator -avd Medium_Phone_API_36.1`). Needs the emulators running (`preview:lan`). Drive its WebView from Playwright with `adb forward tcp:9222 localabstract:webview_devtools_remote_<pid>` + `chromium.connectOverCDP`; Playwright's `click()` can hang there, so click through `page.evaluate`.
-- `npm run android:release`: signed release APK → `android/evenly.apk`, which `firebase deploy` copies to `/evenly.apk` after its own production build (talks to the real project: don't install it for testing). Signing key: `android/release.jks` + `android/key.properties`, gitignored, never regenerate (ADR 0003). Phase 6 step 1 may replace it with the old app's key, so the APK updates the old app (see `docs/rebuild-plan.md`).
+- `npm run android:release`: signed release APK → `android/evenly.apk`, which `firebase deploy` copies to `/evenly.apk` after its own production build (talks to the real project: don't install it for testing). Signing key: `android/release.jks` + `android/key.properties`, gitignored, never regenerate (ADR 0003).
 
 ## Gotchas
 

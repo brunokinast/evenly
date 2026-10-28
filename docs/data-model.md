@@ -146,7 +146,6 @@ Lower priority than a clean, fast model: the model is never bent to fit old data
 
 - Only trips with at least one expense are migrated (user's choice, 2026-10-28); the others are deleted with the leftovers and kept only in the backup.
 - Old trip → `trips/{same tripId}` (whole document replaced): `title` → `name`, `iconName` → `icon` (default `luggage`), `currency`, `ownerUid`, `createdAt` → ms. `invite: null` (old codes aren't carried over).
-- Old member docs → `members` entries with the **same memberIds**. `uid` → `uid` + name from `users/{uid}.displayName`; `manualName` → guest; neither → guest named "Unknown". `joinedAt` from `createdAt`.
+- Old member docs → `members` entries with the **same memberIds**. `uid` with a `--map` to a new identity → that new `uid` and its name (owner and `createdBy` remapped too); `uid` without a mapping → guest with the name from `users/{uid}.displayName`; `manualName` → guest; neither → guest named "Unknown". `joinedAt` from `createdAt`.
 - Old expense → same id: `amount_cents` → `amountCents`, `payer_member_id` → `payerId`, `participant_member_ids` → equal `shares` per BAL-2 (in member order), `split: "equal"`, `spentAt`/`createdAt`/`updatedAt` from `createdAt`, `createdByUid` → `createdBy`.
-- Each user's `users/{uid}.displayName` → Auth `displayName` (Admin SDK `updateUser`).
 - Check: per-trip balances, old vs new, must match.
