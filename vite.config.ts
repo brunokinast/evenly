@@ -63,7 +63,22 @@ export default defineConfig({
           { src: "icon.svg", sizes: "any", type: "image/svg+xml" },
         ],
       },
-      workbox: { globPatterns: ["**/*.{js,css,html,svg,woff2}"], navigateFallback: "/index.html" },
+      workbox: {
+        globPatterns: ["**/*.{js,css,html,svg,woff2}"],
+        // On-demand code (PDF export with its fonts, ~490 kB; the ?perf panel) isn't pre-downloaded with every
+        // install/update: it's cached the first time it's used (hashed names, so never stale).
+        globIgnores: ["**/exportPdf-*", "**/noto-sans-*", "**/PerfPanel-*"],
+        runtimeCaching: [
+          {
+            urlPattern: /\/assets\/(exportPdf|noto-sans|PerfPanel)-/,
+            handler: "CacheFirst",
+            options: { cacheName: "on-demand", expiration: { maxEntries: 10 } }, // old versions age out
+          },
+        ],
+        navigateFallback: "/index.html",
+        // Control the first session too, so on-demand code used then is cached already.
+        clientsClaim: true,
+      },
     }),
   ],
   test: {
