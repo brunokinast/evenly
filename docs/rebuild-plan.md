@@ -52,7 +52,7 @@ A verification pass re-checks every spec against the old code, to catch anything
 - Brand (2026-10-28, branch `brand`, designed with the user from their old custom icon): split-coin app icon and a logo (coin + "Evenly" in Nunito 800 as outlines); PDF header uses the logo (design.md "Brand"). Same branch: Welcome shows the logo (W2), Profile/Edit expense open without the keyboard, Enter in New trip and Add expense only closes the keyboard, creating a trip stays on Home, the empty amount keeps the caret at the end, and the Date and time sheet uses the app's own calendar, time wheels and time shortcuts instead of Android's dialogs (EXP-17).
 - Repo pass (2026-10-28, branch `repo-pass`, a fresh-agent audit): trip delete also removes malformed expenses; sign-in "Try again" recovers from a failed start (ID-6); only a rules denial reads as "too many attempts"; owner edits in the rules are limited to adding/deleting a guest or making an app user a guest, named in `editedMember` (no renaming others, no re-linking uids); member names 2–50 in the rules (ID-3); invites can't outlive about an hour; two new type roles (`heading`, `code`) replace one-off sizes; dead keys/config/deps removed; docs synced; CI runs the e2e suite.
 - The user's end-to-end check on the phone passed (2026-10-28).
-- Phase 5 Android (2026-10-28, branch `android`, built while the user slept; not merged yet): Capacitor Android project, new app ID `br.com.kinast.evenly` registered in Firebase (user's choice; the old app was `com.example.evenly`), new release key, debug build "Evenly Dev" against the LAN emulators, release build with the real config (ADR 0003). Done and checked on the Android emulator (API 36): native anonymous sign-in, join, live lists and live updates, offline cold start from the cache with the banner, a trip deleted while open goes Home (TRIP-7) and leaves Home (the lost-trip check now compares sorted-key JSON), Back closes sheets/screens and leaves the app on Home, Back with unsaved expense changes asks "Discard changes?" (expenses flow 5, also in browsers; e2e), PDF and invite open Android's share sheet (PDF-4), status bar icons follow the app theme, no service worker in the APK, a WebView reload recovers (native SDKs already set up), launcher icons from `icon.svg` (white coin on marigold), launch screen = the logo (coin and name) in `--fg` on `--bg` following the in-app theme (APP-2, light and dark checked).
+- Phase 5 Android (2026-10-28, branch `android`, merged and pushed): Capacitor Android project, app ID `br.com.kinast.evenly` registered in Firebase (**the old app uses this same ID** with another key, so it must be uninstalled first; see the Phase 6 handoff), a new release key, debug build "Evenly Dev" against the LAN emulators, release build with the real config (ADR 0003). Done and checked on the Android emulator (API 36): native anonymous sign-in, join, live lists and live updates, offline cold start from the cache with the banner, a trip deleted while open goes Home (TRIP-7) and leaves Home (the lost-trip check now compares sorted-key JSON), Back closes sheets/screens and leaves the app on Home, Back with unsaved expense changes asks "Discard changes?" (expenses flow 5, also in browsers; e2e), PDF and invite open Android's share sheet (PDF-4), status bar icons follow the app theme, no service worker in the APK, a WebView reload recovers (native SDKs already set up), launcher icons from `icon.svg` (white coin on marigold), launch screen = the logo (coin and name) in `--fg` on `--bg` following the in-app theme (APP-2, light and dark checked).
 - Phase 5 still open:
   1. Install `android/evenly.apk` on the user's phone and try it against the real project. Needs the new rules deployed to the real project first (Phase 6 decision: the old app still uses it).
   2. Install: set `APK_URL` in `src/app/install.ts` once the APK is on Hosting (Phase 6 deploy).
@@ -115,6 +115,34 @@ Scaffold first (Vite, TS, Tailwind, shadcn, Firebase, Vitest, emulator, PWA). Th
 
 - A script that restructures existing Firestore data into the new model. Test it against an export first.
 - Deploy to the same Hosting site.
+
+#### Phase 6 handoff (written 2026-10-28 for a fresh session)
+
+Decided by the user (2026-10-28):
+
+- **Migrate old data**, but **only trips with content**: a trip with at least one expense. Trips with no expenses are not migrated; they're deleted with the old leftovers (they stay in the JSON backup). The mapping is in `docs/data-model.md` "Migration"; the old shape is in `specs/migration-source.md` (the only allowed source about the old app).
+- **Only two people used the old app.** No identity carry-over: they install the new app as new users, and the migration then **links their old member entries to their new UIDs** (the user tells you who is who). Keep our current release key (`android/release.jks`); the old key isn't needed.
+
+Facts found at handoff (verify, don't assume):
+
+- The old Android app's package is **`br.com.kinast.evenly`**, the same ID as the new app, signed with another key. ADR 0003 says the old ID was `com.example.evenly`; that was wrong (probably only its Firebase registration). The Android emulator AVD (`Medium_Phone_API_36.1`) has the old app installed (0.1.0, versionCode 1). Consequence: Android refuses to install the new APK over it, so **the old app must be uninstalled first** (say so in the install note and to the two users). Record this in ADR 0004 (corrects ADR 0003 decision 1's fact; the decisions stand).
+
+Steps (each needs the user's OK before touching the real project):
+
+1. **Migration script** `scripts/migrate.mjs` (Admin SDK, local, with the user's credentials; `firebase-admin` as a devDependency):
+   - Dry-run by default: read everything, write a JSON backup to a gitignored folder, print what it would do: trips kept vs dropped, and each trip's members with their old UID and name.
+   - `--map oldUid=newUid` (repeatable) links an old app member to a new identity: the member keeps its memberId, gets the new `uid` and the new user's name; `ownerUid` and `createdBy` are remapped too. Old app members with no mapping become **guests** with their old name, so anyone can still claim them by joining (MEM-7). A trip whose owner has no mapping: ask the user (the new model needs an app-user owner).
+   - `--apply` writes. Each trip is migrated in one batch: the new trip doc with its members and expenses, then the old subcollections deleted. Afterwards it deletes the dropped trips and `users`.
+   - The new UIDs: after the two users install the new app and enter their names, list the Auth users (Admin SDK `listUsers`, newest first, with names) and confirm the pairs with the user before `--apply`.
+   - Test first against the emulators loaded with the backup JSON: unit tests for the mapping (pure functions), then compare per-trip balances old vs new (the domain functions in `src/domain/`) and look at the trip lists in the app (`npm run android:dev` or the LAN preview).
+2. **Cutover**, with the user:
+   - Run the backup (dry run).
+   - Set `APK_URL` in `src/app/install.ts`, `npm run android:release`, `firebase deploy` (rules, indexes, hosting; the predeploy builds and adds `/evenly.apk`). The new rules lock the old app out.
+   - The two users uninstall the old app, install the new one, and enter their names.
+   - Run the migration with `--map` for both and `--apply`.
+3. **Check on the user's phone**: their old trips appear with matching balances.
+4. **GitHub**: only with the user's explicit OK, make `evenly-v2` the new `main`. That's the one time `main` is touched; ask how they want it (replace or merge) and update `CLAUDE.md` "Git" after.
+5. Loose ends: an embedded PDF font for names in non-Latin scripts (Phase 5 open item 3). Update this status section and the docs.
 
 ### 7. Gemini (later)
 
