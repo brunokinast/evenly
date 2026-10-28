@@ -52,7 +52,7 @@ export async function join(page: Page, code: string, tripName: string, claim?: s
   await expect(page.getByRole("heading", { name: tripName })).toBeVisible();
 }
 
-/** EXP-9, EXP-10: amount, Enter, description, Enter. */
+/** EXP-9, EXP-10: amount, Enter, description, Enter (closes the keyboard), Save. */
 export async function addExpense(page: Page, digits: string, description: string) {
   await page.getByRole("button", { name: "Add expense" }).click();
   await expect(page.getByRole("heading", { name: "New expense" })).toBeVisible();
@@ -60,5 +60,6 @@ export async function addExpense(page: Page, digits: string, description: string
   await page.keyboard.press("Enter");
   await page.keyboard.type(description);
   await page.keyboard.press("Enter");
+  await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByRole("tab", { name: "Expenses" })).toBeVisible();
 }

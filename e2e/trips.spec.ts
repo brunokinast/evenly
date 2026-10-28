@@ -118,6 +118,10 @@ test("EXP BAL expenses, details, custom split, edit, delete and balances, live f
   await expect(ana.getByRole("textbox", { name: "What was it for?" })).toBeFocused();
   await ana.keyboard.type("Dinner");
   await ana.keyboard.press("Enter");
+  // EXP-9: Enter on the description closes the keyboard and stays; Save saves.
+  await expect(ana.getByRole("textbox", { name: "What was it for?" })).not.toBeFocused();
+  await expect(ana.getByRole("heading", { name: "New expense" })).toBeVisible();
+  await ana.getByRole("button", { name: "Save" }).click();
   await expect(ana.getByRole("button", { name: /Dinner/ })).toBeVisible();
   await expect(ana.getByText("Split between all")).toBeVisible();
 
