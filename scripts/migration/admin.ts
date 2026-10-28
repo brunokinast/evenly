@@ -1,10 +1,10 @@
 // Admin SDK access for the Phase 6 scripts: the emulators (--emulator) or the real project with the
 // Firebase CLI login (`firebase login`), so no service-account key has to exist on disk.
-import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
+import { readFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { homedir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
-import { initializeApp, refreshToken, type App } from "firebase-admin/app";
+import { applicationDefault, initializeApp, type App } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import {
   getFirestore,
@@ -33,15 +33,21 @@ export function connect(emulator: boolean): { app: App; db: Firestore; projectId
   ) as { tokens?: { refresh_token?: string } };
   const token = store.tokens?.refresh_token;
   if (!token) throw new Error("Not logged in: run `npx firebase login` first.");
-  const app = initializeApp({
-    projectId: REAL_PROJECT,
-    credential: refreshToken({
+  // Firestore only takes application default credentials, so the login goes in a temporary ADC file.
+  const adc = join(tmpdir(), `evenly-adc-${process.pid}.json`);
+  writeFileSync(
+    adc,
+    JSON.stringify({
       type: "authorized_user",
       client_id: api.clientId(),
       client_secret: api.clientSecret(),
       refresh_token: token,
+      quota_project_id: REAL_PROJECT,
     }),
-  });
+  );
+  process.on("exit", () => rmSync(adc, { force: true }));
+  process.env.GOOGLE_APPLICATION_CREDENTIALS = adc;
+  const app = initializeApp({ projectId: REAL_PROJECT, credential: applicationDefault() });
   return { app, db: getFirestore(app), projectId: REAL_PROJECT };
 }
 
