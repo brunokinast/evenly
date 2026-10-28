@@ -10,6 +10,7 @@ import { TopBar } from "@/components/TopBar";
 import { TripTile } from "@/components/TripIcon";
 import { useMe } from "@/data/session";
 import { useExpenses, useTrip } from "@/data/trips";
+import { usePaintedMark } from "@/lib/perf";
 import { listOrder, people } from "@/domain/members";
 import type { Expense, Trip } from "@/domain/types";
 import { t } from "@/i18n";
@@ -45,6 +46,7 @@ export function TripScreen({ tripId, tab: tabParam }: { tripId: string; tab?: st
   const me = useMe();
   const trip = useTrip(tripId);
   const expenses = useExpenses(tripId);
+  usePaintedMark("painted:trip", trip.status === "ready" && expenses.status === "ready");
   const [, navigate] = useLocation();
   const tab: Tab = TABS.some((x) => x.id === tabParam) ? (tabParam as Tab) : "expenses";
   const [sheet, setSheet] = useState<"invite" | "menu" | null>(null);

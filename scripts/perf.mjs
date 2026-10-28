@@ -1,8 +1,11 @@
-// Phase 6b: repeatable timings of what users feel, on a production build against the local emulators, with
-// Lighthouse's mobile profile (CPU 4× slower, 150 ms latency, 1.6 Mbps down / 750 kbps up).
-//   npm run emulators          (or the LAN preview) in another terminal
-//   node scripts/perf.mjs      → builds dist-perf/, serves it, prints a table, writes perf-results/<time>.json
-//   node scripts/perf.mjs --no-build --runs 5 --label "after X"
+// Phase 6b (docs/performance.md): repeatable timings of what users feel, on a production build against the
+// local emulators, with a mid-range phone's CPU (4× slower) and a mobile network.
+//   npm run emulators                    (or the LAN preview) in another terminal
+//   node scripts/perf.mjs                → builds dist-perf/, serves it, runs, prints medians,
+//                                          writes perf-results/<time>.json
+//   options: --no-build  --runs 5  --size typical|big|stress  --network slow|good  --label "after X"
+// Times come from the page's own clock (performance.now) and the app's marks (src/lib/perf.ts), so they
+// include rendering, not Playwright's overhead.
 import { spawn, spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { chromium, devices } from "@playwright/test";
@@ -11,10 +14,29 @@ import { doc, setDoc, writeBatch } from "firebase/firestore";
 
 const args = process.argv.slice(2);
 const opt = (name, def) => (args.includes(name) ? args[args.indexOf(name) + 1] : def);
-const RUNS = Number(opt("--runs", 3));
+const RUNS = Number(opt("--runs", 5));
+const SIZE = opt("--size", "big");
+const NETWORK = opt("--network", "slow");
 const LABEL = opt("--label", "");
 const PORT = 4173;
 const URL = `http://localhost:${PORT}`;
+
+/** Main trip size per --size; every user also has two small trips. */
+const SIZES = {
+  typical: { people: 6, expenses: 40 },
+  big: { people: 8, expenses: 150 },
+  stress: { people: 20, expenses: 1000 },
+};
+/** Lighthouse's mobile "slow 4G", and a good 4G connection. */
+const NETWORKS = {
+  slow: { latency: 150, down: 1.6 * 1024 * 1024, up: 750 * 1024 },
+  good: { latency: 40, down: 9 * 1024 * 1024, up: 3 * 1024 * 1024 },
+};
+const size = SIZES[SIZE];
+const network = NETWORKS[NETWORK];
+if (!size || !network) throw new Error(`unknown --size ${SIZE} or --network ${NETWORK}`);
+const NAMES = ["Ana", "Bia", "Caio", "Duda", "Edu", "Fê", "Gui", "Hana", "Ivo", "Juca"];
+const ids = Array.from({ length: size.people }, (_, i) => (i === 0 ? "me" : `g${i - 1}`));
 
 if (!args.includes("--no-build")) {
   // Mode "perf" has no .env file, so the build talks to the emulators (src/data/firebase.ts).
@@ -25,22 +47,13 @@ const server = spawn(`npx vite preview --outDir dist-perf --port ${PORT} --stric
   shell: true,
   stdio: "ignore",
 });
-for (
-  let i = 0;
-  i < 60 &&
-  !(await fetch(URL).then(
-    (r) => r.ok,
-    () => false,
-  ));
-  i++
-)
-  await sleep(500);
+await waitForServer();
 
 const env = await initializeTestEnvironment({
   projectId: "demo-evenly",
   firestore: { host: "127.0.0.1", port: 8080 },
 });
-
+await checkEmulator();
 const browser = await chromium.launch();
 const results = {};
 const record = (name, ms) => (results[name] ??= []).push(Math.round(ms));
@@ -57,13 +70,16 @@ try {
 }
 
 const median = (xs) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
-console.log(`\n${LABEL || "perf"} (median of ${RUNS}, ms)`);
+console.log(`\n${LABEL || "perf"}: size ${SIZE}, network ${NETWORK}, median of ${RUNS} (ms)`);
 for (const [name, xs] of Object.entries(results)) {
-  console.log(`  ${name.padEnd(42)} ${String(median(xs)).padStart(6)}   [${xs.join(", ")}]`);
+  console.log(`  ${name.padEnd(52)} ${String(median(xs)).padStart(6)}   [${xs.join(", ")}]`);
 }
 mkdirSync("perf-results", { recursive: true });
 const file = `perf-results/${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
-writeFileSync(file, JSON.stringify({ label: LABEL, runs: RUNS, results }, null, 1));
+writeFileSync(
+  file,
+  JSON.stringify({ label: LABEL, size: SIZE, network: NETWORK, runs: RUNS, results }, null, 1),
+);
 console.log(`\n→ ${file}`);
 process.exit(0);
 
@@ -77,28 +93,243 @@ async function oneRun() {
       origins: [{ origin: URL, localStorage: [{ name: "evenly.installFirstSkipped", value: "1" }] }],
     },
   });
-  const page = await context.newPage();
-  await throttle(page);
 
-  // 1. First open: nothing cached.
-  await page.goto(URL);
-  const welcome = await until(page, () => !!document.querySelector("input[autocomplete=given-name]"));
-  record("1 first open → Welcome usable", welcome);
-  record("1 first open: JS+CSS transferred (kB)", await transferred(page));
+  // First open: nothing cached (no service worker, no HTTP cache, no identity).
+  let page = await open(context);
+  await waitMark(page, "painted:welcome");
+  record("first open → name screen", await markAt(page, "painted:welcome"));
+  await breakdown(page, "first open", ["js-ready", "firebase-ready", "auth-ready"]);
+  record("first open: JS+CSS downloaded (kB)", await downloadedKb(page));
 
-  // 2. Enter a name → Home.
-  const t0 = await now(page);
+  // Name → Home.
+  let t = await now(page);
   await page.fill("input[autocomplete=given-name]", "Perf");
   await page.keyboard.press("Enter");
-  record("2 name entered → Home", (await until(page, () => heading() === "Your trips")) - t0);
+  await waitMark(page, "painted:home");
+  record("name entered → Home", (await markAt(page, "painted:home")) - t);
+  await seed(await myUid(page));
+  await waitText(page, "Perf main trip", "body", 60_000);
+  await page.waitForTimeout(1500); // let the service worker finish installing
+  await page.close();
 
-  // Data for this user: a big trip (8 people, 150 expenses) and two small ones.
-  const uid = await page.evaluate(
+  // Returning launch: service worker, HTTP cache and Firestore's offline cache are warm.
+  for (let i = 0; i < 2; i++) {
+    page = await open(context);
+    await waitMark(page, "painted:home");
+    record("returning launch → trips on screen", await markAt(page, "painted:home"));
+    await breakdown(page, "returning launch", [
+      "js-ready",
+      "firebase-ready",
+      "auth-ready",
+      "snapshot:trips:cache",
+      "snapshot:trips:server",
+    ]);
+    if (i === 0) await page.close();
+  }
+
+  // Home → the main trip with its expenses (first visit this launch: its listeners start now).
+  t = await clickText(page, "main button", "Perf main trip");
+  await waitMark(page, "painted:trip");
+  record("Home → trip with expenses", (await markAt(page, "painted:trip")) - t);
+  await breakdown(
+    page,
+    "Home → trip",
+    ["snapshot:trip:cache", "snapshot:expenses:cache", "snapshot:trip:server", "snapshot:expenses:server"],
+    t,
+  );
+
+  // Tabs: tap → next frame painted.
+  record("tab → Balances", await tapToPaint(page, "[role=tab]:nth-child(2)"));
+  record("tab → Members", await tapToPaint(page, "[role=tab]:nth-child(3)"));
+  record("tab → Expenses", await tapToPaint(page, "[role=tab]:nth-child(1)"));
+
+  // Add expense: tap → form painted with its data.
+  t = await clickText(page, "button", "Add expense");
+  await waitMark(page, "painted:form");
+  record("Add expense → form ready", (await markAt(page, "painted:form", -1)) - t);
+  await page.keyboard.type("1234");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("Perf lunch");
+  await page.keyboard.press("Enter");
+
+  // Save: tap → back on the trip with it listed; and → the server's confirmation.
+  t = await clickText(page, "button", "Save");
+  await page.waitForFunction(
+    () =>
+      document.querySelector("h1")?.textContent?.trim() !== "New expense" &&
+      document.body.innerText.includes("Perf lunch"),
+    undefined,
+    { polling: "raf", timeout: 30_000 },
+  );
+  record("Save → back on trip, expense listed", (await now(page)) - t);
+  record("  Save: server confirmed", (await markAt(page, "save:confirmed", -1)) - t);
+  await breakdown(page, "Save", ["snapshot:expenses:cache", "snapshot:expenses:server"], t);
+
+  // Expense details: tap → sheet painted.
+  record("tap expense → details", await tapToPaint(page, null, "Perf lunch", "dialog[open]"));
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(500);
+
+  // Another member's change arriving live (written straight to the emulator).
+  const tripId = new globalThis.URL(page.url()).pathname.split("/")[2];
+  const t0 = Date.now();
+  await env.withSecurityRulesDisabled((ctx) =>
+    setDoc(
+      doc(ctx.firestore(), `trips/${tripId}/expenses/live${t0}`),
+      expense("Perf from Ana", "g0", t0 - 1000),
+    ),
+  );
+  await waitText(page, "Perf from Ana");
+  record("other member's expense → on screen", Date.now() - t0);
+
+  // Create trip: Home → New trip → sheet closed and the trip listed (TRIP-1: stays on Home).
+  await page.goBack();
+  await waitText(page, "Your trips", "h1");
+  await page.getByRole("button", { name: "New trip" }).click();
+  await page.getByRole("textbox", { name: "Trip name" }).fill("Perf new trip");
+  await page.keyboard.press("Enter");
+  t = await clickText(page, "dialog[open] button", "Create trip");
+  await page.waitForFunction(
+    () =>
+      !document.querySelector("dialog[open]") &&
+      document.querySelector("main")?.textContent.includes("Perf new trip"),
+    undefined,
+    { polling: "raf", timeout: 30_000 },
+  );
+  record("Create trip → listed on Home", (await now(page)) - t);
+  await breakdown(page, "Create trip", ["snapshot:trips:cache", "snapshot:trips:server"], t);
+
+  // PDF export of the main trip (the first one loads the PDF code).
+  await clickText(page, "main button", "Perf main trip");
+  await waitText(page, "Perf main trip", "h1");
+  await page.getByRole("tab", { name: "Balances" }).click();
+  await page.evaluate(() => Object.defineProperty(navigator, "canShare", { value: undefined }));
+  const download = page.waitForEvent("download", { timeout: 60_000 });
+  const d0 = Date.now();
+  await page.getByRole("button", { name: "Export as PDF" }).click();
+  await download;
+  record("Export PDF → file ready (first time)", Date.now() - d0);
+  await page.close();
+
+  // Relaunch, then a trip already seen on this device (its expenses are in the offline cache).
+  page = await open(context);
+  await waitMark(page, "painted:home");
+  t = await clickText(page, "main button", "Perf main trip");
+  await waitMark(page, "painted:trip");
+  record("Home → trip seen before (after relaunch)", (await markAt(page, "painted:trip")) - t);
+  await breakdown(
+    page,
+    "trip seen before",
+    ["snapshot:trip:cache", "snapshot:expenses:cache", "snapshot:trip:server", "snapshot:expenses:server"],
+    t,
+  );
+  await context.close();
+}
+
+/** A new tab with the phone's CPU and network. */
+async function open(context) {
+  const page = await context.newPage();
+  const cdp = await context.newCDPSession(page);
+  await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
+  await cdp.send("Network.enable");
+  await cdp.send("Network.emulateNetworkConditions", {
+    offline: false,
+    latency: network.latency,
+    downloadThroughput: network.down / 8,
+    uploadThroughput: network.up / 8,
+  });
+  await page.goto(URL);
+  return page;
+}
+
+function now(page) {
+  return page.evaluate(() => performance.now());
+}
+
+/** Waits until the app's mark `evenly:<name>` exists. */
+function waitMark(page, name) {
+  return page.waitForFunction((n) => performance.getEntriesByName(`evenly:${n}`).length > 0, name, {
+    timeout: 60_000,
+  });
+}
+
+/** Page time of a mark (the first, or `index` -1 = the last). */
+function markAt(page, name, index = 0) {
+  return page.evaluate(
+    ([n, i]) => performance.getEntriesByName(`evenly:${n}`).at(i)?.startTime ?? NaN,
+    [name, index],
+  );
+}
+
+/** Where inside a journey the time went: each mark's first time after `from` (navigation start by default). */
+async function breakdown(page, journey, names, from = 0) {
+  for (const name of names) {
+    const at = await page.evaluate(
+      ([n, f]) => performance.getEntriesByName(`evenly:${n}`).find((e) => e.startTime >= f)?.startTime,
+      [name, from],
+    );
+    if (at !== undefined) record(`  ${journey}: ${name}`, at - from);
+  }
+}
+
+/** Clicks the last element matching `selector` whose text includes `text`; returns the page time. */
+function clickText(page, selector, text) {
+  return page.evaluate(
+    ([s, x]) => {
+      const el = [...document.querySelectorAll(s)].filter((e) => e.textContent.includes(x)).at(-1);
+      const t = performance.now();
+      el.click();
+      return t;
+    },
+    [selector, text],
+  );
+}
+
+/** Tap (by selector, or by visible text) → the next frame painted, once `until` exists if given. */
+function tapToPaint(page, selector, text, until) {
+  return page.evaluate(
+    async ([s, x, u]) => {
+      const target = s
+        ? document.querySelector(s)
+        : [...document.querySelectorAll("button, [role=button], li")]
+            .filter((e) => e.textContent.includes(x))
+            .at(-1);
+      const t = performance.now();
+      target.click();
+      for (;;) {
+        await new Promise((r) => requestAnimationFrame(() => setTimeout(r)));
+        if (!u || document.querySelector(u)) return performance.now() - t;
+      }
+    },
+    [selector, text, until],
+  );
+}
+
+function waitText(page, text, selector = "body", timeout = 30_000) {
+  return page.waitForFunction(
+    ([x, s]) => [...document.querySelectorAll(s)].some((e) => e.textContent.includes(x)),
+    [text, selector],
+    { polling: "raf", timeout },
+  );
+}
+
+function downloadedKb(page) {
+  return page.evaluate(
+    () =>
+      performance
+        .getEntriesByType("resource")
+        .filter((e) => /\.(js|css)(\?|$)/.test(e.name))
+        .reduce((a, e) => a + e.transferSize, 0) / 1024,
+  );
+}
+
+function myUid(page) {
+  return page.evaluate(
     () =>
       new Promise((resolve) => {
-        const open = indexedDB.open("firebaseLocalStorageDb");
-        open.onsuccess = () => {
-          const all = open.result
+        const req = indexedDB.open("firebaseLocalStorageDb");
+        req.onsuccess = () => {
+          const all = req.result
             .transaction("firebaseLocalStorage")
             .objectStore("firebaseLocalStorage")
             .getAll();
@@ -106,151 +337,88 @@ async function oneRun() {
         };
       }),
   );
-  await seed(uid);
-  await until(page, () => document.body.innerText.includes("Perf big trip"), 30_000);
-  await page.close();
-
-  // 3. Returning launch: service worker, HTTP cache and Firestore's offline cache are warm.
-  for (let i = 0; i < 2; i++) {
-    const p = await context.newPage();
-    await throttle(p);
-    await p.goto(URL);
-    record(
-      "3 returning launch → Home with trips",
-      await until(p, () => document.body.innerText.includes("Perf big trip")),
-    );
-    await p.close();
-  }
-
-  // 4. Home → the big trip with its expenses.
-  const p = await context.newPage();
-  await throttle(p);
-  await p.goto(URL);
-  await until(p, () => document.body.innerText.includes("Perf big trip"));
-  let s = await now(p);
-  await p.evaluate(() =>
-    [...document.querySelectorAll("main button")]
-      .find((b) => b.textContent.includes("Perf big trip"))
-      .click(),
-  );
-  record(
-    "4 open trip → expenses shown",
-    (await until(p, () => document.body.innerText.includes("Expense 149"))) - s,
-  );
-
-  // 5. Add expense: form ready, then Save → back on the trip with it listed.
-  s = await now(p);
-  await p.getByRole("button", { name: "Add expense" }).click();
-  record(
-    "5a Add expense → form ready",
-    (await until(
-      p,
-      () => document.activeElement?.getAttribute("inputmode") === "numeric" || heading() === "New expense",
-    )) - s,
-  );
-  await p.keyboard.type("1234");
-  await p.keyboard.press("Enter");
-  await p.keyboard.type("Perf lunch");
-  await p.keyboard.press("Enter");
-  s = await now(p);
-  await p.getByRole("button", { name: "Save" }).click();
-  record(
-    "5b Save → back on trip, expense listed",
-    (await until(
-      p,
-      () => heading() !== "New expense" && document.body.innerText.includes("Perf lunch"),
-      30_000,
-    )) - s,
-  );
-
-  // 6. Expense details sheet.
-  s = await now(p);
-  await p.getByText("Perf lunch").first().click();
-  record(
-    "6 tap expense → details open",
-    (await until(p, () => !!document.querySelector("dialog[open]"))) - s,
-  );
-  await context.close();
 }
 
-async function throttle(page) {
-  const cdp = await page.context().newCDPSession(page);
-  await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
-  await cdp.send("Network.enable");
-  await cdp.send("Network.emulateNetworkConditions", {
-    offline: false,
-    latency: 150,
-    downloadThroughput: (1.6 * 1024 * 1024) / 8,
-    uploadThroughput: (750 * 1024) / 8,
-  });
+function expense(description, payerId, at) {
+  return {
+    description,
+    amountCents: 1000 * size.people,
+    payerId,
+    shares: Object.fromEntries(ids.map((id) => [id, 1000])),
+    split: "equal",
+    spentAt: at,
+    createdBy: "seed",
+    createdAt: at,
+    updatedAt: at,
+  };
 }
 
-/** ms since the page's navigation started (performance.now) when `cond` first holds. */
-async function until(page, cond, timeout = 20_000) {
-  const fn = `(() => { const heading = () => document.querySelector("h1")?.textContent?.trim(); return (${cond.toString()})(); })()`;
-  await page.waitForFunction(fn, undefined, { polling: "raf", timeout });
-  return now(page);
-}
-function now(page) {
-  return page.evaluate(() => performance.now());
-}
-function heading() {} // (defined inside the page by until())
-
-async function transferred(page) {
-  return Math.round(
-    await page.evaluate(
-      () =>
-        performance
-          .getEntriesByType("resource")
-          .filter((e) => /\.(js|css)(\?|$)/.test(e.name))
-          .reduce((a, e) => a + e.transferSize, 0) / 1024,
-    ),
-  );
-}
-
+/** The user's trips: the main one at --size, and two small ones. */
 async function seed(uid) {
   await env.withSecurityRulesDisabled(async (ctx) => {
     const db = ctx.firestore();
     const now = Date.now();
-    const trip = (id, name, guests) => {
+    const trip = (id, name, people, createdAt) => {
       const members = { me: { name: "Perf", uid, joinedAt: now - 1e9 } };
-      guests.forEach((g, i) => (members[`g${i}`] = { name: g, joinedAt: now - 1e9 + i + 1 }));
+      for (let i = 0; i < people - 1; i++) {
+        members[`g${i}`] = { name: `${NAMES[i % NAMES.length]} ${i}`, joinedAt: now - 1e9 + i + 1 };
+      }
       return setDoc(doc(db, `trips/${id}`), {
         name,
         icon: "beach",
         currency: "BRL",
         ownerUid: uid,
-        createdAt: now - 1e9,
+        createdAt,
         members,
         memberIdsByUid: { [uid]: "me" },
         memberUids: [uid],
         invite: null,
       });
     };
-    const big = `perf-${uid}`;
-    await trip(big, "Perf big trip", ["Ana", "Bia", "Caio", "Duda", "Edu", "Fê", "Gui"]);
-    await trip(`${big}-2`, "Perf small one", ["Ana"]);
-    await trip(`${big}-3`, "Perf small two", ["Bia"]);
-    const ids = ["me", "g0", "g1", "g2", "g3", "g4", "g5", "g6"];
-    const batch = writeBatch(db);
-    for (let i = 0; i < 150; i++) {
-      const at = now - (150 - i) * 3_600_000;
-      batch.set(doc(db, `trips/${big}/expenses/e${i}`), {
-        description: `Expense ${i}`,
-        amountCents: 8000,
-        payerId: ids[i % 8],
-        shares: Object.fromEntries(ids.map((id) => [id, 1000])),
-        split: "equal",
-        spentAt: at,
-        createdBy: uid,
-        createdAt: at,
-        updatedAt: at,
-      });
+    const main = `perf-${uid}`;
+    await trip(`${main}-2`, "Perf small one", 2, now - 3e9);
+    await trip(`${main}-3`, "Perf small two", 2, now - 2e9);
+    await trip(main, "Perf main trip", size.people, now - 1e9);
+    for (let start = 0; start < size.expenses; start += 400) {
+      const batch = writeBatch(db);
+      for (let i = start; i < Math.min(size.expenses, start + 400); i++) {
+        const at = now - (size.expenses - i) * 3_600_000;
+        batch.set(doc(db, `trips/${main}/expenses/e${i}`), expense(`Expense ${i}`, ids[i % size.people], at));
+      }
+      await batch.commit();
     }
-    await batch.commit();
   });
 }
 
-function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
+async function waitForServer() {
+  for (let i = 0; i < 60; i++) {
+    const up = await fetch(URL).then(
+      (r) => r.ok,
+      () => false,
+    );
+    if (up) return;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  throw new Error("preview server didn't start");
+}
+
+/**
+ * A Firestore emulator that has run for hours (many e2e/perf sessions) can take ~2 s per write, which would
+ * swamp every write timing here; a fresh one takes ~20 ms. Refuse to measure on a slow one.
+ */
+async function checkEmulator() {
+  const times = [];
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    for (let i = 0; i < 4; i++) {
+      const t = Date.now();
+      await setDoc(doc(ctx.firestore(), `perfCheck/w${i}`), { at: t });
+      times.push(Date.now() - t);
+    }
+  });
+  const slowest = Math.max(...times.slice(1));
+  if (slowest > 300) {
+    await env.cleanup();
+    server.kill();
+    throw new Error(`The Firestore emulator takes ${slowest} ms per write: restart it (npm run emulators).`);
+  }
 }

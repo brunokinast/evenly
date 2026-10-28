@@ -4,6 +4,7 @@ import { isWellFormed } from "@/domain/balances";
 import { sortMembers } from "@/domain/members";
 import type { Expense, Member, Trip } from "@/domain/types";
 import { firebaseReady } from "./firebase";
+import { mark, source } from "@/lib/perf";
 import { peekLive, useLive, type Live } from "./live";
 
 // Live hooks for on-screen data (docs/architecture.md). Each is one shared Firestore listener.
@@ -115,6 +116,7 @@ function useMyTripsQuery(uid: string): Live<Trip[]> {
     listen(() =>
       FirebaseFirestore.addCollectionSnapshotListener(myTripsQuery(uid), (event, error) => {
         if (error || !event) return emit({ status: "gone" });
+        mark(`snapshot:trips:${source(event.snapshots[0]?.metadata)}`, event.snapshots.length);
         const trips = event.snapshots
           .filter((s) => s.data)
           .map((s) => {
@@ -137,6 +139,7 @@ export function useTrip(tripId: string): Live<Trip> {
           if (last) loseTrip(tripId, last);
           return emit({ status: "gone" });
         }
+        mark(`snapshot:trip:${source(event.snapshot.metadata)}`);
         last = rawJson(event.snapshot.data);
         emit({ status: "ready", data: toTrip(tripId, event.snapshot.data) });
       }),
@@ -151,6 +154,7 @@ export function useExpenses(tripId: string): Live<Expense[]> {
         { reference: `trips/${tripId}/expenses` },
         (event, error) => {
           if (error || !event) return emit({ status: "gone" });
+          mark(`snapshot:expenses:${source(event.snapshots[0]?.metadata)}`, event.snapshots.length);
           const expenses = event.snapshots
             .filter((s) => s.data)
             .map((s) => ({ id: s.id, ...(s.data as Omit<Expense, "id">) }))

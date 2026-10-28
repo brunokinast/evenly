@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { Capacitor } from "@capacitor/core";
 import { FirebaseAuthentication } from "@capacitor-firebase/authentication";
 import { FirebaseFirestore } from "@capacitor-firebase/firestore";
+import { mark } from "@/lib/perf";
 
 // Production config comes from .env.production (VITE_FIREBASE_*). Without it (dev, tests) the app runs
 // against the local emulators under a demo project, so nothing can touch real data.
@@ -40,4 +41,4 @@ function setup(call: Promise<void>) {
 
 /* eslint-enable react-hooks/rules-of-hooks */
 /** Resolves once Firebase is configured. Every function in src/data/ awaits it before its first call. */
-export const firebaseReady: Promise<void> = connect();
+export const firebaseReady: Promise<void> = connect().then(() => mark("firebase-ready"));

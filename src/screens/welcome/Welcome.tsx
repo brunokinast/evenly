@@ -7,6 +7,7 @@ import { showInstallFirst } from "@/domain/install";
 import { checkName } from "@/domain/names";
 import { t } from "@/i18n";
 import { cn } from "@/lib/cn";
+import { usePaintedMark } from "@/lib/perf";
 import { useNameForm } from "../useNameForm";
 import { InstallFirst } from "./InstallFirst";
 
@@ -19,6 +20,7 @@ export function Welcome() {
 
 function NameStep() {
   const form = useNameForm("");
+  usePaintedMark("painted:welcome", true);
   const id = useId();
   const ready = checkName(form.value).ok;
   return (

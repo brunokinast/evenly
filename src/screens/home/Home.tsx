@@ -13,6 +13,7 @@ import { TopBar } from "@/components/TopBar";
 import { TripTile } from "@/components/TripIcon";
 import { useMe } from "@/data/session";
 import { useMyTrips } from "@/data/trips";
+import { usePaintedMark } from "@/lib/perf";
 import { longDate, t } from "@/i18n";
 import { InstallSheets, startInstall, type InstallSheet } from "./InstallSheets";
 import { JoinSheet } from "./JoinSheet";
@@ -24,6 +25,7 @@ type SheetName = "profile" | "newTrip" | "join" | null;
 export function Home() {
   const me = useMe();
   const trips = useMyTrips(me.uid);
+  usePaintedMark("painted:home", trips.status === "ready");
   const online = useOnline();
   const install = useInstall();
   const [, navigate] = useLocation();

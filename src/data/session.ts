@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 import { FirebaseAuthentication, type User } from "@capacitor-firebase/authentication";
 import { Capacitor } from "@capacitor/core";
 import { renameMeInTrips } from "./commands";
+import { mark } from "@/lib/perf";
 import { firebaseReady, usesEmulators } from "./firebase";
 import { myTripsForWrite } from "./trips";
 
@@ -14,6 +15,7 @@ let session: Session = { status: "loading" };
 const listeners = new Set<() => void>();
 
 function set(next: Session) {
+  if (next.status === "ready" && session.status !== "ready") mark("auth-ready");
   session = next;
   listeners.forEach((l) => l());
 }

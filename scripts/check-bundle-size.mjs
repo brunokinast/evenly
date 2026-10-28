@@ -7,7 +7,7 @@ import { join } from "node:path";
 
 const BUDGET = 350 * 1024;
 // PDF export (pdf-lib, fontkit, the WOFF2 decoder; its fonts are separate files) loads only when "Export as PDF" is tapped.
-const ON_DEMAND = [/^exportPdf-/];
+const ON_DEMAND = [/^exportPdf-/, /^PerfPanel-/];
 
 const dir = join("dist", "assets");
 const files = readdirSync(dir).filter((f) => f.endsWith(".js") && !ON_DEMAND.some((re) => re.test(f)));

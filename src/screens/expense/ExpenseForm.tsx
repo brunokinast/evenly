@@ -19,6 +19,7 @@ import { customShares, equalShares, withoutZeroShares } from "@/domain/split";
 import type { Expense, Trip } from "@/domain/types";
 import { money, t, whenLabel } from "@/i18n";
 import { cn } from "@/lib/cn";
+import { mark, usePaintedMark } from "@/lib/perf";
 import { NotFound } from "../NotFound";
 import { PayerSheet, SplitSheet, WhenSheet } from "./FormSheets";
 
@@ -27,6 +28,7 @@ export function ExpenseFormScreen({ tripId, expenseId }: { tripId: string; expen
   const me = useMe();
   const trip = useTrip(tripId);
   const expenses = useExpenses(tripId);
+  usePaintedMark("painted:form", trip.status === "ready" && expenses.status === "ready");
   const [, navigate] = useLocation();
   const existing =
     expenseId && expenses.status === "ready" ? expenses.data.find((e) => e.id === expenseId) : undefined;
@@ -122,6 +124,7 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
     const shares = isCustom ? withoutZeroShares(split!.shares) : equalShares(cents, parts, f.payerId);
     setBusy(true);
     setError(null);
+    mark("save:tap");
     try {
       await saveExpense(
         trip.id,
@@ -135,6 +138,7 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
         },
         existing,
       );
+      mark("save:confirmed");
       showToast(t(existing ? "form.updated" : "form.added"));
       leave();
     } catch {

@@ -164,7 +164,8 @@ Targets (mid-range phone, mobile network): returning launch → trips ≤ 1.0 s 
 3. Measure every journey (first open, name → Home, returning launch cold and resumed, Home → trip, tabs, Add expense, Save, edit/delete, join, create trip, PDF, a change from another member) × platform (web, Android app, iPhone spot checks) × data size. Diagnose slow ones with the download waterfall, bundle composition, Chrome traces, React Profiler and Firestore logging (cache vs server, bridge snapshot sizes, rules `get()`s).
 4. Findings table to the user (cost, cause, fix, gain, risk, behavior change?). Behavior changes (e.g. Save closing before the server confirms) need the user's OK, the spec, and an ADR if they bend a `CLAUDE.md` rule.
 5. One fix per commit with before/after numbers; drop what doesn't move them. Then a real-phone check by the user.
-6. Docs (`architecture.md`, this plan, CLAUDE.md commands), merge, deploy, APK.
+6. Later (asked by the user): a real phone connected to this PC (USB debugging) running `scripts/perf-android.mjs` on real hardware, with a release-like build if possible: release optimizations, but pointed at the emulators and with the WebView debuggable so the marks can be read (the real release talks to the real project and can't be inspected).
+7. Docs (`architecture.md`, this plan, CLAUDE.md commands), merge, deploy, APK.
 
 ### 7. Gemini (later)
 
