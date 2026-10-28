@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
 import { LogOut, Pencil, Trash2, UserRoundPlus } from "lucide-react";
 import { useOnline } from "@/app/online";
 import { showToast } from "@/app/toast";
@@ -26,7 +25,6 @@ type Props = {
 export function TripMenu({ open, view, onClose, onAddGuest, onLeaving }: Props) {
   const { trip, isOwner } = view;
   const online = useOnline();
-  const [, navigate] = useLocation();
   const [step, setStep] = useState<Step>("menu");
   const close = () => {
     setStep("menu");
@@ -72,7 +70,7 @@ export function TripMenu({ open, view, onClose, onAddGuest, onLeaving }: Props) 
         confirm={t("menu.delete")}
         cancel={t("common.cancel")}
         errorText={t("common.error")}
-        disabled={!online}
+        disabled={!online || !view.expensesLoaded}
         onClose={close}
         onConfirm={async () => {
           onLeaving();
@@ -80,8 +78,7 @@ export function TripMenu({ open, view, onClose, onAddGuest, onLeaving }: Props) 
             trip,
             view.expenses.map((e) => e.id),
           );
-          showToast(t("deleteTrip.done"));
-          navigate("/", { replace: true });
+          showToast(t("deleteTrip.done")); // TripScreen goes Home once the trip is gone.
         }}
       />
 
@@ -97,8 +94,7 @@ export function TripMenu({ open, view, onClose, onAddGuest, onLeaving }: Props) 
         onConfirm={async () => {
           onLeaving();
           await leaveTrip(trip);
-          showToast(t("leave.done", { trip: trip.name }));
-          navigate("/", { replace: true });
+          showToast(t("leave.done", { trip: trip.name })); // TripScreen goes Home once access is gone.
         }}
       />
     </>

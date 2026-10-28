@@ -14,6 +14,21 @@ export function balances(memberIds: string[], expenses: Expense[]): Map<string, 
   return out;
 }
 
+/**
+ * BAL-1: the rules can't check that shares add up (data-model), so an expense written by a buggy client is
+ * ignored rather than breaking everyone's balances.
+ */
+export function isWellFormed(e: Expense): boolean {
+  const shares = Object.values(e.shares ?? {});
+  return (
+    Number.isInteger(e.amountCents) &&
+    e.amountCents > 0 &&
+    shares.length > 0 &&
+    shares.every((s) => Number.isInteger(s) && s > 0) &&
+    shares.reduce((a, b) => a + b, 0) === e.amountCents
+  );
+}
+
 export type Payment = { from: string; to: string; cents: number };
 
 /**
@@ -24,7 +39,8 @@ export function settlements(balance: Map<string, number>, order: string[]): Paym
   const ids = [...order, ...[...balance.keys()].filter((id) => !order.includes(id))];
   const b = new Map(ids.map((id) => [id, balance.get(id) ?? 0]));
   const out: Payment[] = [];
-  for (;;) {
+  // At most one payment per member settles everyone; the cap also guards against balances not summing to 0.
+  for (let step = 0; step < ids.length; step++) {
     const open = ids.filter((id) => b.get(id) !== 0);
     if (open.length === 0) return out;
     const debtor = open.reduce((a, x) => (b.get(x)! < b.get(a)! ? x : a));
@@ -34,6 +50,7 @@ export function settlements(balance: Map<string, number>, order: string[]): Paym
     b.set(debtor, b.get(debtor)! + cents);
     b.set(creditor, b.get(creditor)! - cents);
   }
+  return out;
 }
 
 export const totalSpent = (expenses: Expense[]) => expenses.reduce((sum, e) => sum + e.amountCents, 0);

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { openTrip } from "@/app/nav";
 import { ChevronRight, Luggage, Plus, Smartphone, Ticket } from "lucide-react";
 import { dismissInstallCard, useInstall } from "@/app/install";
 import { useOnline } from "@/app/online";
@@ -59,7 +60,7 @@ export function Home() {
                 title={trip.name}
                 caption={`${trip.currency} · ${longDate(trip.createdAt)}`}
                 trailing={<ChevronRight className="size-5 shrink-0 text-fg-muted" aria-hidden />}
-                onClick={() => navigate(`/trip/${trip.id}`)}
+                onClick={() => void openTrip(navigate, `/trip/${trip.id}`)}
               />
             ))}
           </ListGroup>

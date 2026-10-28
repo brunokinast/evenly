@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useLocation } from "wouter";
+import { openTrip } from "@/app/nav";
 import { LoaderCircle } from "lucide-react";
 import { useOnline } from "@/app/online";
 import { showToast } from "@/app/toast";
@@ -39,7 +40,10 @@ function JoinForm({ myTrips }: { myTrips: Trip[] }) {
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState(false);
 
+  const latest = useRef("");
+
   async function onCode(digits: string) {
+    latest.current = digits;
     setCode(digits);
     setClaim(null);
     setJoinError(false);
@@ -47,8 +51,10 @@ function JoinForm({ myTrips }: { myTrips: Trip[] }) {
     setLookup({ status: "busy" });
     try {
       const invite = await lookupInvite(digits);
+      if (latest.current !== digits) return; // A newer code was typed meanwhile.
       setLookup(invite ? { status: "found", invite } : { status: "error", message: t("join.invalid") });
     } catch (e) {
+      if (latest.current !== digits) return;
       setLookup({
         status: "error",
         message: t(e instanceof TooManyAttempts ? "join.tooMany" : "common.error"),
@@ -62,7 +68,7 @@ function JoinForm({ myTrips }: { myTrips: Trip[] }) {
     try {
       await joinTrip(invite, me.name, claim);
       showToast(t("join.joined", { trip: invite.name }));
-      navigate(`/trip/${invite.tripId}`, { replace: true });
+      await openTrip(navigate, `/trip/${invite.tripId}`);
     } catch {
       setJoinError(true);
       setJoining(false);
@@ -100,7 +106,7 @@ function JoinForm({ myTrips }: { myTrips: Trip[] }) {
               <Button
                 variant="primary"
                 className="w-full"
-                onClick={() => navigate(`/trip/${found.tripId}`, { replace: true })}
+                onClick={() => void openTrip(navigate, `/trip/${found.tripId}`)}
               >
                 {t("join.open")}
               </Button>

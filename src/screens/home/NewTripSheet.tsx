@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { openTrip } from "@/app/nav";
 import { useOnline } from "@/app/online";
 import { Button } from "@/components/Button";
 import { Segmented } from "@/components/Segmented";
@@ -53,7 +54,7 @@ function NewTripForm() {
       } catch {
         // Storage blocked: no remembered currency.
       }
-      navigate(`/trip/${id}/members`, { replace: true });
+      await openTrip(navigate, `/trip/${id}/members`);
     } catch {
       setError(t("common.error"));
       setBusy(false);

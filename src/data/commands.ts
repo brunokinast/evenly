@@ -83,12 +83,20 @@ export async function deleteTrip(trip: Trip, expenseIds: string[]) {
   await batch([...ops, ...(invite ? [remove(`invites/${invite.code}`)] : []), remove(`trips/${trip.id}`)]);
 }
 
-/** ID-5: my name in the Auth profile is copied into each of my trips, in one batch. */
-export function renameMeInTrips(trips: Trip[], name: string) {
-  const ops = trips
+/** ID-5: my name in the Auth profile is copied into each of my trips, one write per trip (so one trip
+ * I lost access to can't block the others). */
+export async function renameMeInTrips(trips: Trip[], name: string) {
+  await firebaseReady;
+  const writes = trips
     .filter((t) => t.members.find((m) => m.id === t.memberIdsByUid[myUid()])?.name !== name)
-    .map((t) => update(`trips/${t.id}`, { [`members.${myMemberId(t)}.name`]: name }));
-  return ops.length ? batch(ops.slice(0, 500)) : Promise.resolve();
+    .map((t) =>
+      FirebaseFirestore.updateDocument({
+        reference: `trips/${t.id}`,
+        data: { [`members.${myMemberId(t)}.name`]: name },
+      }),
+    );
+  const results = await Promise.allSettled(writes);
+  if (results.some((r) => r.status === "rejected")) throw new Error("Some trips weren't updated");
 }
 
 // ---------- invites ----------

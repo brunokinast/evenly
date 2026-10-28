@@ -23,20 +23,24 @@ describe("members", () => {
     expect(m.map((x) => x.id)).toEqual(["a", "b"]);
   });
 
-  it("MEM-4 tells same names apart: me stays plain, others get a number in join order", () => {
+  it("MEM-4 tells same names apart: me stays plain, the guest tag, else a number in join order", () => {
     const p = people(
       trip([
         { id: "a", name: "Ana", uid: "u1", joinedAt: 1 },
         { id: "b", name: "ana", uid: "u2", joinedAt: 2 },
         { id: "c", name: "Ana", joinedAt: 3 },
         { id: "d", name: "Bia", joinedAt: 4 },
+        { id: "e", name: "Ana", uid: "u3", joinedAt: 5 },
+        { id: "f", name: "ANA", joinedAt: 6 },
       ]),
       "u1",
     );
     expect(p.get("a")).toMatchObject({ name: "Ana", me: true, owner: true, guest: false });
     expect(p.get("b")).toMatchObject({ name: "ana", me: false });
-    expect(p.get("c")).toMatchObject({ name: "Ana (2)", guest: true });
+    expect(p.get("c")).toMatchObject({ name: "Ana", guest: true });
     expect(p.get("d")?.name).toBe("Bia");
+    expect(p.get("e")?.name).toBe("Ana (2)");
+    expect(p.get("f")).toMatchObject({ name: "ANA (2)", guest: true });
   });
 
   it("MEM-5 an id no longer in the trip shows as a former member", () => {

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
+import { goHome, openExpenseForm, switchTab } from "@/app/nav";
 import { ChevronLeft, Ellipsis, Plus, Receipt, Scale, UserPlus, Users } from "lucide-react";
 import { showToast } from "@/app/toast";
 import { Button } from "@/components/Button";
@@ -33,6 +34,8 @@ export type TripView = {
   people: ReturnType<typeof people>;
   myMemberId: string;
   isOwner: boolean;
+  /** False until the expenses listener has delivered (e.g. deleting the trip waits for it). */
+  expensesLoaded: boolean;
 };
 
 export function TripScreen({ tripId, tab: tabParam }: { tripId: string; tab?: string }) {
@@ -56,6 +59,7 @@ export function TripScreen({ tripId, tab: tabParam }: { tripId: string; tab?: st
       people: people(trip.data, me.uid),
       myMemberId: trip.data.memberIdsByUid[me.uid] ?? "",
       isOwner: trip.data.ownerUid === me.uid,
+      expensesLoaded: expenses.status === "ready",
     };
   }, [trip, expenses, me.uid]);
 
@@ -63,19 +67,19 @@ export function TripScreen({ tripId, tab: tabParam }: { tripId: string; tab?: st
   useEffect(() => {
     if (trip.status === "gone" && wasReady) {
       if (!leaving.current) showToast(t("trip.gone"));
-      navigate("/", { replace: true });
+      void goHome(navigate);
     }
   }, [trip.status, wasReady, navigate]);
 
   if (trip.status === "gone") return wasReady ? null : <NotFound />;
 
-  const goTab = (next: Tab) => navigate(`/trip/${tripId}/${next}`, { replace: true });
+  const goTab = (next: Tab) => void switchTab(navigate, `/trip/${tripId}/${next}`);
 
   return (
     <div className="mx-auto flex h-full max-w-[520px] flex-col">
       <TopBar
         leading={
-          <IconButton label={t("trip.back")} onClick={() => navigate("/")}>
+          <IconButton label={t("trip.back")} onClick={() => void goHome(navigate)}>
             <ChevronLeft />
           </IconButton>
         }
@@ -122,7 +126,7 @@ export function TripScreen({ tripId, tab: tabParam }: { tripId: string; tab?: st
         <Button
           variant="primary"
           className="absolute right-4 bottom-[calc(100%+16px)] z-10 min-h-13 rounded-full pr-5 pl-4 shadow-float"
-          onClick={() => navigate(`/trip/${tripId}/expense/new`, { state: { fromTrip: true } })}
+          onClick={() => void openExpenseForm(navigate, `/trip/${tripId}/expense/new`)}
           disabled={!view}
         >
           <Plus aria-hidden />

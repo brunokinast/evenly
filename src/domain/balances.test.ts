@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { balances, settlements } from "./balances";
+import { balances, isWellFormed, settlements } from "./balances";
 import { equalShares } from "./split";
 import type { Expense } from "./types";
 
@@ -54,6 +54,14 @@ describe("balances and settlements", () => {
       after.set(p.to, after.get(p.to)! - p.cents);
     }
     expect([...after.values()].every((v) => v === 0)).toBe(true);
+  });
+
+  it("BAL-1 malformed expenses are detected, and settlements always end", () => {
+    const bad = { ...exp("A", 500, ["A", "B"]), shares: { A: 1 } };
+    expect(isWellFormed(exp("A", 500, ["A", "B"]))).toBe(true);
+    expect(isWellFormed(bad)).toBe(false);
+    expect(isWellFormed({ ...bad, shares: { A: 250.5, B: 249.5 } })).toBe(false);
+    expect(settlements(balances(["A", "B"], [bad]), ["A", "B"]).length).toBeLessThanOrEqual(2);
   });
 
   it("BAL-3 nothing to pay when all are settled", () => {

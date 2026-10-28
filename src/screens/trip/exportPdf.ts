@@ -3,7 +3,7 @@ import { jsPDF } from "jspdf";
 import { balances, settlements, totalSpent } from "@/domain/balances";
 import { pdfFileName } from "@/domain/trips";
 import { longDate, money, t, tn } from "@/i18n";
-import { label, who } from "./labels";
+import { who } from "./labels";
 import type { TripView } from "./TripScreen";
 
 const MARGIN = 48;
@@ -97,7 +97,7 @@ export async function exportTripPdf(view: TripView) {
   heading(t("pdf.settlements"));
   const pays = settlements(bal, order);
   for (const p of pays) {
-    line(t("balances.pays", { from: label(view, p.from), to: label(view, p.to) }), money(p.cents, cur));
+    line(t("balances.pays", { from: who(view, p.from).name, to: who(view, p.to).name }), money(p.cents, cur));
   }
   if (pays.length === 0) line(t("balances.allSettled"), "");
 

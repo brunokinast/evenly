@@ -49,9 +49,11 @@ Through the Capacitor Firebase plugins on every platform: `@capacitor-firebase/a
 
 - Every piece of server data on screen comes from a **live listener**, exposed as a hook in `src/data/`: `useSession()`, `useMyTrips()`, `useTrip(tripId)`, `useExpenses(tripId)`.
 - A hook returns `{ status: "loading" | "ready" | "gone", data }`. `gone` = the document doesn't exist or access was lost (deleted trip, removed member). Screens react to it (TRIP-7, TRIP-9, MEM-9).
-- Listeners are shared and reference-counted by key (one listener per path, however many components use it), built on `useSyncExternalStore`. That's the only cache: no manual caches, no one-off reads for on-screen data, no "refresh" (KI-1..3).
+- Listeners are shared and reference-counted by key (`src/data/live.ts`); an unused listener is kept 30 s so going back and forth doesn't re-listen, and a failed one ("gone") is dropped at once (one listener per path, however many components use it), built on `useSyncExternalStore`. That's the only cache: no manual caches, no one-off reads for on-screen data, no "refresh" (KI-1..3).
 - Derived values (balances, settlements, display names, "split between all") are computed from hook data with `src/domain/` functions during render (memoized when needed), never stored.
 - **One exception**: the Auth profile (display name) has no change listener, so `setDisplayName` re-reads the current user after `updateProfile` and publishes it to `useSession()`.
+- **Cache gotcha**: when a trip listener loses access (trip deleted, member removed), Firestore's offline cache can keep the old trip and Home's query may keep showing it. `useMyTrips` hides a trip whose listener reported "gone" while the query still returns that same version (`src/data/trips.ts`).
+- **Join preview**: looking up a code (`lookupInvite`) is a one-off read by design: the attempt must be counted first (INV-9), and the preview is only shown in the Join sheet.
 - **Writes** are plain async functions in `src/data/` (`createTrip`, `joinTrip`, `saveExpense`…). They don't update local state: the listener delivers the change, just as it does for other members. Screens show busy state and errors (EXP-8).
 
 ## Domain logic (`src/domain/`)

@@ -1,4 +1,5 @@
 import { useLocation } from "wouter";
+import { openExpenseForm } from "@/app/nav";
 import { Pencil } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
@@ -42,12 +43,7 @@ export function ExpenseDetailsSheet({
           <Button
             variant="secondary"
             className="min-h-10 px-3 text-caption font-semibold [&_svg]:size-[18px]"
-            onClick={() =>
-              navigate(`/trip/${view.trip.id}/expense/${e.id}/edit`, {
-                replace: true,
-                state: { fromTrip: true }, // replaces the sheet entry, so back() returns to the trip
-              })
-            }
+            onClick={() => void openExpenseForm(navigate, `/trip/${view.trip.id}/expense/${e.id}/edit`)}
           >
             <Pencil aria-hidden />
             {t("common.edit")}

@@ -18,15 +18,16 @@ export type Person = {
 };
 
 /**
- * KI-11, MEM-4: every member's display name, computed in one place. Duplicate names are told apart by the
- * "You" label for the current user and a number suffix for the others, in join order.
+ * KI-11, MEM-4: every member's display name, computed in one place. Duplicate names are told apart by
+ * "You" for the current user, the Guest tag for guests, and otherwise a number suffix in join order.
  */
 export function people(trip: Trip, myUid: string): Map<string, Person> {
   const out = new Map<string, Person>();
   const seen = new Map<string, number>();
   for (const m of trip.members) {
     const me = m.uid === myUid;
-    const key = m.name.toLocaleLowerCase();
+    // MEM-4: the Guest tag already tells a guest from an app user, so numbers count within each kind.
+    const key = `${isGuest(m) ? "g" : "u"}:${m.name.toLocaleLowerCase()}`;
     let name = m.name;
     if (!me) {
       const n = (seen.get(key) ?? 0) + 1;

@@ -323,3 +323,30 @@ test.describe("in Portuguese", () => {
     await page.screenshot({ path: info.outputPath("expense-pt.png") });
   });
 });
+
+test("Android back returns where you came from, never to a screen you left", async ({ browser }) => {
+  const ana = await newUser(browser, "Ana");
+  await createTrip(ana, "Faro");
+  await tab(ana, "Expenses");
+  await addExpense(ana, "1000", "Fuel");
+  // The form was popped after saving: back from the trip goes Home.
+  await ana.goBack();
+  await expect(ana.getByRole("heading", { name: "Your trips" })).toBeVisible();
+
+  // Home → trip → details → Edit → Close → back: Home again.
+  await ana.getByRole("main").getByRole("button", { name: /Faro/ }).click();
+  await ana.getByRole("button", { name: /Fuel/ }).click();
+  await ana.getByRole("dialog", { name: "Fuel" }).getByRole("button", { name: "Edit" }).click();
+  await expect(ana.getByRole("heading", { name: "Edit expense" })).toBeVisible();
+  await ana.getByRole("button", { name: "Close" }).click();
+  await expect(ana.getByRole("heading", { name: "Faro" })).toBeVisible();
+  await ana.goBack();
+  await expect(ana.getByRole("heading", { name: "Your trips" })).toBeVisible();
+
+  // The trip's back arrow pops to Home; forward then returns to the trip, not a duplicate Home.
+  await ana.getByRole("main").getByRole("button", { name: /Faro/ }).click();
+  await ana.getByRole("button", { name: "Back to your trips" }).click();
+  await expect(ana.getByRole("heading", { name: "Your trips" })).toBeVisible();
+  await ana.goForward();
+  await expect(ana.getByRole("heading", { name: "Faro" })).toBeVisible();
+});

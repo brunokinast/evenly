@@ -76,19 +76,19 @@ Rate limit for code guessing (INV-9): `{ code: string, count: int, windowStart: 
 
 Each is one write or one batch, in `src/data/`. "Batch" = Firestore batched write (atomic, ≤ 500 operations).
 
-| Operation                                | Writes                                                                                                                                                                                                |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Set name (ID-1..3, ID-5)                 | Auth `updateProfile`; then one batch updating `members[myId].name` in each of my trips (≤ 500 trips per batch)                                                                                        |
-| Create trip (TRIP-1)                     | set `trips/{new}` with me as the owner and only member                                                                                                                                                |
-| Rename trip (TRIP-11)                    | batch: trip `name` + valid invite `name`                                                                                                                                                              |
-| Delete trip (TRIP-7, KI-5)               | batch: delete all expenses, the invite, the trip. Over 499 docs: delete expenses in chunks and the trip in the last batch, so a retry resumes safely                                                  |
-| Create invite (INV-1, 2, 8, 10)          | batch: set `invites/{random code}`, delete the previous `invites/{old}`, set trip `invite`. If the code is taken (write denied), retry with a new code (max 3)                                        |
-| Look up code (INV-3, 4)                  | set `joinAttempts/{me}`, then get `invites/{code}`; missing or expired → INV-4                                                                                                                        |
-| Join (INV-6, 7, MEM-7)                   | batch: update trip (add my uid to `memberUids` and `memberIdsByUid`; add a new member entry, or put my uid and name on the claimed guest); if claiming, remove the guest from `invites/{code}.guests` |
-| Add guest (MEM-1)                        | batch: add member entry without uid + add to invite `guests`                                                                                                                                          |
-| Leave / remove an app user (MEM-5, 8, 9) | batch: remove the uid from `memberUids` and `memberIdsByUid` and delete `uid` from the member entry, which is now a guest; add it to the valid invite's `guests`                                      |
-| Remove a guest (MEM-5)                   | batch: delete the member entry (only if in no expense) + remove from invite `guests`                                                                                                                  |
-| Add / edit / delete expense (EXP-3, 4)   | one expense document write                                                                                                                                                                            |
+| Operation                                | Writes                                                                                                                                                                                                                         |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Set name (ID-1..3, ID-5)                 | Auth `updateProfile`; then one batch updating `members[myId].name` in each of my trips (≤ 500 trips per batch)                                                                                                                 |
+| Create trip (TRIP-1)                     | set `trips/{new}` with me as the owner and only member                                                                                                                                                                         |
+| Rename trip (TRIP-11)                    | batch: trip `name` + valid invite `name`                                                                                                                                                                                       |
+| Delete trip (TRIP-7, KI-5)               | batch: delete all expenses, the invite (only if still valid; an expired code may already belong to another trip), the trip. Over 499 docs: delete expenses in chunks and the trip in the last batch, so a retry resumes safely |
+| Create invite (INV-1, 2, 8, 10)          | batch: set `invites/{random code}`, delete the previous `invites/{old}` (only if still valid), set trip `invite`. If the code is taken (write denied), retry with a new code (max 3)                                           |
+| Look up code (INV-3, 4)                  | set `joinAttempts/{me}`, then get `invites/{code}`; missing or expired → INV-4                                                                                                                                                 |
+| Join (INV-6, 7, MEM-7)                   | batch: update trip (add my uid to `memberUids` and `memberIdsByUid`; add a new member entry, or put my uid and name on the claimed guest); if claiming, remove the guest from `invites/{code}.guests`                          |
+| Add guest (MEM-1)                        | batch: add member entry without uid + add to invite `guests`                                                                                                                                                                   |
+| Leave / remove an app user (MEM-5, 8, 9) | batch: remove the uid from `memberUids` and `memberIdsByUid` and delete `uid` from the member entry, which is now a guest; add it to the valid invite's `guests`                                                               |
+| Remove a guest (MEM-5)                   | batch: delete the member entry (only if in no expense) + remove from invite `guests`                                                                                                                                           |
+| Add / edit / delete expense (EXP-3, 4)   | one expense document write                                                                                                                                                                                                     |
 
 Already a member (INV-7): the client knows from its live Home list; the rules also reject a join from a current member.
 
@@ -110,17 +110,21 @@ Helpers: `signedIn()`, `trip(id)` = `get(/trips/id).data`, `isMember(t)` = `requ
 **trips/{tripId}/expenses/{expenseId}**
 
 - read, delete: member of the trip.
-- create, update: member; field allow-list; `description`, `amountCents`, `split`, `spentAt <= now() + 5 min` valid; `payerId in trip.members`; `shares` non-empty and `shares.keys().hasOnly(trip.members.keys())`; `createdBy`/`createdAt` unchanged on update.
+- create, update: member; field allow-list; `description`, `amountCents`, `split`, `spentAt <= now() + 10 min` valid; `payerId in trip.members`; `shares` non-empty and `shares.keys().hasOnly(trip.members.keys())`; `createdBy`/`createdAt` unchanged on update.
 
 **invites/{code}**
 
 - get: `get(joinAttempts/me).code == code` (no `list`, so codes can't be enumerated).
-- create / update (reusing an expired code): the trip's owner, and `getAfter(trip).invite.code == code`, `expiresAt` = about now + 1 h. Update of a still-valid invite by the owner for synced fields; by a joiner only to remove the guest they just claimed, and by a leaver only to add their own new guest entry (both checked with `getAfter`).
+- create / update (reusing an expired code): the trip's owner, and `getAfter(trip).invite.code == code`, `expiresAt` = about now + 1 h (±10 min), and name/icon/currency equal the trip's. Update of a still-valid invite by the owner for synced fields; by a joiner only to remove the guest they just claimed, and by a leaver only to add their own new guest entry (both checked with `getAfter`).
 - delete: the trip's owner.
 
 **joinAttempts/{uid}**
 
-- read/write: only `uid == me`. Same window (`now() < windowStart + 15 min`): `count` + 1, max 10, `windowStart` unchanged. New window: `count == 1`, `windowStart` within 1 min of `now()`.
+- read/write: only `uid == me`. Same window (`now() < windowStart + 15 min`): `count` + 1, max 10, `windowStart` unchanged. New window: `count == 1`, `windowStart` within 10 min of `now()`.
+
+### Client clocks
+
+Times are written by the client (no server timestamps, so Kotlin and the web write the same plain ints). The rules accept times up to **10 minutes** off the server clock (`near()`), so a phone with a slightly wrong clock can still write.
 
 ### What the rules can't check (enforced in the client and domain code)
 
@@ -129,7 +133,7 @@ Rules can't loop over a map, so these are client-side only. The UI, domain tests
 - Shares sum to `amountCents` and are all > 0 (BAL-2, EXP-12). The balance code uses shares as stored.
 - Guest name uniqueness (MEM-2).
 - A guest in an expense can't be removed (MEM-5). If it ever happens (a race), display code shows that memberId as "Former member" and balances still sum to zero.
-- New anonymous accounts get fresh guess budgets (INV-9). Firebase limits anonymous sign-ups per IP; with 10⁶ codes, each valid 1 hour, guessing stays impractical.
+- New anonymous accounts get fresh guess budgets (INV-9). Also, because client times may be 10 minutes off, a new window can start up to 10 minutes in the past, so the worst case is about 10 guesses per 5 minutes rather than per 15. Firebase limits anonymous sign-ups per IP; with 10⁶ codes, each valid 1 hour, guessing stays impractical.
 
 ## Reads and cost
 

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { backToTrip } from "@/app/nav";
 import { useLocation } from "wouter";
 import { CalendarDays, ChevronRight, Trash2, Users, Wallet, X } from "lucide-react";
 import { useOnline } from "@/app/online";
@@ -26,16 +27,17 @@ export function ExpenseFormScreen({ tripId, expenseId }: { tripId: string; expen
   const trip = useTrip(tripId);
   const expenses = useExpenses(tripId);
   const [, navigate] = useLocation();
-
-  if (trip.status === "gone") return <NotFound />;
-  if (trip.status === "loading" || (expenseId && expenses.status !== "ready")) return null;
   const existing =
     expenseId && expenses.status === "ready" ? expenses.data.find((e) => e.id === expenseId) : undefined;
-  if (expenseId && !existing) {
-    // Deleted meanwhile by someone else.
-    navigate(`/trip/${tripId}`, { replace: true });
-    return null;
-  }
+  const deleted = !!expenseId && expenses.status === "ready" && !existing;
+
+  // Deleted (by me from this screen, or by someone else meanwhile): back to the trip.
+  useEffect(() => {
+    if (deleted) void backToTrip(navigate, tripId);
+  }, [deleted, navigate, tripId]);
+
+  if (trip.status === "gone") return <NotFound />;
+  if (trip.status === "loading" || (expenseId && expenses.status !== "ready") || deleted) return null;
   return <ExpenseForm key={expenseId ?? "new"} trip={trip.data} existing={existing} myUid={me.uid} />;
 }
 
@@ -108,14 +110,10 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
   const name = (id: string) =>
     id === myId ? t("common.you") : (people.get(id)?.name ?? t("members.former"));
 
-  /** Back to the trip: pop this screen if we came from it, else replace. */
-  function leave() {
-    if ((history.state as { fromTrip?: boolean } | null)?.fromTrip) history.back();
-    else navigate(`/trip/${trip.id}`, { replace: true });
-  }
+  const leave = () => void backToTrip(navigate, trip.id);
 
   async function save() {
-    if (!valid || busy) return;
+    if (!valid || busy || !online) return;
     const cents = f.cents!;
     const shares = isCustom ? withoutZeroShares(split!.shares) : equalShares(cents, parts, f.payerId);
     setBusy(true);
@@ -333,8 +331,7 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
           onClose={() => setSheet(null)}
           onConfirm={async () => {
             await deleteExpense(trip.id, existing.id);
-            showToast(t("form.deleted"));
-            leave();
+            showToast(t("form.deleted")); // The screen leaves once the expense is gone.
           }}
         />
       )}

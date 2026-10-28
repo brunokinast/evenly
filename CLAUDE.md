@@ -44,4 +44,7 @@ Any feature, bug or change request goes through the `change-workflow` skill (`.c
 - Call `await firebaseReady` (`src/data/firebase.ts`) before any Firebase plugin call.
 - Tailwind colors are only the design tokens (`bg-surface`, `text-fg-muted`, …); default palette is disabled. Type roles: `text-amount|title|total|row|body|caption|tag`. Radii: `rounded-ctl|card|sheet`.
 - e2e: `playwright.config.ts` starts the emulators and dev server itself; each test is a fresh browser = a fresh anonymous user. Tests run with reduced motion so screenshots never catch a sheet mid-slide.
+- Sheets add one history entry (Android back). Navigating away from a sheet must use `navigate(url, { replace: true })`, or back lands on the stale entry. `ExpenseForm` leaves with `history.back()` when opened from the trip (`state.fromTrip`).
+- PDF export is lazy (`import("./exportPdf")`); its chunks are listed in `ON_DEMAND` in `scripts/check-bundle-size.mjs`. New on-demand code must be added there.
+- Rules tests reuse a Firestore emulator already running on :8080 (e.g. the LAN preview); otherwise they start one.
 - TypeScript is pinned to 6.0 (typescript-eslint support); Firebase JS SDK to 12 (Capacitor Firebase plugins).

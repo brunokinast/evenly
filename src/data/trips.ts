@@ -1,9 +1,10 @@
-import { useMemo } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { FirebaseFirestore, type DocumentData } from "@capacitor-firebase/firestore";
+import { isWellFormed } from "@/domain/balances";
 import { sortMembers } from "@/domain/members";
 import type { Expense, Member, Trip } from "@/domain/types";
 import { firebaseReady } from "./firebase";
-import { useLive, type Live } from "./live";
+import { peekLive, useLive, type Live } from "./live";
 
 // Live hooks for on-screen data (docs/architecture.md). Each is one shared Firestore listener.
 
@@ -51,17 +52,37 @@ function listen(attach: () => Promise<string>) {
  */
 const lostTrips = new Map<string, string>(); // tripId → raw JSON of the version we lost access to
 const rawOf = new WeakMap<Trip, string>();
+let lostVersion = 0;
+const lostListeners = new Set<() => void>();
+
+function loseTrip(tripId: string, raw: string) {
+  lostTrips.set(tripId, raw);
+  lostVersion++;
+  lostListeners.forEach((l) => l());
+}
+
+const withoutLost = (trips: Trip[]) => trips.filter((trip) => lostTrips.get(trip.id) !== rawOf.get(trip));
 
 /** TRIP-5, KI-1, KI-2: Home's single query, newest first. */
 export function useMyTrips(uid: string): Live<Trip[]> {
   const live = useMyTripsQuery(uid);
-  return useMemo(
-    () =>
-      live.status === "ready"
-        ? { status: "ready", data: live.data.filter((trip) => lostTrips.get(trip.id) !== rawOf.get(trip)) }
-        : live,
-    [live],
+  const version = useSyncExternalStore(
+    (l) => {
+      lostListeners.add(l);
+      return () => lostListeners.delete(l);
+    },
+    () => lostVersion,
   );
+  return useMemo(
+    () => (live.status === "ready" ? { status: "ready", data: withoutLost(live.data) } : live),
+    [live, version], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+}
+
+/** My trips as Home shows them, for writes that touch all of them (ID-5). Empty if Home never loaded. */
+export function currentTrips(uid: string): Trip[] {
+  const live = peekLive<Trip[]>(`myTrips/${uid}`);
+  return live?.status === "ready" ? withoutLost(live.data) : [];
 }
 
 function useMyTripsQuery(uid: string): Live<Trip[]> {
@@ -99,7 +120,7 @@ export function useTrip(tripId: string): Live<Trip> {
     return listen(() =>
       FirebaseFirestore.addDocumentSnapshotListener({ reference: `trips/${tripId}` }, (event, error) => {
         if (error || !event?.snapshot.data) {
-          if (last) lostTrips.set(tripId, last);
+          if (last) loseTrip(tripId, last);
           return emit({ status: "gone" });
         }
         last = JSON.stringify(event.snapshot.data);
@@ -118,7 +139,8 @@ export function useExpenses(tripId: string): Live<Expense[]> {
           if (error || !event) return emit({ status: "gone" });
           const expenses = event.snapshots
             .filter((s) => s.data)
-            .map((s) => ({ id: s.id, ...(s.data as Omit<Expense, "id">) }));
+            .map((s) => ({ id: s.id, ...(s.data as Omit<Expense, "id">) }))
+            .filter(isWellFormed); // BAL-1: a malformed expense never breaks the balances
           emit({ status: "ready", data: expenses });
         },
       ),

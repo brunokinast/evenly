@@ -5,7 +5,7 @@ import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { GroupHeader, ListGroup, Row } from "@/components/List";
 import { balances, settlements, totalSpent, type Payment } from "@/domain/balances";
-import { money, t } from "@/i18n";
+import { locale, money, t } from "@/i18n";
 import { cn } from "@/lib/cn";
 import { label, who } from "./labels";
 import type { TripView } from "./TripScreen";
@@ -43,10 +43,11 @@ export function BalancesTab({ view }: { view: TripView }) {
 
   return (
     <>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <Stat k={t("balances.total")} v={money(total, cur)} />
         <Stat k={t("balances.perPerson")} v={money(Math.round(total / trip.members.length), cur)} />
-        <Stat k={t("balances.expenses")} v={expenses.length.toLocaleString()} />
+        <Stat k={t("balances.expenses")} v={expenses.length.toLocaleString(locale)} />
+        <Stat k={t("trip.tab.members")} v={trip.members.length.toLocaleString(locale)} />
       </div>
 
       {pays.length === 0 ? (

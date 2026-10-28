@@ -49,6 +49,12 @@ function subscribe(
     e.stop = start((value) => {
       e.value = value;
       e.listeners.forEach((l) => l());
+      // Failed while nobody was looking: drop it now, so the next visit listens anew.
+      if (value.status === "gone" && e.listeners.size === 0) {
+        if (e.idleTimer) clearTimeout(e.idleTimer);
+        e.stop?.();
+        entries.delete(key);
+      }
     });
   }
   return () => {

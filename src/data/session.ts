@@ -1,9 +1,8 @@
 import { useSyncExternalStore } from "react";
 import { FirebaseAuthentication, type User } from "@capacitor-firebase/authentication";
-import type { Trip } from "@/domain/types";
 import { renameMeInTrips } from "./commands";
 import { firebaseReady } from "./firebase";
-import { peekLive } from "./live";
+import { currentTrips } from "./trips";
 
 export type Session =
   | { status: "loading" }
@@ -79,6 +78,5 @@ export async function setDisplayName(name: string) {
   await FirebaseAuthentication.updateProfile({ displayName: name });
   const { user } = await FirebaseAuthentication.getCurrentUser();
   if (user) set(fromUser(user));
-  const trips = peekLive<Trip[]>(`myTrips/${myUid()}`);
-  if (trips?.status === "ready") await renameMeInTrips(trips.data, name);
+  await renameMeInTrips(currentTrips(myUid()), name);
 }

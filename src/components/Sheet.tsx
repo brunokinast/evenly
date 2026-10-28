@@ -94,6 +94,8 @@ export function Sheet({ open, onClose, title, subtitle, action, children }: Prop
 const stack: (() => void)[] = [];
 let entry: string | null = null; // token of our entry, while it exists
 let backPending = false; // we called history.back() and its popstate hasn't arrived yet
+let leaving = false; // navigating away: sheets still open don't get a new entry
+let waiters: (() => void)[] = [];
 
 // A reload while a sheet was open leaves a marked entry behind; unmark it so back works normally.
 if (history.state?.evenlySheet) history.replaceState(null, "");
@@ -121,10 +123,32 @@ function registerBack(close: () => void) {
   };
 }
 
+/**
+ * Removes the open sheets' history entry before navigating away from a sheet, so the history stays
+ * [..., previous screen, next screen] and Back never lands on a stale entry. Resolves once done.
+ */
+export function leaveSheets(): Promise<void> {
+  if (entry !== null && history.state?.evenlySheet === entry) {
+    backPending = true;
+    history.back();
+  }
+  entry = null;
+  if (!backPending) return Promise.resolve();
+  leaving = true;
+  return new Promise((resolve) => waiters.push(resolve));
+}
+
 addEventListener("popstate", () => {
   if (backPending) {
-    // Our own back finished. A sheet opened meanwhile gets its entry now.
     backPending = false;
+    if (leaving) {
+      leaving = false;
+      const done = waiters;
+      waiters = [];
+      done.forEach((resolve) => resolve());
+      return;
+    }
+    // Our own back finished. A sheet opened meanwhile gets its entry now.
     if (stack.length > 0 && entry === null) pushEntry();
     return;
   }

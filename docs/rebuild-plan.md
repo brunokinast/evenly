@@ -45,8 +45,9 @@ A verification pass re-checks every spec against the old code, to catch anything
 - Phase 3b + scaffold done (2026-10-27, branch `phase-4-scaffold`): Vite 8, React 19, TS 6.0, Tailwind 4 with design tokens, Capacitor Firebase plugins (emulators in dev), PWA, Vitest (unit + rules on the emulator), Playwright, ESLint layer rules, Prettier/Stop hooks, `change-workflow` skill, GitHub Actions CI. `firestore.rules` is deny-all until each slice adds its rules.
 - Code lives on GitHub `brunokinast/evenly`, branch `evenly-v2` (only that branch is fetched; `main` is the old app, off limits). `evenly-v2` replaces `main` at cutover (Phase 6).
 - Slice 1 identity (2026-10-27, branch `identity`): Welcome, session gate, Unable to connect, Profile sheet (name, theme, install), Home skeleton with the install card; EN + PT-BR dictionary. Spec changes approved by the user: ID-3 max 50, ID-9, APP-3 install in Profile (APK on Android once it exists), APP-7 install card, APP-8 overflow. Startup JS budget raised to 350 kB (see architecture).
-- Carried into the trips slice: `setDisplayName` must also batch-update the name copies in my trips (ID-5); ID-7 is enforced by the trips rules; Home's `tripCount` and the Join/New trip buttons get wired.
-- Next: slice 2, trips.
+- Slices 2–7 (2026-10-28, branch `app-slices`; the user asked to build all slices and test end to end at the end): trips, invites/joining, members, expenses, balances/settlements, PDF export, EN + PT-BR, offline banner. Full Security Rules with emulator tests (one per data-model case), domain unit tests, and Playwright flows with two and three users for the live behavior (INV-6, EXP-3, MEM-9, TRIP-7). PNG app icons for install. No spec changes.
+- Phase 5 must also: share/save the PDF through Capacitor (Filesystem + Share plugins), since the Android WebView can't share files or download blob links (PDF-4); handle the hardware back button with the Capacitor App plugin (sheets, discard changes).
+- Next: the user's end-to-end check on the phone, then Phase 5 (Android/Capacitor).
 
 ### 2. Design → `specs/design.md` + a mockup page
 
