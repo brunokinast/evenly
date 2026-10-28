@@ -2,7 +2,7 @@ import { useSyncExternalStore } from "react";
 import { Capacitor } from "@capacitor/core";
 import { installMethod, type InstallMethod } from "@/domain/install";
 
-// APP-3 / APP-7. Set to "/evenly.apk" once Phase 5 publishes the APK on Hosting.
+// APP-3 / APP-7: the release APK's download URL. Not on Firebase Hosting: the free plan refuses .apk files.
 const APK_URL: string | null = null;
 const DISMISS_KEY = "evenly.installCardDismissed";
 

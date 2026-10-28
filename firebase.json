@@ -1,7 +1,7 @@
 {
   "firestore": { "rules": "firestore.rules", "indexes": "firestore.indexes.json" },
   "hosting": {
-    "predeploy": ["npm run build", "node scripts/android.mjs publish"],
+    "predeploy": ["npm run build"],
     "public": "dist",
     "ignore": ["firebase.json", "**/.*"],
     "rewrites": [{ "source": "**", "destination": "/index.html" }],

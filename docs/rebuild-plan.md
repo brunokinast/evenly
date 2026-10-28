@@ -58,6 +58,9 @@ A verification pass re-checks every spec against the old code, to catch anything
   2. Install: set `APK_URL` in `src/app/install.ts` once the APK is on Hosting (Phase 6 deploy).
   3. PDF fonts: jsPDF's Helvetica is Latin only; names in other scripts need an embedded font.
 - Phase 6 step 1 (2026-10-28, branch `migration`): `scripts/migrate.ts` and `scripts/relink.ts` (run with `npx tsx`; `firebase-admin` uses the `firebase login` credentials, no key file). Unit tests for the mapping and relink; checked on the emulators with a synthetic old-shape backup: restore, dry run, apply (one trip kept, the empty one and `users` deleted, balances read back), relink of the old owner to a new app user, and the trip showed live on Home and in the trip screen. Next: the dry run on the real project (read only), with the user's OK.
+- **Cutover done (2026-10-28, branch `cutover`)**: the migration ran on the real project (backup `backups/evenly-app-6f5f2-2026-10-28T14-09-32-583Z.json`, local only): Gramado (13 expenses) and Porto de Galinhas (43) migrated with their old UIDs, 3 empty trips and `users` deleted, balances read back. New rules, indexes and the web app deployed to https://evenly-app-6f5f2.web.app. The old app is locked out.
+  - **The APK isn't hosted**: Firebase Hosting refuses executable files (`.apk`) on the Spark plan, so the deploy was redone without it and `APK_URL` stays `null` (Android gets the web-app install). The predeploy no longer copies the APK. Next: host `android/evenly.apk` elsewhere (e.g. a GitHub Release on the public repo), then set `APK_URL`. The install note already says to uninstall the old app first (ADR 0004).
+  - Still to do: steps 3–6 of the handoff (check on the phone, `main` on GitHub, PDF font, relink the two old users).
 - Still untested (no automated test yet): EXP-8 failure path, PDF-2 and PDF-5, APP-5 (accessibility). BAL-4 and INV-12 are absences by design.
 
 ### 2. Design → `specs/design.md` + a mockup page
