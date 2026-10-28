@@ -12,20 +12,21 @@ Implemented as CSS variables (shadcn/ui convention) and mapped into Tailwind. Co
 
 ### Color
 
-| Token           | Light     | Dark      | Use                                         |
-| --------------- | --------- | --------- | ------------------------------------------- |
-| `--bg`          | `#F6F7F9` | `#0F1115` | App background                              |
-| `--surface`     | `#FFFFFF` | `#171A20` | Cards, sheets, bars                         |
-| `--surface-2`   | `#EEF0F4` | `#20242C` | Inputs, chips, pressed rows                 |
-| `--border`      | `#DDE1E8` | `#2C313B` | Dividers, outlines                          |
-| `--fg`          | `#171A21` | `#ECEEF2` | Main text                                   |
-| `--fg-muted`    | `#5D6472` | `#9AA2B1` | Secondary text, captions                    |
-| `--accent`      | `#F2B233` | `#F5BE4B` | Primary button, active tab mark, focus ring |
-| `--accent-fg`   | `#1A1405` | `#1A1405` | Text/icons on accent                        |
-| `--accent-soft` | `#FDF1D6` | `#3A2F17` | Trip icon tiles, selected rows              |
-| `--accent-text` | `#8A5A00` | `#F5BE4B` | Accent-colored text/links on surfaces       |
-| `--positive`    | `#18794E` | `#4CC38A` | "Gets back"                                 |
-| `--negative`    | `#C33B2C` | `#F07A6A` | "Owes", destructive actions                 |
+| Token           | Light                 | Dark      | Use                                         |
+| --------------- | --------------------- | --------- | ------------------------------------------- |
+| `--bg`          | `#F6F7F9`             | `#0F1115` | App background                              |
+| `--surface`     | `#FFFFFF`             | `#171A20` | Cards, sheets, bars                         |
+| `--surface-2`   | `#EEF0F4`             | `#20242C` | Inputs, chips, pressed rows                 |
+| `--border`      | `#DDE1E8`             | `#2C313B` | Dividers, outlines                          |
+| `--fg`          | `#171A21`             | `#ECEEF2` | Main text                                   |
+| `--fg-muted`    | `#5D6472`             | `#9AA2B1` | Secondary text, captions                    |
+| `--accent`      | `#F2B233`             | `#F5BE4B` | Primary button, active tab mark, focus ring |
+| `--accent-fg`   | `#1A1405`             | `#1A1405` | Text/icons on accent                        |
+| `--accent-soft` | `#FDF1D6`             | `#3A2F17` | Trip icon tiles, selected rows              |
+| `--accent-text` | `#8A5A00`             | `#F5BE4B` | Accent-colored text/links on surfaces       |
+| `--positive`    | `#18794E`             | `#4CC38A` | "Gets back"                                 |
+| `--negative`    | `#C33B2C`             | `#F07A6A` | "Owes", destructive actions                 |
+| `--scrim`       | `rgb(10 12 16 / .45)` | same      | Backdrop behind sheets                      |
 
 Avatar colors: 6 soft background/ink pairs (`--av1`…`--av6`), picked by a stable hash of the member id, so a person keeps their color everywhere.
 
@@ -59,6 +60,7 @@ Inputs are never smaller than 16px (prevents iOS zoom on focus).
 - **One column, max width 520px**, centered on wide screens. The app is designed for a phone first.
 - **Safe areas**: top bar and bottom bars pad by `env(safe-area-inset-*)`; `viewport-fit=cover`.
 - **Tap targets** at least 48×48px; rows are full-width tap targets.
+- **Long text** (APP-8): one line with an ellipsis in rows, top bars, tabs and pills (`min-width: 0` on flex children); wraps in sheet headers and details. Layout must hold at 320px wide with 50-character names.
 - **Top bar**: back (chevron) left, title, then actions right. Home: profile avatar. Trip: an **Invite** button (owner only, labeled, never hidden in a menu) and the "⋯" menu for the rarer owner actions. No hamburger menus.
 - **Bottom action bar** (Home): "Join trip" (secondary) and "New trip" (primary) side by side, always reachable by thumb.
 - **Bottom tab bar** (Trip only): Expenses · Balances · Members. Labels always visible; active tab = `--fg` label with a marigold pill behind the icon.
@@ -87,6 +89,8 @@ Inputs are never smaller than 16px (prevents iOS zoom on focus).
 - **Toast**: bottom, above bars, auto-hides after 3s, for confirmations ("Expense added") and notices ("Split reset to equal").
 - **Confirmation**: a bottom sheet with the consequence in plain words and the destructive button in `--negative`. The browser's `confirm()` is never used.
 - **Empty states**: centered vertically and horizontally in the free space; one short sentence of what to do plus the action button. No illustrations.
+- **Install card** (APP-7, Home empty state only): one `--surface` card under the empty-state text: a 44px tile with the `smartphone` icon, title "Get Evenly on your home screen", caption "Opens instantly, like any other app.", then a secondary button with the device's action ("Get the Android app", "Add to Home Screen" or "Install app") and a quiet "Not now". Secondary, not primary: New trip stays the screen's one primary action.
+- **Profile sheet**: "Your name" field, Theme (System / Light / Dark segmented control, applies instantly), the Install app row (APP-3, when available), then a primary Done.
 - **Balances tab order**: stats row, "Your payments", member balances, "Other payments", Export as PDF. What you personally need to do comes first.
 - **Suggested payments**: two groups. "Your payments": what you pay (`--negative`) or receive (`--positive`), or "You're settled up". Then "Other payments" between other members, in neutral color, shown only if there are any.
 - **Export as PDF**: a subtle ghost button (muted text, small) centered at the end of the Balances tab, available to every member. It isn't in the "⋯" menu.

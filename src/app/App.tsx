@@ -1,10 +1,13 @@
-// Placeholder shell; the identity slice replaces it with the session gate and routes.
+import { useSession } from "@/data/session";
+import { ConnectError } from "@/screens/ConnectError";
+import { Home } from "@/screens/home/Home";
+import { Welcome } from "@/screens/welcome/Welcome";
+
+/** Session gate: identity first (ID-1, ID-6), then a name (ID-2), then the app (ID-4). */
 export function App() {
-  return (
-    <main className="mx-auto flex h-full max-w-[520px] flex-col items-center justify-center gap-4 px-4">
-      <h1 className="text-title">Evenly</h1>
-      <p className="text-caption text-fg-muted">Scaffold is running.</p>
-      <button className="h-12 rounded-ctl bg-accent px-6 text-row text-accent-fg">Primary action</button>
-    </main>
-  );
+  const session = useSession();
+  if (session.status === "loading") return null; // Cached sessions resolve in a few ms; no spinner.
+  if (session.status === "error") return <ConnectError />;
+  if (!session.name) return <Welcome />;
+  return <Home uid={session.uid} name={session.name} />;
 }

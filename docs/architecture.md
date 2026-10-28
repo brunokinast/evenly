@@ -51,6 +51,7 @@ Through the Capacitor Firebase plugins on every platform: `@capacitor-firebase/a
 - A hook returns `{ status: "loading" | "ready" | "gone", data }`. `gone` = the document doesn't exist or access was lost (deleted trip, removed member). Screens react to it (TRIP-7, TRIP-9, MEM-9).
 - Listeners are shared and reference-counted by key (one listener per path, however many components use it), built on `useSyncExternalStore`. That's the only cache: no manual caches, no one-off reads for on-screen data, no "refresh" (KI-1..3).
 - Derived values (balances, settlements, display names, "split between all") are computed from hook data with `src/domain/` functions during render (memoized when needed), never stored.
+- **One exception**: the Auth profile (display name) has no change listener, so `setDisplayName` re-reads the current user after `updateProfile` and publishes it to `useSession()`.
 - **Writes** are plain async functions in `src/data/` (`createTrip`, `joinTrip`, `saveExpense`…). They don't update local state: the listener delivers the change, just as it does for other members. Screens show busy state and errors (EXP-8).
 
 ## Domain logic (`src/domain/`)
@@ -66,7 +67,8 @@ Pure functions with unit tests named after the acceptance criteria:
 ## Screens and navigation
 
 - Routes (wouter, ~2 kB): `/` Home, `/trip/:tripId` (tab in the URL: `/expenses`, `/balances`, `/members`), `/trip/:tripId/expense/new`, `/trip/:tripId/expense/:expenseId/edit`. Welcome is shown by the session gate, not a route. Unknown or inaccessible trip → Trip not found (TRIP-9).
-- Bottom sheets are components opened by screen state, not routes. Android back closes the open sheet first.
+- Bottom sheets are components opened by screen state, not routes (`src/components/Sheet.tsx`, a native `<dialog>`). Android back closes the open sheet first: while any sheet is open there is one extra history entry, removed when the last sheet closes.
+- Device-only state (theme, install availability, keyboard height) lives in small stores in `src/app/` (`theme.ts`, `install.ts`, `viewport.ts`), not in `src/data/`.
 - Hosting rewrites every path to `index.html`.
 
 ## i18n and formatting
@@ -81,7 +83,7 @@ Tokens from `specs/design.md` as CSS variables, mapped into Tailwind. Theme ligh
 ## PWA and performance (APP-3, APP-4)
 
 - `vite-plugin-pwa`: manifest + service worker that precaches the app shell, so repeat opens don't hit the network for code.
-- Budget: initial JavaScript ≤ 250 kB gzipped (Firebase is most of it), checked by a small script after `vite build`. Heavy, rarely used code (PDF export) is loaded only when used.
+- Budget: JavaScript loaded at startup ≤ 350 kB gzipped, checked by `scripts/check-bundle-size.mjs` after `vite build`. It counts every chunk, since the Firebase plugins import their SDKs dynamically right at startup. (Raised from 250 kB in the identity slice: Firestore with its offline cache is ~153 kB and Auth ~29 kB on their own; 350 kB still downloads in well under a second on 4G and repeat opens come from the service worker.) Heavy, rarely used code (PDF export) is loaded only when used and listed in the script's `ON_DEMAND`.
 - First paint shows skeletons in the real layout; never a full-screen spinner after it.
 
 ## Android (Phase 5)

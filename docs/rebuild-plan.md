@@ -44,7 +44,9 @@ A verification pass re-checks every spec against the old code, to catch anything
 - **User preference: a good, fast structure beats compatibility with the old app.** Migrating old data (Phase 6) is optional and never shapes the new model.
 - Phase 3b + scaffold done (2026-10-27, branch `phase-4-scaffold`): Vite 8, React 19, TS 6.0, Tailwind 4 with design tokens, Capacitor Firebase plugins (emulators in dev), PWA, Vitest (unit + rules on the emulator), Playwright, ESLint layer rules, Prettier/Stop hooks, `change-workflow` skill, GitHub Actions CI. `firestore.rules` is deny-all until each slice adds its rules.
 - Code lives on GitHub `brunokinast/evenly`, branch `evenly-v2` (only that branch is fetched; `main` is the old app, off limits). `evenly-v2` replaces `main` at cutover (Phase 6).
-- Next: slice 1, identity (ID-*), then trips.
+- Slice 1 identity (2026-10-27, branch `identity`): Welcome, session gate, Unable to connect, Profile sheet (name, theme, install), Home skeleton with the install card; EN + PT-BR dictionary. Spec changes approved by the user: ID-3 max 50, ID-9, APP-3 install in Profile (APK on Android once it exists), APP-7 install card, APP-8 overflow. Startup JS budget raised to 350 kB (see architecture).
+- Carried into the trips slice: `setDisplayName` must also batch-update the name copies in my trips (ID-5); ID-7 is enforced by the trips rules; Home's `tripCount` and the Join/New trip buttons get wired.
+- Next: slice 2, trips.
 
 ### 2. Design → `specs/design.md` + a mockup page
 

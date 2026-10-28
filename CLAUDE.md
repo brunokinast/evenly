@@ -37,10 +37,11 @@ Any feature, bug or change request goes through the `change-workflow` skill (`.c
 - `npm run check`: typecheck + lint + unit tests + rules tests (starts the Firestore emulator; needs Java).
 - `npm run emulators` (auth + Firestore, project `demo-evenly`) and `npm run dev:lan`: local app for the phone at `http://<LAN IP>:5173`. Without `VITE_FIREBASE_*` env vars the app always uses the emulators.
 - `npm run e2e`: Playwright phone-viewport checks; screenshots in `test-results/`.
-- `npm run build`: production build + APP-4 bundle budget (initial JS ≤ 250 kB gzip).
+- `npm run build`: production build + APP-4 bundle budget (startup JS ≤ 350 kB gzip).
 
 ## Gotchas
 
 - Call `await firebaseReady` (`src/data/firebase.ts`) before any Firebase plugin call.
 - Tailwind colors are only the design tokens (`bg-surface`, `text-fg-muted`, …); default palette is disabled. Type roles: `text-amount|title|total|row|body|caption|tag`. Radii: `rounded-ctl|card|sheet`.
+- e2e: `playwright.config.ts` starts the emulators and dev server itself; each test is a fresh browser = a fresh anonymous user. Tests run with reduced motion so screenshots never catch a sheet mid-slide.
 - TypeScript is pinned to 6.0 (typescript-eslint support); Firebase JS SDK to 12 (Capacitor Firebase plugins).
