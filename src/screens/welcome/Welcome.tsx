@@ -1,5 +1,6 @@
 import { useId } from "react";
 import { ArrowRight } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { SubmitField } from "@/components/SubmitField";
 import { checkName } from "@/domain/names";
 import { t } from "@/i18n";
@@ -20,12 +21,7 @@ export function Welcome() {
           void form.submit();
         }}
       >
-        {/* The logo in the theme's text color: public/logo.svg used as a mask over --fg. */}
-        <span
-          role="img"
-          aria-label="Evenly"
-          className="mb-9 h-14 w-[202px] bg-fg [mask:url(/logo.svg)_center/contain_no-repeat]"
-        />
+        <Logo label="Evenly" className="mb-9 h-14 w-[202px]" />
         {/* The logo says hello; the one question is the title and the field's label. */}
         <h1 className="mb-5 text-title">
           <label htmlFor={id}>{t("welcome.title")}</label>

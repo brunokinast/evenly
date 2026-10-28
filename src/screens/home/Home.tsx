@@ -7,6 +7,7 @@ import { useOnline } from "@/app/online";
 import { Avatar } from "@/components/Avatar";
 import { Button, ButtonRow } from "@/components/Button";
 import { IconButton } from "@/components/IconButton";
+import { Logo } from "@/components/Logo";
 import { EmptyState, IconTile, ListGroup, Row, SkeletonRows } from "@/components/List";
 import { TopBar } from "@/components/TopBar";
 import { TripTile } from "@/components/TripIcon";
@@ -40,7 +41,13 @@ export function Home() {
   return (
     <div className="mx-auto flex h-full max-w-[520px] flex-col">
       <TopBar
-        title={t("home.title")}
+        title={
+          <>
+            {/* The logo is the visible title; "Your trips" names the screen for screen readers. */}
+            <Logo className="h-8 w-[115px]" />
+            <span className="sr-only">{t("home.title")}</span>
+          </>
+        }
         actions={
           <IconButton label={t("home.profile")} onClick={() => setSheet("profile")}>
             <Avatar id={me.uid} name={me.name} />
