@@ -1,5 +1,16 @@
 import { devices, expect, type Browser, type Page } from "@playwright/test";
 
+/** Browser state where "Continue in the browser" (ID-10) was already chosen, so the app opens at the name. */
+export const skippedInstallFirst = {
+  cookies: [],
+  origins: [
+    {
+      origin: "http://localhost:5173",
+      localStorage: [{ name: "evenly.installFirstSkipped", value: "1" }],
+    },
+  ],
+};
+
 /** A fresh user (own browser context = own anonymous identity) who has entered their name. */
 export async function newUser(browser: Browser, name: string): Promise<Page> {
   const context = await browser.newContext({
@@ -7,6 +18,7 @@ export async function newUser(browser: Browser, name: string): Promise<Page> {
     baseURL: "http://localhost:5173",
     locale: "en-US",
     reducedMotion: "reduce",
+    storageState: skippedInstallFirst,
   });
   const page = await context.newPage();
   await page.goto("/");

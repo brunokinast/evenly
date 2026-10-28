@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { installMethod, showInstallCard, type InstallContext } from "./install";
+import { installMethod, showInstallCard, showInstallFirst, type InstallContext } from "./install";
 
 const ANDROID =
   "Mozilla/5.0 (Linux; Android 17; Pixel 9) AppleWebKit/537.36 Chrome/140.0 Mobile Safari/537.36";
@@ -56,5 +56,15 @@ describe("showInstallCard", () => {
     expect(showInstallCard("ios", 1, false)).toBe(false);
     expect(showInstallCard("ios", 0, true)).toBe(false);
     expect(showInstallCard(null, 0, false)).toBe(false);
+  });
+});
+
+describe("showInstallFirst", () => {
+  it("ID-10 suggests installing first only where the app is a separate identity, until skipped", () => {
+    expect(showInstallFirst("apk", false)).toBe(true);
+    expect(showInstallFirst("ios", false)).toBe(true);
+    expect(showInstallFirst("prompt", false)).toBe(false);
+    expect(showInstallFirst(null, false)).toBe(false);
+    expect(showInstallFirst("apk", true)).toBe(false);
   });
 });
