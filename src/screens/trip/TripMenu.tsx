@@ -89,9 +89,9 @@ export function TripMenu({ open, view, onClose, onAddGuest, onLeaving, onLeft }:
         onClose={close}
         onConfirm={async () => {
           onLeaving();
-          // APP-9: gone from this device at once, so TripScreen goes Home; a refusal comes back as a notice.
-          deleteTrip(trip).catch(() => showToast(t("common.notSaved")));
-          showToast(t("deleteTrip.done"));
+          // APP-9: waits for the server (it first reads the trip's expenses there, to delete them all).
+          await deleteTrip(trip);
+          showToast(t("deleteTrip.done")); // TripScreen goes Home once the trip is gone.
         }}
       />
 

@@ -319,7 +319,7 @@ test("EXP-8 Save and Delete take effect at once, before the server confirms", as
   await expect(ana.getByText("Expense deleted")).toBeVisible();
 });
 
-test("APP-9 remove, rename, delete and leave take effect before the server confirms", async ({
+test("APP-9 remove, rename and leave take effect before the server confirms; delete waits", async ({
   browser,
 }) => {
   const ana = await newUser(browser, "Ana");
@@ -349,6 +349,7 @@ test("APP-9 remove, rename, delete and leave take effect before the server confi
   await ana.getByRole("textbox", { name: "Trip name" }).press("Enter");
   await expect(ana.getByRole("heading", { name: "Lisboa 2026" })).toBeVisible(fast);
 
+  await ana.unroute(/Write\/channel/); // delete waits for the server (APP-9)
   await ana.getByRole("button", { name: "Trip options" }).click();
   await ana.getByRole("button", { name: "Delete trip" }).click();
   await ana

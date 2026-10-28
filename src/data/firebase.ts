@@ -26,16 +26,17 @@ async function connect() {
   // Single-tab cache (web): ~60–90 ms faster launches than multi-tab coordination (docs/performance.md, R2). A
   // second tab of the site falls back to a memory cache and still works, just without offline data.
   const persistence = setup(FirebaseFirestore.enablePersistence({ synchronizeTabs: false }));
-  if (!Capacitor.isNativePlatform()) await webAuth();
-  await persistence;
+  const native = Capacitor.isNativePlatform();
+  await Promise.all([persistence, native ? null : webAuth()]);
   if (usesEmulators) {
-    // Same host as the page, so a phone on the LAN reaches the emulators on this PC. The Android app's page
-    // is always "localhost", so its build sets VITE_EMULATOR_HOST to this PC's LAN IP.
-    const host = env.VITE_EMULATOR_HOST || location.hostname;
-    await setup(FirebaseAuthentication.useEmulator({ host, port: 9099 }));
-    await setup(FirebaseFirestore.useEmulator({ host, port: 8080 }));
+    if (native) await setup(FirebaseAuthentication.useEmulator({ host: emulatorHost(), port: 9099 }));
+    await setup(FirebaseFirestore.useEmulator({ host: emulatorHost(), port: 8080 }));
   }
 }
+
+/** Same host as the page, so a phone on the LAN reaches the emulators on this PC. The Android app's page is
+ * always "localhost", so its build sets VITE_EMULATOR_HOST to this PC's LAN IP. */
+const emulatorHost = () => env.VITE_EMULATOR_HOST || location.hostname;
 
 /**
  * On the web the plugin uses getAuth(), which also sets up sign-in popups: it loads Google's api.js and an
@@ -43,11 +44,18 @@ async function connect() {
  * first without that (same storage as getAuth(), so existing identities stay).
  */
 async function webAuth() {
-  const { initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence } =
-    await import("firebase/auth");
-  initializeAuth(getApp(), {
+  const {
+    initializeAuth,
+    connectAuthEmulator,
+    indexedDBLocalPersistence,
+    browserLocalPersistence,
+    browserSessionPersistence,
+  } = await import("firebase/auth");
+  const auth = initializeAuth(getApp(), {
     persistence: [indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence],
   });
+  // Before Auth restores a stored user, or its token check would go to the real service.
+  if (usesEmulators) connectAuthEmulator(auth, `http://${emulatorHost()}:9099`, { disableWarnings: true });
 }
 
 /** On Android a WebView reload finds the native SDKs already set up; they refuse setup calls but keep the

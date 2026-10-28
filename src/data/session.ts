@@ -127,7 +127,7 @@ export function myUid(): string {
  * ID-1..3, ID-5: saves the display name in the Auth profile, then its copies in my trips (one batch).
  * The Auth profile has no change listener, so this is the one place that re-reads after a write.
  */
-export async function setDisplayName(name: string) {
+export async function setDisplayName(name: string): Promise<{ synced: Promise<void> }> {
   if (creating) {
     try {
       await creating;
@@ -139,6 +139,7 @@ export async function setDisplayName(name: string) {
   await FirebaseAuthentication.updateProfile({ displayName: name });
   const { user } = await FirebaseAuthentication.getCurrentUser();
   if (user) set(fromUser(user));
-  // APP-9: the Auth profile needs the server, but the trips' copies show at once and sync in the background.
-  void renameMeInTrips(await myTripsForWrite(myUid()), name).catch(() => {});
+  // APP-9: the Auth profile needs the server, but the trips' copies show at once and sync in the background;
+  // `synced` settles when the server has them (the caller shows a notice if it refuses).
+  return { synced: renameMeInTrips(await myTripsForWrite(myUid()), name) };
 }

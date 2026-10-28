@@ -5,7 +5,10 @@ import { useEffect, useRef } from "react";
 
 /** Records `evenly:<name>` at this moment; `detail` shows next to it in the readers. */
 export function mark(name: string, detail?: string | number) {
-  performance.mark(`evenly:${name}`, { detail });
+  const entry = `evenly:${name}`;
+  // Snapshot marks repeat for as long as the app is open: keep the latest 100 of each.
+  if (performance.getEntriesByName(entry).length >= 100) performance.clearMarks(entry);
+  performance.mark(entry, { detail });
 }
 
 /** Marks `name` once, after the first frame painted with `ready` true (e.g. a screen showing its data). */
