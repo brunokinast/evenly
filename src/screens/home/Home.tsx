@@ -12,7 +12,7 @@ import { EmptyState, IconTile, ListGroup, Row, SkeletonRows } from "@/components
 import { TopBar } from "@/components/TopBar";
 import { TripTile } from "@/components/TripIcon";
 import { useMe } from "@/data/session";
-import { useMyTrips } from "@/data/trips";
+import { useMyTrips, warmTrip } from "@/data/trips";
 import { usePaintedMark } from "@/lib/perf";
 import { longDate, t } from "@/i18n";
 import { InstallSheets, startInstall, type InstallSheet } from "./InstallSheets";
@@ -68,6 +68,7 @@ export function Home() {
                 title={trip.name}
                 caption={`${trip.currency} · ${longDate(trip.createdAt)}`}
                 trailing={<ChevronRight className="size-5 shrink-0 text-fg-muted" aria-hidden />}
+                onPointerDown={() => warmTrip(trip.id)}
                 onClick={() => void openTrip(navigate, `/trip/${trip.id}`)}
               />
             ))}

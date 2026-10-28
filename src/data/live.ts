@@ -72,6 +72,14 @@ function subscribe(
   };
 }
 
+/**
+ * Starts a key's listener now, without a screen using it yet (e.g. on touch-down, before the tap opens the
+ * screen that will): kept for the usual idle time if nothing ends up using it.
+ */
+export function warmLive<T>(key: string, start: (emit: (value: Live<T>) => void) => () => void) {
+  subscribe(key, start as never, () => {})();
+}
+
 /** Current value of a live key, if something is listening (used by writes that need the latest data). */
 export function peekLive<T>(key: string): Live<T> | undefined {
   return entries.get(key)?.value as Live<T> | undefined;
