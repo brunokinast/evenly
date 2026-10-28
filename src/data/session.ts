@@ -8,14 +8,19 @@ import { myTripsForWrite } from "./trips";
 
 export type Session =
   | { status: "loading" }
+  | { status: "creating" } // ID-1 first open: the identity is being created; Welcome shows meanwhile (ID-6)
   | { status: "error" } // ID-6: couldn't create the identity
   | { status: "ready"; uid: string; name: string | null }; // name null → Welcome (ID-2)
 
 let session: Session = { status: "loading" };
 const listeners = new Set<() => void>();
 
+/** The first open's identity creation; the Welcome name waits for it before saving (ID-6). */
+let creating: Promise<void> | null = null;
+
 function set(next: Session) {
   if (next.status === "ready" && session.status !== "ready") mark("auth-ready");
+  if (next.status === "ready") creating = null;
   session = next;
   listeners.forEach((l) => l());
 }
@@ -24,12 +29,15 @@ function fromUser(user: User): Session {
   return { status: "ready", uid: user.uid, name: user.displayName || null };
 }
 
-async function signIn() {
-  set({ status: "loading" });
+/** ID-1. On a first open (`firstOpen`) Welcome shows while this runs, and a failure waits for Continue. */
+async function signIn(firstOpen = false) {
+  set({ status: firstOpen ? "creating" : "loading" });
+  const attempt = FirebaseAuthentication.signInAnonymously().then(() => {}); // authStateChange delivers the user
+  if (firstOpen) creating = attempt;
   try {
-    await FirebaseAuthentication.signInAnonymously(); // ID-1; authStateChange delivers the user
+    await attempt;
   } catch {
-    set({ status: "error" });
+    if (!firstOpen) set({ status: "error" });
   }
 }
 
@@ -44,7 +52,7 @@ async function start() {
   await FirebaseAuthentication.addListener("authStateChange", ({ user }) => {
     heard = true;
     if (user) set(fromUser(user));
-    else void signIn();
+    else void signIn(true);
   });
   listening = true;
   if (Capacitor.isNativePlatform()) void afterReload(() => heard);
@@ -120,6 +128,14 @@ export function myUid(): string {
  * The Auth profile has no change listener, so this is the one place that re-reads after a write.
  */
 export async function setDisplayName(name: string) {
+  if (creating) {
+    try {
+      await creating;
+    } catch (e) {
+      set({ status: "error" }); // ID-6, shown now that the user continued
+      throw e;
+    }
+  }
   await FirebaseAuthentication.updateProfile({ displayName: name });
   const { user } = await FirebaseAuthentication.getCurrentUser();
   if (user) set(fromUser(user));
