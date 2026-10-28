@@ -2,7 +2,7 @@
 // trip, and the dev server on the local network. Stop with Ctrl+C (that also saves the emulator data).
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { networkInterfaces } from "node:os";
+import { lanIp } from "./lan-ip.mjs";
 
 const DATA = ".emulator-data";
 const imp = existsSync(`${DATA}/firebase-export-metadata.json`) ? ` --import=${DATA}` : "";
@@ -20,9 +20,7 @@ console.log("Emulators ready.");
 spawnSync("node scripts/seed-demo.mjs", { shell: true, stdio: "inherit" });
 
 const vite = spawn("npx vite --host", { shell: true, stdio: "ignore" });
-const ip = Object.values(networkInterfaces())
-  .flat()
-  .find((a) => a?.family === "IPv4" && !a.internal && a.address.startsWith("192.168."))?.address;
+const ip = lanIp();
 console.log(`\nOpen on your phone (same Wi-Fi): http://${ip ?? "<this PC's IP>"}:5173\n`);
 
 const stop = () => {

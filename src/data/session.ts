@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { FirebaseAuthentication, type User } from "@capacitor-firebase/authentication";
+import { Capacitor } from "@capacitor/core";
 import { renameMeInTrips } from "./commands";
 import { firebaseReady, usesEmulators } from "./firebase";
 import { currentTrips } from "./trips";
@@ -37,11 +38,32 @@ async function start() {
   await firebaseReady;
   // The plugin holds the first auth state until a listener is attached, so a restored session (ID-4)
   // arrives here before we'd ever create a new identity.
+  let heard = false;
   await FirebaseAuthentication.addListener("authStateChange", ({ user }) => {
+    heard = true;
     if (user) set(fromUser(user));
     else void signIn();
   });
   listening = true;
+  if (Capacitor.isNativePlatform()) void afterReload(() => heard);
+}
+
+/**
+ * After a WebView reload (Android) the native plugin already gave its first state to the old page and
+ * sends nothing new: read the signed-in user directly, or sign in if there is none and still no event.
+ */
+async function afterReload(heard: () => boolean) {
+  try {
+    const { user } = await FirebaseAuthentication.getCurrentUser();
+    if (user) {
+      if (session.status === "loading") set(fromUser(user));
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // a first launch's own event comes first
+    if (!heard() && session.status === "loading") await signIn();
+  } catch {
+    if (session.status === "loading") set({ status: "error" });
+  }
 }
 const begin = () => start().catch(() => set({ status: "error" })); // ID-6 rather than a blank screen
 void begin();

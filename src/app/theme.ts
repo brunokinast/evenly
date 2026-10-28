@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { Capacitor, SystemBars, SystemBarsStyle } from "@capacitor/core";
 
 // APP-2: light, dark or system (default), remembered on this device.
 export type ThemeChoice = "system" | "light" | "dark";
@@ -23,6 +24,9 @@ function apply() {
   document.documentElement.classList.toggle("dark", isDark);
   const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
   if (bg) document.querySelector('meta[name="theme-color"]')?.setAttribute("content", bg);
+  // Android draws the app under transparent system bars; their icons follow our theme, not the phone's.
+  if (Capacitor.isNativePlatform())
+    void SystemBars.setStyle({ style: isDark ? SystemBarsStyle.Dark : SystemBarsStyle.Light });
 }
 apply();
 dark.addEventListener("change", apply);

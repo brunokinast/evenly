@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Copy, LoaderCircle, Share2 } from "lucide-react";
 import { useOnline } from "@/app/online";
+import { shareText } from "@/app/share";
 import { showToast } from "@/app/toast";
 import { Button, ButtonRow } from "@/components/Button";
 import { Sheet } from "@/components/Sheet";
@@ -52,7 +53,7 @@ function InviteBody({ trip }: { trip: Trip }) {
   });
 
   const code = invite?.code;
-  const shareText = code ? t("invite.shareText", { trip: trip.name, code }) : "";
+  const text = code ? t("invite.shareText", { trip: trip.name, code }) : "";
   const left = invite ? Math.max(0, Math.ceil((invite.expiresAt - now) / 1000)) : 0;
   const countdown = countdownLabel(left);
 
@@ -94,9 +95,12 @@ function InviteBody({ trip }: { trip: Trip }) {
         <Button
           variant="primary"
           disabled={!code || busy}
-          onClick={() => {
-            if (navigator.share) void navigator.share({ text: shareText }).catch(() => {});
-            else void navigator.clipboard?.writeText(shareText).then(() => showToast(t("invite.copied")));
+          onClick={async () => {
+            if (await shareText(text)) return;
+            await navigator.clipboard
+              ?.writeText(text)
+              .then(() => showToast(t("invite.copied")))
+              .catch(() => {});
           }}
         >
           <Share2 aria-hidden />

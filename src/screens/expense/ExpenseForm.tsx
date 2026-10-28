@@ -6,6 +6,7 @@ import { useOnline } from "@/app/online";
 import { showToast } from "@/app/toast";
 import { Button } from "@/components/Button";
 import { ConfirmSheet } from "@/components/ConfirmSheet";
+import { guardBack } from "@/components/Sheet";
 import { IconButton } from "@/components/IconButton";
 import { ListGroup } from "@/components/List";
 import { MoneyInput } from "@/components/MoneyInput";
@@ -111,6 +112,9 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
     id === myId ? t("common.you") : (people.get(id)?.name ?? t("members.former"));
 
   const leave = () => void backToTrip(navigate, trip.id);
+
+  // Expenses flow 5: Back (Android, browser) with unsaved changes asks first, like the close button.
+  useEffect(() => (dirty ? guardBack(() => setSheet("discard")) : undefined), [dirty]);
 
   async function save() {
     if (!valid || busy || !online) return;

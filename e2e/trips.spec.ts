@@ -457,4 +457,22 @@ test("Android back returns where you came from, never to a screen you left", asy
   await expect(ana.getByRole("heading", { name: "Your trips" })).toBeVisible();
   await ana.goForward();
   await expect(ana.getByRole("heading", { name: "Faro" })).toBeVisible();
+
+  // EXP flow 5: back with unsaved changes asks first. A sheet on top closes first; "Keep editing" keeps
+  // the guard, "Discard" leaves for the trip.
+  await ana.getByRole("button", { name: /Fuel/ }).click();
+  await ana.getByRole("dialog", { name: "Fuel" }).getByRole("button", { name: "Edit" }).click();
+  await ana.getByRole("textbox", { name: "What was it for?" }).fill("Fuel and tolls");
+  await ana.getByRole("button", { name: /Paid by/ }).click();
+  await ana.goBack();
+  await expect(ana.getByRole("dialog")).toHaveCount(0);
+  await ana.goBack();
+  await ana.getByRole("button", { name: "Keep editing" }).click();
+  await expect(ana.getByRole("heading", { name: "Edit expense" })).toBeVisible();
+  await ana.goBack();
+  await ana.getByRole("button", { name: "Discard" }).click();
+  await expect(ana.getByRole("heading", { name: "Faro" })).toBeVisible();
+  await expect(ana.getByText("Fuel and tolls")).toHaveCount(0);
+  await ana.goBack();
+  await expect(ana.getByRole("heading", { name: "Your trips" })).toBeVisible();
 });

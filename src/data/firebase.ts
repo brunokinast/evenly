@@ -1,4 +1,5 @@
 import { initializeApp } from "firebase/app";
+import { Capacitor } from "@capacitor/core";
 import { FirebaseAuthentication } from "@capacitor-firebase/authentication";
 import { FirebaseFirestore } from "@capacitor-firebase/firestore";
 
@@ -21,13 +22,20 @@ initializeApp(
 // The plugins' useEmulator() methods are not React hooks.
 /* eslint-disable react-hooks/rules-of-hooks */
 async function connect() {
-  await FirebaseFirestore.enablePersistence({ synchronizeTabs: true });
+  await setup(FirebaseFirestore.enablePersistence({ synchronizeTabs: true }));
   if (usesEmulators) {
-    // Same host as the page, so a phone on the LAN reaches the emulators on this PC.
-    const host = location.hostname;
-    await FirebaseAuthentication.useEmulator({ host, port: 9099 });
-    await FirebaseFirestore.useEmulator({ host, port: 8080 });
+    // Same host as the page, so a phone on the LAN reaches the emulators on this PC. The Android app's page
+    // is always "localhost", so its build sets VITE_EMULATOR_HOST to this PC's LAN IP.
+    const host = env.VITE_EMULATOR_HOST || location.hostname;
+    await setup(FirebaseAuthentication.useEmulator({ host, port: 9099 }));
+    await setup(FirebaseFirestore.useEmulator({ host, port: 8080 }));
   }
+}
+
+/** On Android a WebView reload finds the native SDKs already set up; they refuse setup calls but keep the
+ * first load's settings, so those rejections are harmless there. */
+function setup(call: Promise<void>) {
+  return Capacitor.isNativePlatform() ? call.catch(() => {}) : call;
 }
 
 /* eslint-enable react-hooks/rules-of-hooks */
