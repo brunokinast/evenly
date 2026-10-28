@@ -121,7 +121,7 @@ Scaffold first (Vite, TS, Tailwind, shadcn, Firebase, Vitest, emulator, PWA). Th
 Decided by the user (2026-10-28):
 
 - **Migrate old data**, but **only trips with content**: a trip with at least one expense. Trips with no expenses are not migrated; they're deleted with the old leftovers (they stay in the JSON backup). The mapping is in `docs/data-model.md` "Migration"; the old shape is in `specs/migration-source.md` (the only allowed source about the old app).
-- **Only two people used the old app.** No identity carry-over: they install the new app as new users, and the migration then **links their old member entries to their new UIDs** (the user tells you who is who). Keep our current release key (`android/release.jks`); the old key isn't needed.
+- **Only two people used the old app, and they'll come later.** Migrate now, keeping their old UIDs; linking them to their new accounts is the **last step**, after everything else, whenever they install the new app. Keep our current release key (`android/release.jks`); the old key isn't needed.
 
 Facts found at handoff (verify, don't assume):
 
@@ -131,18 +131,16 @@ Steps (each needs the user's OK before touching the real project):
 
 1. **Migration script** `scripts/migrate.mjs` (Admin SDK, local, with the user's credentials; `firebase-admin` as a devDependency):
    - Dry-run by default: read everything, write a JSON backup to a gitignored folder, print what it would do: trips kept vs dropped, and each trip's members with their old UID and name.
-   - `--map oldUid=newUid` (repeatable) links an old app member to a new identity: the member keeps its memberId, gets the new `uid` and the new user's name; `ownerUid` and `createdBy` are remapped too. Old app members with no mapping become **guests** with their old name, so anyone can still claim them by joining (MEM-7). A trip whose owner has no mapping: ask the user (the new model needs an app-user owner).
+   - Old app members stay app members with their **old UID** (name from `users/{uid}.displayName`), so owners and `createdBy` stay valid and the later link is a plain UID swap. Until then nobody can sign in as them.
    - `--apply` writes. Each trip is migrated in one batch: the new trip doc with its members and expenses, then the old subcollections deleted. Afterwards it deletes the dropped trips and `users`.
-   - The new UIDs: after the two users install the new app and enter their names, list the Auth users (Admin SDK `listUsers`, newest first, with names) and confirm the pairs with the user before `--apply`.
    - Test first against the emulators loaded with the backup JSON: unit tests for the mapping (pure functions), then compare per-trip balances old vs new (the domain functions in `src/domain/`) and look at the trip lists in the app (`npm run android:dev` or the LAN preview).
 2. **Cutover**, with the user:
-   - Run the backup (dry run).
+   - Backup and migration with `--apply`.
    - Set `APK_URL` in `src/app/install.ts`, `npm run android:release`, `firebase deploy` (rules, indexes, hosting; the predeploy builds and adds `/evenly.apk`). The new rules lock the old app out.
-   - The two users uninstall the old app, install the new one, and enter their names.
-   - Run the migration with `--map` for both and `--apply`.
-3. **Check on the user's phone**: their old trips appear with matching balances.
+3. **Check on the user's phone**: the user's own old trips show only after their link (step 6), so check them on the emulators with the backup, and check the real site and APK with a new trip.
 4. **GitHub**: only with the user's explicit OK, make `evenly-v2` the new `main`. That's the one time `main` is touched; ask how they want it (replace or merge) and update `CLAUDE.md` "Git" after.
 5. Loose ends: an embedded PDF font for names in non-Latin scripts (Phase 5 open item 3). Update this status section and the docs.
+6. **Last, whenever the two old users come** (the user says when): they uninstall the old app, install the new one and enter their names. Then `scripts/relink.mjs oldUid=newUid …` (dry run first) swaps each old UID for the new one in every trip it appears in (member `uid`, `memberUids`, `memberIdsByUid` keys, `ownerUid`, expenses' `createdBy`), one batch per trip. List the Auth users (Admin SDK `listUsers`, newest first, with names) and confirm the pairs with the user before applying. The new identity must not already be a member of that trip (if it is, ask the user).
 
 ### 7. Gemini (later)
 
