@@ -61,6 +61,15 @@ function loseTrip(tripId: string, raw: string) {
   lostListeners.forEach((l) => l());
 }
 
+/** JSON with sorted keys: the native SDK's maps don't promise the same key order in both listeners. */
+function rawJson(value: unknown): string {
+  return JSON.stringify(value, (_, v: unknown) =>
+    v && typeof v === "object" && !Array.isArray(v)
+      ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => (a < b ? -1 : 1)))
+      : v,
+  );
+}
+
 const withoutLost = (trips: Trip[]) => trips.filter((trip) => lostTrips.get(trip.id) !== rawOf.get(trip));
 
 /** TRIP-5, KI-1, KI-2: Home's single query, newest first. */
@@ -104,7 +113,7 @@ function useMyTripsQuery(uid: string): Live<Trip[]> {
             .filter((s) => s.data)
             .map((s) => {
               const trip = toTrip(s.id, s.data!);
-              rawOf.set(trip, JSON.stringify(s.data));
+              rawOf.set(trip, rawJson(s.data));
               return trip;
             });
           emit({ status: "ready", data: trips.sort((a, b) => b.createdAt - a.createdAt) });
@@ -123,7 +132,7 @@ export function useTrip(tripId: string): Live<Trip> {
           if (last) loseTrip(tripId, last);
           return emit({ status: "gone" });
         }
-        last = JSON.stringify(event.snapshot.data);
+        last = rawJson(event.snapshot.data);
         emit({ status: "ready", data: toTrip(tripId, event.snapshot.data) });
       }),
     );

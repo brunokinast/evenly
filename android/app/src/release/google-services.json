@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "842719625398",
+    "project_id": "evenly-app-6f5f2",
+    "storage_bucket": "evenly-app-6f5f2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:842719625398:android:203e3dffe526ebec9d2617",
+        "android_client_info": {
+          "package_name": "br.com.kinast.evenly"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCmvMNJC58mMqCXCJRgdn2XnzD_rdlqVsw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:842719625398:android:8a00250fe4b802279d2617",
+        "android_client_info": {
+          "package_name": "com.example.evenly"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCmvMNJC58mMqCXCJRgdn2XnzD_rdlqVsw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

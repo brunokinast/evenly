@@ -91,7 +91,12 @@ Tokens from `specs/design.md` as CSS variables, mapped into Tailwind. Theme ligh
 
 ## Android (Phase 5)
 
-Capacitor wraps the same build and uses the native Firebase SDKs, so later Kotlin code (Gemini) acts as the same signed-in user. Keeping the applicationId `br.com.kinast.evenly` and the old release key would also keep existing users' sessions; that's nice to have, not required.
+Capacitor wraps the same build (`capacitor.config.ts`, `android/`) and uses the native Firebase SDKs, so later Kotlin code (Gemini) acts as the same signed-in user. App ID, signing, build types, Back and sharing: ADR 0003.
+
+- `npm run android:dev`: debug APK ("Evenly Dev") against the emulators on this PC, installed on a connected phone or Android emulator. `npm run android:release`: signed release APK in `android/evenly.apk`; Hosting's predeploy runs the production build and copies it to `/evenly.apk`.
+- The WebView page is `https://localhost`, so `location.hostname` can't find the emulators: the debug build bakes in `VITE_EMULATOR_HOST` (this PC's LAN IP).
+- Edge to edge: Capacitor's SystemBars keeps `env(safe-area-inset-*)` correct; `src/app/theme.ts` sets the bar icons' style from the app theme and hands the choice to `AppThemePlugin.java` (our one native plugin, registered in `MainActivity`), which sets the app's night mode so the next launch screen matches (Android 12+). The keyboard resizes the WebView like Chrome does, so `--kb` stays 0 there.
+- Launcher icons (white coin on marigold) and the launch-screen logo (`drawable[-night]-xxxhdpi/splash_icon.png`, in `--fg`) come from `public/icon.svg` and `public/logo.svg` (`scripts/make-icons.mjs`).
 
 ## Testing
 

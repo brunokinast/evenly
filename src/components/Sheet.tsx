@@ -106,13 +106,16 @@ function pushEntry() {
   history.pushState({ evenlySheet: entry }, "");
 }
 
-function registerBack(close: () => void) {
-  stack.push(close);
+function registerBack(close: () => void, under = false) {
+  if (under) stack.unshift(close);
+  else stack.push(close);
   if (entry === null && !backPending) pushEntry();
   return () => {
     stack.splice(stack.indexOf(close), 1);
     // Deferred so a sheet that remounts right away (React StrictMode) keeps the entry.
     setTimeout(() => {
+      // Back closed this one while others remain (a sheet under it, a guard): they need an entry again.
+      if (stack.length > 0 && entry === null && !backPending) pushEntry();
       if (stack.length > 0 || entry === null) return;
       const onEntry = history.state?.evenlySheet === entry;
       entry = null;
@@ -122,6 +125,14 @@ function registerBack(close: () => void) {
       }
     });
   };
+}
+
+/**
+ * While registered, Back calls `onBack` instead of leaving the screen (e.g. "Discard changes?"). It sits
+ * under every sheet, so Back still closes open sheets first. Returns the unregister function.
+ */
+export function guardBack(onBack: () => void) {
+  return registerBack(onBack, true);
 }
 
 /**

@@ -11,6 +11,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
+      injectRegister: false, // src/main.tsx registers it on the web only
       includeAssets: ["fonts/hanken-grotesk.woff2", "icon.svg", "apple-touch-icon.png", "logo.png"],
       manifest: {
         name: "Evenly",

@@ -38,13 +38,16 @@ Any feature, bug or change request goes through the `change-workflow` skill (`.c
 - `npm run preview:lan`: emulators (data kept in `.emulator-data/`) + demo trip + dev server for the phone at `http://<LAN IP>:5173`. Demo trip: join with code **123456** (`scripts/seed-demo.mjs`; `npm run demo:reset` rewrites it). On the emulators the Profile sheet has "Reset account (testing)": new identity, back to Welcome. Without `VITE_FIREBASE_*` env vars the app always uses the emulators.
 - `npm run emulators`: just the emulators, empty (used by e2e).
 - `npm run e2e`: Playwright phone-viewport checks; screenshots in `test-results/`.
-- `npm run build`: production build + APP-4 bundle budget (startup JS ≤ 350 kB gzip).
+- `npm run build`: production build (real project via `.env.production`) + APP-4 bundle budget (startup JS ≤ 350 kB gzip).
+- `npm run android:dev`: debug APK "Evenly Dev" against the emulators on this PC's LAN IP, installed on a connected device/AVD (`emulator -avd Medium_Phone_API_36.1`). Needs the emulators running (`preview:lan`). Drive its WebView from Playwright with `adb forward tcp:9222 localabstract:webview_devtools_remote_<pid>` + `chromium.connectOverCDP`; Playwright's `click()` can hang there, so click through `page.evaluate`.
+- `npm run android:release`: signed release APK → `android/evenly.apk`, which `firebase deploy` copies to `/evenly.apk` after its own production build (talks to the real project: don't install it for testing). Signing key: `android/release.jks` + `android/key.properties`, gitignored, never regenerate (ADR 0003).
 
 ## Gotchas
 
 - Call `await firebaseReady` (`src/data/firebase.ts`) before any Firebase plugin call.
 - Tailwind colors are only the design tokens (`bg-surface`, `text-fg-muted`, …); default palette is disabled. Type roles: `text-amount|code|title|total|heading|row|body|caption|tag` (also listed in `src/lib/cn.ts` for tailwind-merge); no one-off sizes. Radii: `rounded-ctl|card|sheet`.
 - e2e: `playwright.config.ts` starts the emulators and dev server itself; each test is a fresh browser = a fresh anonymous user. Tests run with reduced motion so screenshots never catch a sheet mid-slide.
+- Android Back = `history.back()` (listener in `src/main.tsx`), so everything Back does is web history. A screen that must ask before leaving uses `guardBack()` from `Sheet.tsx` (see `ExpenseForm`).
 - Sheets add one history entry (Android back). Move between screens only with the helpers in `src/app/nav.ts` (`openTrip`, `goHome`, `openExpenseForm`, `backToTrip`, `switchTab`): they first drop open sheets' entry (`leaveSheets()`), then push or pop, so Back never lands on a stale screen or sheet.
 - PDF export is lazy (`import("./exportPdf")`); its chunks are listed in `ON_DEMAND` in `scripts/check-bundle-size.mjs`. New on-demand code must be added there.
 - Rules tests reuse a Firestore emulator already running on :8080 (e.g. the LAN preview); otherwise they start one. They use project `demo-evenly-rules` so `clearFirestore()` never wipes the preview's `demo-evenly` data. Scripts that join the demo trip must remove themselves after (`seed-demo.mjs --remove-name`).

@@ -1,6 +1,7 @@
 // PDF-1..5, specs/design.md "PDF". Loaded on demand (listed in scripts/check-bundle-size.mjs ON_DEMAND),
 // so jsPDF isn't startup code.
 import { jsPDF } from "jspdf";
+import { shareFile } from "@/app/share";
 import { balances, paymentsInListOrder, splitsAll, totalSpent } from "@/domain/balances";
 import { byListOrder } from "@/domain/members";
 import { pdfFileName } from "@/domain/trips";
@@ -248,7 +249,7 @@ export async function exportTripPdf(view: TripView) {
     text(t("pdf.page", { n: i, total: pages }), W - M, { size: 8, color: C.muted, right: true });
   }
 
-  await deliver(doc.output("blob"), pdfFileName(trip.name), trip.name);
+  await shareFile(doc.output("blob"), pdfFileName(trip.name), trip.name);
 }
 
 const LOGO_H = 28;
@@ -278,23 +279,4 @@ function fit(doc: jsPDF, s: string, max: number) {
   let out = s;
   while (out.length > 1 && doc.getTextWidth(`${out}…`) > max) out = out.slice(0, -1);
   return `${out}…`;
-}
-
-/** PDF-4: the share sheet where it can share files, otherwise a download. */
-async function deliver(blob: Blob, name: string, title: string) {
-  const file = new File([blob], name, { type: "application/pdf" });
-  if (navigator.canShare?.({ files: [file] })) {
-    try {
-      await navigator.share({ files: [file], title });
-      return;
-    } catch (e) {
-      if ((e as Error).name === "AbortError") return; // The user closed the share sheet.
-    }
-  }
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
