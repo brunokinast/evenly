@@ -336,7 +336,7 @@ test.describe("in Portuguese", () => {
 
   test("APP-1 EXP-2 texts and amounts follow the device language", async ({ page }, info) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Boas-vindas", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Qual é o seu nome?" })).toBeVisible();
     await page.getByRole("textbox", { name: "Qual é o seu nome?" }).fill("Ana");
     await page.keyboard.press("Enter");
     // Button labels are never cut (design.md "Bottom action bar"): at 360px wide the Portuguese labels

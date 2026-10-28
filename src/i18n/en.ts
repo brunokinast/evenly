@@ -19,7 +19,6 @@ export const en = {
   "connect.title": "Unable to connect",
   "connect.body": "Check your internet connection and try again.",
 
-  "welcome.hello": "Welcome",
   "welcome.title": "What's your name?",
   "welcome.body": "Friends see it in the trips you share. No account needed.",
   "name.label": "Your name",

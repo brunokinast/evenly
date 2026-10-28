@@ -4,7 +4,7 @@ import { devices, expect, test, type Page } from "@playwright/test";
 
 const nameField = (page: Page) => page.getByRole("textbox", { name: "Your name" });
 const welcomeField = (page: Page) => page.getByRole("textbox", { name: "What's your name?" });
-const welcomeHeading = (page: Page) => page.getByRole("heading", { name: "Welcome", exact: true });
+const welcomeHeading = (page: Page) => page.getByRole("heading", { name: "What's your name?" });
 
 async function enterName(page: Page, name: string) {
   await page.goto("/");

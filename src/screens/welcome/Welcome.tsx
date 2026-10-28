@@ -24,12 +24,12 @@ export function Welcome() {
         <span
           role="img"
           aria-label="Evenly"
-          className="mb-6 h-16 w-[230px] bg-fg [mask:url(/logo.svg)_center/contain_no-repeat]"
+          className="mb-9 h-14 w-[202px] bg-fg [mask:url(/logo.svg)_center/contain_no-repeat]"
         />
-        <h1 className="text-title">{t("welcome.hello")}</h1>
-        <label htmlFor={id} className="mt-8 mb-2 text-caption font-semibold text-fg-muted">
-          {t("welcome.title")}
-        </label>
+        {/* The logo says hello; the one question is the title and the field's label. */}
+        <h1 className="mb-5 text-title">
+          <label htmlFor={id}>{t("welcome.title")}</label>
+        </h1>
         <SubmitField
           id={id}
           autoFocus
