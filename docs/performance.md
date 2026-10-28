@@ -51,7 +51,7 @@ Web, big trip (8 people, 150 expenses), slow network, medians, ms. Fresh emulato
 | Tab → Expenses                              |                   133 |     100 | ≤ 100 ✓                                                   |
 | Rename trip / remove member / leave         | waited for the server | at once |                                                           |
 
-1000 expenses: Save 1410 → 720, details 362 → 71; the Expenses tab (~540) and opening the trip (~1.3 s from cache) still build every row: windowing the list would fix that if trips that large appear.
+1000 expenses: Save 1410 → 720, details 362 → 71; the Expenses tab (~540) and opening the trip (~1.3 s from cache) still build every row: out of scope: the user decided (2026-10-28) large trips aren't a real case; perf work focuses on typical trips.
 Android (AVD, debug APK, relative): Save 1159 → ~170; cold start → trips ~4.4 s → ~2.7 s, mostly the restarted AVD (the native early start, F5, didn't measurably help and was reverted).
 Open: another member's change arrives ~0.4 s later on the throttled slow network since F1 (≈ the same on the good network); likely the emulator's HTTP/1.1 under throttling: check on a real phone.
 
