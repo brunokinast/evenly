@@ -49,4 +49,5 @@ Any feature, bug or change request goes through the `change-workflow` skill (`.c
 - PDF export is lazy (`import("./exportPdf")`); its chunks are listed in `ON_DEMAND` in `scripts/check-bundle-size.mjs`. New on-demand code must be added there.
 - Rules tests reuse a Firestore emulator already running on :8080 (e.g. the LAN preview); otherwise they start one. They use project `demo-evenly-rules` so `clearFirestore()` never wipes the preview's `demo-evenly` data. Scripts that join the demo trip must remove themselves after (`seed-demo.mjs --remove-name`).
 - People lists use `view.listed` (MEM-6: me first, then join order); computations keep `trip.members` order. Button pairs go in `ButtonRow`; one-field forms use `SubmitField`.
+- Typecheck with `npm run typecheck` (`tsc -b`); `tsc --noEmit -p .` checks nothing here (the root tsconfig only has references).
 - TypeScript is pinned to 6.0 (typescript-eslint support); Firebase JS SDK to 12 (Capacitor Firebase plugins).
