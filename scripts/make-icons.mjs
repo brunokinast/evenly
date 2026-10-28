@@ -1,6 +1,6 @@
 // Renders public/icon.svg to the PNG sizes iOS and Android install prompts need and to the Android app's
-// launcher icons, and public/logo.svg to the PNG the PDF header uses (jsPDF can't draw SVG). Run after changing the icon or the logo.
-import { readFileSync } from "node:fs";
+// launcher and launch-screen icons, and public/logo.svg to the PNG the PDF header uses (jsPDF can't draw SVG). Run after changing the icon or the logo.
+import { mkdirSync, readFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 
 const icon = readFileSync("public/icon.svg", "utf8");
@@ -64,5 +64,23 @@ for (const [dir, dp] of [
     await page.screenshot({ path: `${res}/mipmap-${dir}/${name}.png`, omitBackground: true });
     await page.close();
   }
+}
+
+// Android launch screen (API 31+): the coin alone in --fg, on a 288dp canvas inside the 192dp circle the
+// system shows. One xxxhdpi PNG per theme; Android scales it down for other densities.
+for (const [dir, fg] of [
+  ["drawable-xxxhdpi", "#171A21"],
+  ["drawable-night-xxxhdpi", "#ECEEF2"],
+]) {
+  const size = 288 * 4;
+  const inner = Math.round(size * 0.62);
+  const page = await browser.newPage({ viewport: { width: size, height: size } });
+  await page.setContent(
+    `<body style="margin:0;display:grid;place-items:center;height:${size}px"><div style="width:${inner}px;height:${inner}px">` +
+      `${glyph.replaceAll("#FFFFFF", fg).replace("<svg", `<svg width="${inner}" height="${inner}"`)}</div></body>`,
+  );
+  mkdirSync(`${res}/${dir}`, { recursive: true });
+  await page.screenshot({ path: `${res}/${dir}/splash_icon.png`, omitBackground: true });
+  await page.close();
 }
 await browser.close();

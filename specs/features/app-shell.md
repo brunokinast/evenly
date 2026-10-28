@@ -3,7 +3,7 @@
 ## Acceptance criteria
 
 - **APP-1** Languages: English and Portuguese (Brazil). The app follows the device language and falls back to English.
-- **APP-2** Theme: light, dark or system (default). The choice is remembered on the device.
+- **APP-2** Theme: light, dark or system (default). The choice is remembered on the device. In the Android app the launch screen follows it too, from the next launch (Android 12 and later).
 - **APP-3** Install from the Profile sheet. The "Install app" row shows only when the app isn't already running installed, and depends on the device:
   - Android: "Get the Android app" downloads the APK from the app's own website, with a short note on allowing the install. Until the APK exists (Phase 5), Android gets the web-app install instead.
   - iPhone/iPad Safari: opens the 3 steps (Share → Add to Home Screen → Add).

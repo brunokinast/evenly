@@ -117,9 +117,10 @@ Inputs are never smaller than 16px (prevents iOS zoom on focus).
 
 ## Brand
 
-- **App icon** (`public/icon.svg`): a marigold rounded tile with a coin in `--accent-fg`: a ring with a "$" inside, split by a diagonal cut (−14°) whose two halves slide slightly apart. At each end of the cut, two short round-ended lines (a longer one and a shorter one, mirrored on the other side) fly outward, as if the coin was just split. Strokes are round-ended and heavy, so it reads at 16px.
+- **App icon** (`public/icon.svg`): a marigold rounded tile with a white coin: a ring with a "$" inside, split by a diagonal cut (−14°) whose two halves slide slightly apart. At each end of the cut, two short round-ended lines (a longer one and a shorter one, mirrored on the other side) fly outward, as if the coin was just split. Strokes are round-ended and heavy, so it reads at 16px.
 - **Logo** (`public/logo.svg`): the same coin without the tile, then "Evenly" in Nunito ExtraBold (800), stored as outlines (no font is loaded for it). Used where the brand is shown at larger size: the Welcome screen (drawn in `--fg` through a CSS mask, so it follows the theme) and the PDF header.
-- `scripts/make-icons.mjs` renders the PNGs (install icons, full-bleed tiles for iOS and maskable Android icons, and the PDF logo) from those two files.
+- **Android launch screen**: the coin alone (no tile), centered on `--bg`, in `--fg`: dark on light in the light theme, light on dark in the dark theme. It follows the theme chosen in the app (APP-2).
+- `scripts/make-icons.mjs` renders the PNGs (install icons, full-bleed tiles for iOS and maskable Android icons, the Android launcher and launch-screen icons, and the PDF logo) from those two files.
 
 ## PDF
 
