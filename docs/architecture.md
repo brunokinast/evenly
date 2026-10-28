@@ -54,6 +54,7 @@ Through the Capacitor Firebase plugins on every platform: `@capacitor-firebase/a
 - Derived values (balances, settlements, display names, "split between all") are computed from hook data with `src/domain/` functions during render (memoized when needed), never stored.
 - **One exception**: the Auth profile (display name) has no change listener, so `setDisplayName` re-reads the current user after `updateProfile` and publishes it to `useSession()`.
 - **Cache gotcha**: when a trip listener loses access (trip deleted, member removed), Firestore's offline cache can keep the old trip and Home's query may keep showing it. `useMyTrips` hides a trip whose listener reported "gone" while the query still returns that same version (`src/data/trips.ts`).
+- **Rename in all trips** (ID-5): `setDisplayName` takes Home's live list, or one read of the same query when Home never loaded (a name entered on Welcome by a user who already has trips, e.g. migrated). The read feeds a write, never the screen.
 - **Join preview**: looking up a code (`lookupInvite`) is a one-off read by design: the attempt must be counted first (INV-9), and the preview is only shown in the Join sheet.
 - **Writes** are plain async functions in `src/data/` (`createTrip`, `joinTrip`, `saveExpense`…). They don't update local state: the listener delivers the change, just as it does for other members. Screens show busy state and errors (EXP-8).
 
