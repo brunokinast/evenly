@@ -57,6 +57,7 @@ A verification pass re-checks every spec against the old code, to catch anything
   1. Install `android/evenly.apk` on the user's phone and try it against the real project. Needs the new rules deployed to the real project first (Phase 6 decision: the old app still uses it).
   2. Install: set `APK_URL` in `src/app/install.ts` once the APK is on Hosting (Phase 6 deploy).
   3. PDF fonts: jsPDF's Helvetica is Latin only; names in other scripts need an embedded font.
+- Phase 6 step 1 (2026-10-28, branch `migration`): `scripts/migrate.ts` and `scripts/relink.ts` (run with `npx tsx`; `firebase-admin` uses the `firebase login` credentials, no key file). Unit tests for the mapping and relink; checked on the emulators with a synthetic old-shape backup: restore, dry run, apply (one trip kept, the empty one and `users` deleted, balances read back), relink of the old owner to a new app user, and the trip showed live on Home and in the trip screen. Next: the dry run on the real project (read only), with the user's OK.
 - Still untested (no automated test yet): EXP-8 failure path, PDF-2 and PDF-5, APP-5 (accessibility). BAL-4 and INV-12 are absences by design.
 
 ### 2. Design → `specs/design.md` + a mockup page
@@ -129,7 +130,7 @@ Facts found at handoff (verify, don't assume):
 
 Steps (each needs the user's OK before touching the real project):
 
-1. **Migration script** `scripts/migrate.mjs` (Admin SDK, local, with the user's credentials; `firebase-admin` as a devDependency):
+1. **Migration script** `scripts/migrate.ts` (done, see status) (Admin SDK, local, with the user's credentials; `firebase-admin` as a devDependency):
    - Dry-run by default: read everything, write a JSON backup to a gitignored folder, print what it would do: trips kept vs dropped, and each trip's members with their old UID and name.
    - Old app members stay app members with their **old UID** (name from `users/{uid}.displayName`), so owners and `createdBy` stay valid and the later link is a plain UID swap. Until then nobody can sign in as them.
    - `--apply` writes. Each trip is migrated in one batch: the new trip doc with its members and expenses, then the old subcollections deleted. Afterwards it deletes the dropped trips and `users`.
@@ -140,7 +141,7 @@ Steps (each needs the user's OK before touching the real project):
 3. **Check on the user's phone**: the user's own old trips show only after their link (step 6), so check them on the emulators with the backup, and check the real site and APK with a new trip.
 4. **GitHub**: only with the user's explicit OK, make `evenly-v2` the new `main`. That's the one time `main` is touched; ask how they want it (replace or merge) and update `CLAUDE.md` "Git" after.
 5. Loose ends: an embedded PDF font for names in non-Latin scripts (Phase 5 open item 3). Update this status section and the docs.
-6. **Last, whenever the two old users come** (the user says when): they uninstall the old app, install the new one and enter their names. Then `scripts/relink.mjs oldUid=newUid …` (dry run first) swaps each old UID for the new one in every trip it appears in (member `uid`, `memberUids`, `memberIdsByUid` keys, `ownerUid`, expenses' `createdBy`), one batch per trip. List the Auth users (Admin SDK `listUsers`, newest first, with names) and confirm the pairs with the user before applying. The new identity must not already be a member of that trip (if it is, ask the user).
+6. **Last, whenever the two old users come** (the user says when): they uninstall the old app, install the new one and enter their names. Then `npx tsx scripts/relink.ts oldUid=newUid …` (`--users` lists the Auth users) (dry run first) swaps each old UID for the new one in every trip it appears in (member `uid`, `memberUids`, `memberIdsByUid` keys, `ownerUid`, expenses' `createdBy`), one batch per trip. List the Auth users (Admin SDK `listUsers`, newest first, with names) and confirm the pairs with the user before applying. The new identity must not already be a member of that trip (if it is, ask the user).
 
 ### 7. Gemini (later)
 

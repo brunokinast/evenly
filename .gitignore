@@ -13,3 +13,4 @@ test-results/
 *-debug.log
 node_modules/.tmp/
 .emulator-data/
+backups/
