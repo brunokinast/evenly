@@ -49,7 +49,7 @@ export const ptBR: Record<MessageKey, string> = {
   "install.ios.step3": "Toque em Adicionar. O Evenly agora está na sua tela inicial.",
   "install.apk.title": "Baixar o app Android",
   "install.apk.body":
-    "Abra o arquivo baixado para instalar. Se o Android pedir, permita que o navegador instale apps.",
+    "Abra o arquivo baixado para instalar. Se o Android pedir, permita que o navegador instale apps. Se você tem o app Evenly antigo, desinstale-o antes.",
   "install.apk.download": "Baixar",
 
   "newTrip.title": "Nova viagem",

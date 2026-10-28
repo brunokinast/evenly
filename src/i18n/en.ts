@@ -48,7 +48,7 @@ export const en = {
   "install.ios.step3": "Tap Add. Evenly is now on your home screen.",
   "install.apk.title": "Get the Android app",
   "install.apk.body":
-    "Open the downloaded file to install it. If Android asks, allow your browser to install apps.",
+    "Open the downloaded file to install it. If Android asks, allow your browser to install apps. If you have the old Evenly app, uninstall it first.",
   "install.apk.download": "Download",
 
   "newTrip.title": "New trip",
