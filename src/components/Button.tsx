@@ -25,6 +25,19 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   busy?: boolean;
 };
 
+/** Button classes for a link that looks like a button (`<a>`, wouter `<Link>`). */
+export const buttonClass = (
+  variant: Variant = "secondary",
+  size: keyof typeof sizes = "md",
+  className?: string,
+) =>
+  cn(
+    "inline-flex min-w-0 items-center justify-center gap-2 rounded-ctl text-center text-balance [&_svg]:shrink-0",
+    sizes[size],
+    variants[variant],
+    className,
+  );
+
 /** specs/design.md "Buttons": the label is never cut; as a last resort it wraps. */
 export function Button({
   variant = "secondary",
@@ -40,12 +53,7 @@ export function Button({
       type="button"
       disabled={disabled || busy}
       aria-busy={busy || undefined}
-      className={cn(
-        "inline-flex min-w-0 items-center justify-center gap-2 rounded-ctl text-center text-balance [&_svg]:shrink-0",
-        sizes[size],
-        variants[variant],
-        className,
-      )}
+      className={buttonClass(variant, size, className)}
       {...rest}
     >
       {busy ? <LoaderCircle className="animate-spin" aria-hidden /> : children}

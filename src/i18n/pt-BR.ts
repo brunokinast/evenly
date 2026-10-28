@@ -1,7 +1,6 @@
 import type { MessageKey } from "./en";
 
 export const ptBR: Record<MessageKey, string> = {
-  "app.name": "Evenly",
   "common.done": "Pronto",
   "common.notNow": "Agora não",
   "common.tryAgain": "Tentar de novo",
@@ -9,7 +8,6 @@ export const ptBR: Record<MessageKey, string> = {
   "common.cancel": "Cancelar",
   "common.save": "Salvar",
   "common.close": "Fechar",
-  "common.back": "Voltar",
   "common.edit": "Editar",
   "common.add": "Adicionar",
   "common.error": "Algo deu errado. Verifique sua conexão e tente de novo.",
@@ -134,6 +132,8 @@ export const ptBR: Record<MessageKey, string> = {
   "expenses.count.other": "{n} despesas",
   "date.today": "Hoje",
   "date.yesterday": "Ontem",
+  "date.dayAndDate": "{day}, {date}",
+  "date.dayAndTime": "{day}, {time}",
   "expenses.paidBy": "Pago por {name}.",
   "details.paidBy": "Pago por {name}",
   "split.all": "Dividido entre todos",
@@ -225,7 +225,6 @@ export const ptBR: Record<MessageKey, string> = {
   "form.deleteTitle": "Excluir despesa?",
   "form.deleteBody": "Ela será removida para todos, e os saldos serão atualizados.",
   "form.needPeople": "Escolha pelo menos uma pessoa.",
-  "form.missingPerson": "Alguém nesta despesa não está mais na viagem. Escolha as pessoas de novo.",
 
   "pdf.summary": "Resumo da viagem",
   "pdf.created": "Criada em {date}",

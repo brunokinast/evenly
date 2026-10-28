@@ -1,5 +1,6 @@
 import { Download, Share, SquarePlus, Check, type LucideIcon } from "lucide-react";
 import { promptInstall, useInstall } from "@/app/install";
+import { Button, buttonClass } from "@/components/Button";
 import { Sheet } from "@/components/Sheet";
 import { t, type MessageKey } from "@/i18n";
 
@@ -36,23 +37,14 @@ export function InstallSheets({ open, onClose }: { open: InstallSheet; onClose: 
             </li>
           ))}
         </ol>
-        <button
-          type="button"
-          onClick={onClose}
-          className="min-h-12 rounded-ctl bg-accent text-row text-accent-fg active:brightness-95"
-        >
+        <Button variant="primary" onClick={onClose}>
           {t("common.done")}
-        </button>
+        </Button>
       </Sheet>
       <Sheet open={open === "apk"} onClose={onClose} title={t("install.apk.title")}>
         <p className="text-caption text-fg-muted">{t("install.apk.body")}</p>
         {apkUrl && (
-          <a
-            href={apkUrl}
-            download
-            onClick={onClose}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-ctl bg-accent text-row text-accent-fg active:brightness-95"
-          >
+          <a href={apkUrl} download onClick={onClose} className={buttonClass("primary")}>
             <Download className="size-5" aria-hidden />
             {t("install.apk.download")}
           </a>

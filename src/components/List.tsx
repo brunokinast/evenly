@@ -73,7 +73,7 @@ export function Row({
 /** Small uppercase pill: "You", "Owner", "Guest". */
 export function Tag({ children }: { children: ReactNode }) {
   return (
-    <span className="ml-1.5 inline-block rounded-full bg-surface-2 px-[7px] align-[2px] text-[11px] leading-4 font-bold tracking-[0.05em] text-fg-muted uppercase">
+    <span className="ml-1.5 inline-block rounded-full bg-surface-2 px-[7px] align-[2px] text-tag text-fg-muted uppercase">
       {children}
     </span>
   );

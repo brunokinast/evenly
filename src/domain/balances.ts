@@ -1,3 +1,4 @@
+import { byListOrder } from "./members";
 import type { Expense } from "./types";
 
 /**
@@ -54,3 +55,18 @@ export function settlements(balance: Map<string, number>, order: string[]): Paym
 }
 
 export const totalSpent = (expenses: Expense[]) => expenses.reduce((sum, e) => sum + e.amountCents, 0);
+
+/** BAL-8: suggested payments shown in the MEM-6 list order of the payer, then of the receiver. */
+export function paymentsInListOrder(
+  balance: Map<string, number>,
+  order: string[],
+  listed: string[],
+): Payment[] {
+  const by = byListOrder(listed);
+  return settlements(balance, order).sort((a, b) => by(a.from, b.from) || by(a.to, b.to));
+}
+
+/** An equal split between every current member ("Split between all"). */
+export function splitsAll(e: Expense, memberIds: string[]): boolean {
+  return Object.keys(e.shares).length === memberIds.length && memberIds.every((id) => id in e.shares);
+}

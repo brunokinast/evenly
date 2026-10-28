@@ -42,7 +42,7 @@ export function ExpenseDetailsSheet({
       {e && payer && (
         <>
           <div className="flex flex-col items-center gap-1.5 pt-1 pb-2 text-center">
-            <span className="text-[34px] leading-10 font-bold">{money(e.amountCents, cur)}</span>
+            <span className="text-amount">{money(e.amountCents, cur)}</span>
             <span className="flex max-w-full items-center gap-2 text-caption text-fg-muted">
               <Avatar id={payer.id} name={payer.name} size="sm" guest={payer.guest} />
               <span className="truncate">{t("details.paidBy", { name: label(view, e.payerId) })}</span>

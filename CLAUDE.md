@@ -43,9 +43,9 @@ Any feature, bug or change request goes through the `change-workflow` skill (`.c
 ## Gotchas
 
 - Call `await firebaseReady` (`src/data/firebase.ts`) before any Firebase plugin call.
-- Tailwind colors are only the design tokens (`bg-surface`, `text-fg-muted`, …); default palette is disabled. Type roles: `text-amount|title|total|row|body|caption|tag`. Radii: `rounded-ctl|card|sheet`.
+- Tailwind colors are only the design tokens (`bg-surface`, `text-fg-muted`, …); default palette is disabled. Type roles: `text-amount|code|title|total|heading|row|body|caption|tag` (also listed in `src/lib/cn.ts` for tailwind-merge); no one-off sizes. Radii: `rounded-ctl|card|sheet`.
 - e2e: `playwright.config.ts` starts the emulators and dev server itself; each test is a fresh browser = a fresh anonymous user. Tests run with reduced motion so screenshots never catch a sheet mid-slide.
-- Sheets add one history entry (Android back). Navigating away from a sheet must use `navigate(url, { replace: true })`, or back lands on the stale entry. `ExpenseForm` leaves with `history.back()` when opened from the trip (`state.fromTrip`).
+- Sheets add one history entry (Android back). Move between screens only with the helpers in `src/app/nav.ts` (`openTrip`, `goHome`, `openExpenseForm`, `backToTrip`, `switchTab`): they first drop open sheets' entry (`leaveSheets()`), then push or pop, so Back never lands on a stale screen or sheet.
 - PDF export is lazy (`import("./exportPdf")`); its chunks are listed in `ON_DEMAND` in `scripts/check-bundle-size.mjs`. New on-demand code must be added there.
 - Rules tests reuse a Firestore emulator already running on :8080 (e.g. the LAN preview); otherwise they start one. They use project `demo-evenly-rules` so `clearFirestore()` never wipes the preview's `demo-evenly` data. Scripts that join the demo trip must remove themselves after (`seed-demo.mjs --remove-name`).
 - People lists use `view.listed` (MEM-6: me first, then join order); computations keep `trip.members` order. Button pairs go in `ButtonRow`; one-field forms use `SubmitField`.

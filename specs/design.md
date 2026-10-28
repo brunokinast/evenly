@@ -36,12 +36,15 @@ All text meets WCAG AA (4.5:1) on its background in both themes. Text never uses
 
 - One family: **Hanken Grotesk** (variable, weights 400–700), self-hosted as a single `woff2` (no Google Fonts request at runtime, for APP-4). Fallback: `system-ui, sans-serif`.
 - All numbers use `font-variant-numeric: tabular-nums`.
+- Only these roles set text size (`text-amount|code|title|total|heading|row|body|caption|tag`); no one-off sizes.
 
 | Role                                            | Size / line height | Weight |
 | ----------------------------------------------- | ------------------ | ------ |
 | Amount display (Add expense, trip total)        | 44 / 52            | 700    |
-| Screen title                                    | 24 / 30            | 700    |
+| Invite code (6 digits, +0.08em tracking)        | 40 / 48            | 700    |
+| Screen title, code and time picker digits       | 24 / 30            | 700    |
 | Section total (e.g. "Total spent")              | 28 / 34            | 700    |
+| Sheet title, compact bar title, balance stat    | 18 / 24            | 700    |
 | Row title, button                               | 16 / 22            | 600    |
 | Body, inputs                                    | 16 / 24            | 400    |
 | Caption, meta ("Paid by Ana · Split between 5") | 14 / 20            | 400    |

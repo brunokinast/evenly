@@ -78,7 +78,7 @@ export function Sheet({ open, onClose, title, subtitle, focusField = true, child
         <div aria-hidden className="mx-auto mb-1 h-1 w-9 rounded bg-border" />
         <div className="flex items-start gap-3 pt-1.5 pb-2.5">
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <h2 className="text-[18px] leading-6 font-bold text-balance break-words">{title}</h2>
+            <h2 className="text-heading text-balance break-words">{title}</h2>
             {subtitle && <p className="text-caption text-fg-muted">{subtitle}</p>}
           </div>
         </div>

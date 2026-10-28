@@ -1,7 +1,6 @@
 // Source dictionary. pt-BR.ts must have the same keys (checked by its type).
 // Count-dependent texts come in pairs ".one" / ".other" (see tn() in index.ts).
 export const en = {
-  "app.name": "Evenly",
   "common.done": "Done",
   "common.notNow": "Not now",
   "common.tryAgain": "Try again",
@@ -9,7 +8,6 @@ export const en = {
   "common.cancel": "Cancel",
   "common.save": "Save",
   "common.close": "Close",
-  "common.back": "Back",
   "common.edit": "Edit",
   "common.add": "Add",
   "common.error": "Something went wrong. Check your connection and try again.",
@@ -133,6 +131,8 @@ export const en = {
   "expenses.count.other": "{n} expenses",
   "date.today": "Today",
   "date.yesterday": "Yesterday",
+  "date.dayAndDate": "{day}, {date}",
+  "date.dayAndTime": "{day}, {time}",
   "expenses.paidBy": "Paid by {name}.",
   "details.paidBy": "Paid by {name}",
   "split.all": "Split between all",
@@ -224,7 +224,6 @@ export const en = {
   "form.deleteTitle": "Delete expense?",
   "form.deleteBody": "This removes it for everyone, and balances update.",
   "form.needPeople": "Pick at least one person.",
-  "form.missingPerson": "Someone in this expense is no longer in the trip. Pick the people again.",
 
   "pdf.summary": "Trip summary",
   "pdf.created": "Created {date}",

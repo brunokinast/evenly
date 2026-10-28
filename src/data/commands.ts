@@ -75,9 +75,13 @@ export function renameTrip(trip: Trip, name: string) {
   ]);
 }
 
-/** TRIP-7, KI-5 (owner): expenses in chunks, then the trip last, so a retry resumes safely. */
-export async function deleteTrip(trip: Trip, expenseIds: string[]) {
-  const ops = expenseIds.map((id) => remove(`trips/${trip.id}/expenses/${id}`));
+/** TRIP-7, KI-5 (owner): expenses in chunks, then the trip last, so a retry resumes safely. Reads the
+ * expense ids itself (not the on-screen list, which hides malformed ones): once the trip is gone, no one
+ * could delete a leftover expense. */
+export async function deleteTrip(trip: Trip) {
+  await firebaseReady;
+  const { snapshots } = await FirebaseFirestore.getCollection({ reference: `trips/${trip.id}/expenses` });
+  const ops = snapshots.map((s) => remove(`trips/${trip.id}/expenses/${s.id}`));
   while (ops.length > 450) await batch(ops.splice(0, 450));
   const invite = validInvite(trip);
   await batch([...ops, ...(invite ? [remove(`invites/${invite.code}`)] : []), remove(`trips/${trip.id}`)]);
@@ -144,6 +148,10 @@ export type InvitePreview = {
 
 export class TooManyAttempts extends Error {}
 
+/** Firestore's "denied by the rules" error: `permission-denied` on the web, `PERMISSION_DENIED` on Android. */
+const isPermissionDenied = (e: unknown) =>
+  /permission[-_ ]denied/i.test(`${(e as { code?: string })?.code ?? ""} ${(e as Error)?.message ?? ""}`);
+
 /**
  * INV-3..5, INV-9: records the attempt (the rules count it), then reads the invite.
  * Returns null for an invalid, expired or replaced code.
@@ -164,8 +172,9 @@ export async function lookupInvite(code: string): Promise<InvitePreview | null> 
         ? { code, count: prev.count + 1, windowStart: prev.windowStart }
         : { code, count: 1, windowStart: now },
     });
-  } catch {
-    throw new TooManyAttempts();
+  } catch (e) {
+    // Only the rules' attempt limit means "too many"; a network error stays a plain error.
+    throw isPermissionDenied(e) ? new TooManyAttempts() : e;
   }
   try {
     const invite = await FirebaseFirestore.getDocument<
@@ -207,19 +216,21 @@ export function addGuest(trip: Trip, name: string) {
   const id = newId();
   const invite = validInvite(trip);
   return batch([
-    update(`trips/${trip.id}`, { [`members.${id}`]: { name, joinedAt: Date.now() } }),
+    update(`trips/${trip.id}`, { [`members.${id}`]: { name, joinedAt: Date.now() }, editedMember: id }),
     ...(invite ? [update(`invites/${invite.code}`, { [`guests.${id}`]: name })] : []),
   ]);
 }
 
-/** MEM-5: an app user who leaves or is removed becomes a guest with the same name. */
-function toGuest(trip: Trip, m: Member) {
+/** MEM-5: an app user who leaves or is removed becomes a guest with the same name. The owner's write
+ * names the entry it changes (`editedMember`, for the rules); a leaver's write doesn't need to. */
+function toGuest(trip: Trip, m: Member, byOwner: boolean) {
   const invite = validInvite(trip);
   return batch([
     update(`trips/${trip.id}`, {
       memberUids: FieldValue.arrayRemove(m.uid),
       [`memberIdsByUid.${m.uid}`]: FieldValue.delete(),
       [`members.${m.id}.uid`]: FieldValue.delete(),
+      ...(byOwner ? { editedMember: m.id } : {}),
     }),
     ...(invite ? [update(`invites/${invite.code}`, { [`guests.${m.id}`]: m.name })] : []),
   ]);
@@ -227,10 +238,10 @@ function toGuest(trip: Trip, m: Member) {
 
 /** MEM-5 (owner): an app user becomes a guest; a guest in no expense is deleted. */
 export function removeMember(trip: Trip, m: Member) {
-  if (!isGuest(m)) return toGuest(trip, m);
+  if (!isGuest(m)) return toGuest(trip, m, true);
   const invite = validInvite(trip);
   return batch([
-    update(`trips/${trip.id}`, { [`members.${m.id}`]: FieldValue.delete() }),
+    update(`trips/${trip.id}`, { [`members.${m.id}`]: FieldValue.delete(), editedMember: m.id }),
     ...(invite ? [update(`invites/${invite.code}`, { [`guests.${m.id}`]: FieldValue.delete() })] : []),
   ]);
 }
@@ -238,7 +249,7 @@ export function removeMember(trip: Trip, m: Member) {
 /** MEM-5, MEM-8, MEM-9: a non-owner leaves. */
 export function leaveTrip(trip: Trip) {
   const me = trip.members.find((m) => m.id === myMemberId(trip))!;
-  return toGuest(trip, me);
+  return toGuest(trip, me, false);
 }
 
 // ---------- expenses ----------

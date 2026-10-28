@@ -1,7 +1,7 @@
 // PDF-1..5, specs/design.md "PDF". Loaded on demand (listed in scripts/check-bundle-size.mjs ON_DEMAND),
 // so jsPDF isn't startup code.
 import { jsPDF } from "jspdf";
-import { balances, settlements, totalSpent } from "@/domain/balances";
+import { balances, paymentsInListOrder, splitsAll, totalSpent } from "@/domain/balances";
 import { byListOrder } from "@/domain/members";
 import { pdfFileName } from "@/domain/trips";
 import { longDate, money, shortDate, t, tn } from "@/i18n";
@@ -128,7 +128,7 @@ export async function exportTripPdf(view: TripView) {
   const order = trip.members.map((m) => m.id);
   const bal = balances(order, expenses);
   const by = byListOrder(view.listed);
-  const pays = settlements(bal, order).sort((a, b) => by(a.from, b.from) || by(a.to, b.to));
+  const pays = paymentsInListOrder(bal, order, view.listed);
   section(t("pdf.settlements"));
   if (pays.length === 0) {
     y += 16;
@@ -216,7 +216,10 @@ export async function exportTripPdf(view: TripView) {
     const split =
       e.split === "custom"
         ? t("pdf.splitCustom")
-        : n === trip.members.length && trip.members.every((m) => m.id in e.shares)
+        : splitsAll(
+              e,
+              trip.members.map((m) => m.id),
+            )
           ? t("pdf.splitAll")
           : t("pdf.splitN", { n });
     y += ROW - 7;

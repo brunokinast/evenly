@@ -83,14 +83,11 @@ export function TripMenu({ open, view, onClose, onAddGuest, onLeaving }: Props) 
         confirm={t("menu.delete")}
         cancel={t("common.cancel")}
         errorText={t("common.error")}
-        disabled={!online || !view.expensesLoaded}
+        disabled={!online}
         onClose={close}
         onConfirm={async () => {
           onLeaving();
-          await deleteTrip(
-            trip,
-            view.expenses.map((e) => e.id),
-          );
+          await deleteTrip(trip);
           showToast(t("deleteTrip.done")); // TripScreen goes Home once the trip is gone.
         }}
       />

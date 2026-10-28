@@ -30,7 +30,10 @@ async function signIn() {
   }
 }
 
+let listening = false;
+
 async function start() {
+  set({ status: "loading" });
   await firebaseReady;
   // The plugin holds the first auth state until a listener is attached, so a restored session (ID-4)
   // arrives here before we'd ever create a new identity.
@@ -38,8 +41,10 @@ async function start() {
     if (user) set(fromUser(user));
     else void signIn();
   });
+  listening = true;
 }
-start().catch(() => set({ status: "error" })); // ID-6 rather than a blank screen
+const begin = () => start().catch(() => set({ status: "error" })); // ID-6 rather than a blank screen
+void begin();
 
 /** The signed-in user, live. Started once at app load. */
 export function useSession(): Session {
@@ -75,9 +80,9 @@ export async function resetForTesting() {
   await FirebaseAuthentication.signOut(); // authStateChange → a new anonymous identity → Welcome
 }
 
-/** ID-6 "Try again". */
+/** ID-6 "Try again": sign in again, or start over if setup itself failed (no auth listener yet). */
 export function retrySignIn() {
-  return signIn();
+  return listening ? signIn() : begin();
 }
 
 /** The signed-in user's id. Only called by writes, which run after the session gate. */

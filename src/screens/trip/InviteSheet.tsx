@@ -6,7 +6,7 @@ import { Button, ButtonRow } from "@/components/Button";
 import { Sheet } from "@/components/Sheet";
 import { createInvite } from "@/data/commands";
 import type { Trip } from "@/domain/types";
-import { t } from "@/i18n";
+import { countdownLabel, t } from "@/i18n";
 
 /** INV-1, INV-2, INV-8: shows the valid code (creating one on open if needed), Copy, Share, new code. */
 export function InviteSheet({ open, trip, onClose }: { open: boolean; trip: Trip; onClose: () => void }) {
@@ -54,7 +54,7 @@ function InviteBody({ trip }: { trip: Trip }) {
   const code = invite?.code;
   const shareText = code ? t("invite.shareText", { trip: trip.name, code }) : "";
   const left = invite ? Math.max(0, Math.ceil((invite.expiresAt - now) / 1000)) : 0;
-  const countdown = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`;
+  const countdown = countdownLabel(left);
 
   return (
     <>
@@ -62,7 +62,7 @@ function InviteBody({ trip }: { trip: Trip }) {
       {code && !busy ? (
         <>
           <p
-            className="pt-2 text-center text-[40px] leading-[48px] font-bold tracking-[0.08em]"
+            className="pt-2 text-center text-code"
             aria-label={t("invite.codeIs", { code: code.split("").join(" ") })}
           >
             {code.slice(0, 3)} {code.slice(3)}

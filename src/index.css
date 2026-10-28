@@ -99,6 +99,13 @@
   --text-amount: 44px;
   --text-amount--line-height: 52px;
   --text-amount--font-weight: 700;
+  --text-code: 40px;
+  --text-code--line-height: 48px;
+  --text-code--font-weight: 700;
+  --text-code--letter-spacing: 0.08em;
+  --text-heading: 18px;
+  --text-heading--line-height: 24px;
+  --text-heading--font-weight: 700;
   --text-title: 24px;
   --text-title--line-height: 30px;
   --text-title--font-weight: 700;
