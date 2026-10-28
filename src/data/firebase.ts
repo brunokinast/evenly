@@ -23,7 +23,9 @@ initializeApp(
 // The plugins' useEmulator() methods are not React hooks.
 /* eslint-disable react-hooks/rules-of-hooks */
 async function connect() {
-  const persistence = setup(FirebaseFirestore.enablePersistence({ synchronizeTabs: true }));
+  // Single-tab cache (web): ~60–90 ms faster launches than multi-tab coordination (docs/performance.md, R2). A
+  // second tab of the site falls back to a memory cache and still works, just without offline data.
+  const persistence = setup(FirebaseFirestore.enablePersistence({ synchronizeTabs: false }));
   if (!Capacitor.isNativePlatform()) await webAuth();
   await persistence;
   if (usesEmulators) {

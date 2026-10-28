@@ -449,11 +449,22 @@ async function waitForServer() {
  * Refuse to measure on a slow one.
  */
 async function checkEmulator() {
-  const slowest = await writeTime();
+  let slowest = await writeTime();
+  if (slowest > 150) {
+    // Clearing its data brings it back (docs/performance.md, R4); the demo trip is seeded again for the LAN preview.
+    console.log(
+      `The Firestore emulator takes ${slowest} ms per write: clearing it and re-seeding the demo trip.`,
+    );
+    await env.clearFirestore();
+    spawnSync("node scripts/seed-demo.mjs --reset", { shell: true, stdio: "inherit" });
+    slowest = await writeTime();
+  }
   if (slowest > 150) {
     await env.cleanup();
     server.kill();
-    throw new Error(`The Firestore emulator takes ${slowest} ms per write: restart it (npm run emulators).`);
+    throw new Error(
+      `The Firestore emulator still takes ${slowest} ms per write: restart it (npm run emulators).`,
+    );
   }
 }
 
