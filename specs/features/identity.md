@@ -20,7 +20,7 @@ Users don't create accounts. On first open, the app silently gives the device an
 - **ID-6** If identity setup fails (e.g. offline), the user sees a clear "Unable to connect" message with a Try again button.
 - **ID-7** A user's name is visible only to people who share at least one trip with them.
 - **ID-8** The welcome screen opens with the name field focused and the keyboard up; Enter submits.
-- **ID-9** In the Profile sheet, Done or Enter saves the name. Closing the sheet any other way (backdrop, swipe down, back) keeps the old name. An invalid name shows the ID-3 message and the sheet stays open.
+- **ID-9** The Profile sheet opens without the keyboard (it is opened for the name or the theme alike). Done or Enter saves the name. Closing the sheet any other way (backdrop, swipe down, back) keeps the old name. An invalid name shows the ID-3 message and the sheet stays open.
 
 ## Notes
 

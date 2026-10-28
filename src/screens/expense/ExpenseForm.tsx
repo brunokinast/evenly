@@ -190,7 +190,7 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
             enterKeyHint="next"
             cents={f.cents}
             format={(c) => money(c, cur)}
-            placeholder={money(0, cur)}
+            zero
             onCents={(cents) => {
               // EXP-13: a new total resets a custom split to equal.
               if (isCustom && cents !== f.cents) showToast(t("form.splitReset"));
@@ -206,7 +206,10 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
                 descRef.current?.focus(); // EXP-9
               }
             }}
-            className="w-full min-w-0 bg-transparent text-center text-amount tracking-[-0.01em] caret-accent placeholder:text-fg-muted focus:outline-none"
+            className={cn(
+              "w-full min-w-0 bg-transparent text-center text-amount tracking-[-0.01em] caret-accent focus:outline-none",
+              !f.cents && "text-fg-muted",
+            )}
           />
           <span className="min-h-5 text-caption text-fg-muted">{hint}</span>
         </label>
@@ -220,6 +223,13 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
           maxLength={100}
           autoComplete="off"
           enterKeyHint="done"
+          onKeyDown={(e) => {
+            // EXP-9: Enter closes the keyboard so Paid by, Split and When are in view; Save saves.
+            if (e.key === "Enter") {
+              e.preventDefault();
+              e.currentTarget.blur();
+            }
+          }}
           className="min-h-12 w-full rounded-ctl border border-transparent bg-surface-2 px-3.5 text-body placeholder:text-fg-muted focus:border-accent focus:outline-none"
         />
 
@@ -260,8 +270,6 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
             {error}
           </p>
         )}
-        {/* Enter on the description submits through this hidden button (EXP-9). */}
-        <button type="submit" hidden />
       </form>
 
       <div className="shrink-0 border-t border-border bg-surface px-4 pt-3 pb-[max(16px,env(safe-area-inset-bottom))]">

@@ -20,11 +20,16 @@ export function Welcome() {
           void form.submit();
         }}
       >
-        <img src="/icon.svg" alt="" className="mb-5 size-18 rounded-[20px] shadow-float" />
-        <h1 className="text-title">{t("welcome.hello")}</h1>
-        <label htmlFor={id} className="mt-8 mb-2 text-caption font-semibold text-fg-muted">
-          {t("welcome.title")}
-        </label>
+        {/* The logo in the theme's text color: public/logo.svg used as a mask over --fg. */}
+        <span
+          role="img"
+          aria-label="Evenly"
+          className="mb-9 h-14 w-[202px] bg-fg [mask:url(/logo.svg)_center/contain_no-repeat]"
+        />
+        {/* The logo says hello; the one question is the title and the field's label. */}
+        <h1 className="mb-5 text-title">
+          <label htmlFor={id}>{t("welcome.title")}</label>
+        </h1>
         <SubmitField
           id={id}
           autoFocus

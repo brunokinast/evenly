@@ -6,6 +6,8 @@ type Props = {
   title: string;
   /** Under the title, e.g. the expense's date and time. */
   subtitle?: string;
+  /** False: focus the sheet itself, not its first field, so the keyboard stays down (ID-9). */
+  focusField?: boolean;
   children: ReactNode;
 };
 
@@ -14,7 +16,7 @@ type Props = {
  * swipe down, Escape and Android back. A native <dialog> keeps focus inside and focuses the first input
  * (give it `autoFocus`). Content updates in place while open.
  */
-export function Sheet({ open, onClose, title, subtitle, children }: Props) {
+export function Sheet({ open, onClose, title, subtitle, focusField = true, children }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
   const close = useRef(onClose);
   useEffect(() => {
@@ -25,12 +27,13 @@ export function Sheet({ open, onClose, title, subtitle, children }: Props) {
     const dialog = ref.current;
     if (!open || !dialog) return;
     dialog.showModal();
+    if (!focusField) dialog.focus();
     const unregister = registerBack(() => close.current());
     return () => {
       unregister();
       dialog.close();
     };
-  }, [open]);
+  }, [open, focusField]);
 
   const drag = useRef<{ startY: number; dy: number } | null>(null);
   const onPointerDown = (e: React.PointerEvent) => {
@@ -55,6 +58,7 @@ export function Sheet({ open, onClose, title, subtitle, children }: Props) {
     <dialog
       ref={ref}
       aria-label={title}
+      tabIndex={-1}
       onCancel={(e) => {
         e.preventDefault();
         onClose();
@@ -62,7 +66,7 @@ export function Sheet({ open, onClose, title, subtitle, children }: Props) {
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose(); // backdrop
       }}
-      className="sheet fixed inset-x-0 top-auto bottom-[var(--kb,0px)] m-0 mx-auto flex max-h-[85dvh] w-full max-w-[520px] flex-col rounded-t-sheet bg-surface p-0 text-fg shadow-float backdrop:bg-scrim"
+      className="sheet fixed inset-x-0 outline-none top-auto bottom-[var(--kb,0px)] m-0 mx-auto flex max-h-[85dvh] w-full max-w-[520px] flex-col rounded-t-sheet bg-surface p-0 text-fg shadow-float backdrop:bg-scrim"
     >
       <div
         className="shrink-0 cursor-grab touch-none px-4 pt-2"

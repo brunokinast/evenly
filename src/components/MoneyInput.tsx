@@ -7,6 +7,9 @@ type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange"> &
   onCents: (cents: number | null) => void;
   /** Formats a value for display, e.g. with the currency symbol. */
   format: (cents: number) => string;
+  /** When empty, show format(0) as the text (style it muted) instead of a placeholder, so a centered
+   * field's caret sits at the end of it, where digits appear. */
+  zero?: boolean;
 };
 
 /**
@@ -14,7 +17,7 @@ type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange"> &
  * and the value is formatted as you type. Clearing it gives null.
  */
 export const MoneyInput = forwardRef<HTMLInputElement, Props>(function MoneyInput(
-  { cents, onCents, format, ...rest },
+  { cents, onCents, format, zero, ...rest },
   ref,
 ) {
   const toEnd = (el: HTMLInputElement) =>
@@ -24,7 +27,7 @@ export const MoneyInput = forwardRef<HTMLInputElement, Props>(function MoneyInpu
       ref={ref}
       inputMode="numeric"
       autoComplete="off"
-      value={cents ? format(cents) : ""}
+      value={cents ? format(cents) : zero ? format(0) : ""}
       onChange={(e) => {
         const next = digitsToCents(e.target.value);
         onCents(next > 0 ? next : null);

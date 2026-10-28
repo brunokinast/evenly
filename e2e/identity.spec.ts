@@ -4,7 +4,7 @@ import { devices, expect, test, type Page } from "@playwright/test";
 
 const nameField = (page: Page) => page.getByRole("textbox", { name: "Your name" });
 const welcomeField = (page: Page) => page.getByRole("textbox", { name: "What's your name?" });
-const welcomeHeading = (page: Page) => page.getByRole("heading", { name: "Welcome to Evenly" });
+const welcomeHeading = (page: Page) => page.getByRole("heading", { name: "What's your name?" });
 
 async function enterName(page: Page, name: string) {
   await page.goto("/");
@@ -63,7 +63,9 @@ test("ID-9 Done saves the name; closing the sheet otherwise keeps the old one", 
   const profile = page.getByRole("button", { name: "Profile" });
 
   await profile.click();
-  await expect(nameField(page)).toBeFocused();
+  // ID-9: no keyboard on open; tapping the field gives it.
+  await expect(nameField(page)).not.toBeFocused();
+  await nameField(page).click();
   await nameField(page).fill("Bia");
   await page.keyboard.press("Escape");
   await profile.click();

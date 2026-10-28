@@ -6,19 +6,6 @@ export function dayKey(ms: number): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-/** "HH:MM" of a time, in local time (for the time input). */
-export function timeKey(ms: number): string {
-  const d = new Date(ms);
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-/** Local date ("YYYY-MM-DD") + time ("HH:MM") → ms. */
-export function fromKeys(day: string, time: string): number {
-  const [y, m, d] = day.split("-").map(Number);
-  const [h, min] = time.split(":").map(Number);
-  return new Date(y!, m! - 1, d!, h!, min!).getTime();
-}
-
 /** Days between a day key and today (0 = today, 1 = yesterday). */
 export function daysAgo(day: string, now: number): number {
   const [y, m, d] = day.split("-").map(Number);

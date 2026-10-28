@@ -11,7 +11,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["fonts/hanken-grotesk.woff2", "icon.svg", "apple-touch-icon.png"],
+      includeAssets: ["fonts/hanken-grotesk.woff2", "icon.svg", "apple-touch-icon.png", "logo.png"],
       manifest: {
         name: "Evenly",
         short_name: "Evenly",

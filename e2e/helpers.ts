@@ -16,13 +16,23 @@ export async function newUser(browser: Browser, name: string): Promise<Page> {
   return page;
 }
 
-/** TRIP-10: name + Enter creates the trip (default icon and currency, or the ones given). */
+/** TRIP-10: name, Enter (closes the keyboard), then Create trip (default icon and currency, or the ones given). */
 export async function createTrip(page: Page, name: string, currency?: string) {
   await page.getByRole("button", { name: "New trip" }).click();
   await page.getByRole("textbox", { name: "Trip name" }).fill(name);
   if (currency) await page.getByRole("button", { name: currency, exact: true }).click();
   await page.getByRole("textbox", { name: "Trip name" }).press("Enter");
+  await expect(page.getByRole("textbox", { name: "Trip name" })).not.toBeFocused();
+  await page.getByRole("button", { name: "Create trip" }).click();
+  // Creating stays on Home (trips.md flow 3); open the trip on Members, where the tests continue.
+  await expect(page.getByText(`${name} created`)).toBeVisible();
+  await page
+    .getByRole("main")
+    .getByRole("button", { name: new RegExp(name) })
+    .first()
+    .click();
   await expect(page.getByRole("heading", { name })).toBeVisible();
+  await tab(page, "Members");
 }
 
 export const tab = (page: Page, name: "Expenses" | "Balances" | "Members") =>
@@ -50,7 +60,7 @@ export async function join(page: Page, code: string, tripName: string, claim?: s
   await expect(page.getByRole("heading", { name: tripName })).toBeVisible();
 }
 
-/** EXP-9, EXP-10: amount, Enter, description, Enter. */
+/** EXP-9, EXP-10: amount, Enter, description, Enter (closes the keyboard), Save. */
 export async function addExpense(page: Page, digits: string, description: string) {
   await page.getByRole("button", { name: "Add expense" }).click();
   await expect(page.getByRole("heading", { name: "New expense" })).toBeVisible();
@@ -58,5 +68,16 @@ export async function addExpense(page: Page, digits: string, description: string
   await page.keyboard.press("Enter");
   await page.keyboard.type(description);
   await page.keyboard.press("Enter");
+  await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByRole("tab", { name: "Expenses" })).toBeVisible();
+}
+
+/** In the open Date and time sheet's calendar (EXP-17), picks yesterday, going back a month if needed. */
+export async function pickYesterday(page: Page) {
+  const now = new Date();
+  const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+  if (yesterday.getMonth() !== now.getMonth())
+    await page.getByRole("button", { name: "Previous month" }).click();
+  const name = new Intl.DateTimeFormat("en-US", { dateStyle: "full" }).format(yesterday);
+  await page.getByRole("button", { name, exact: true }).click();
 }
