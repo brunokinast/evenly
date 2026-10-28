@@ -75,3 +75,21 @@ What the docs and reports say, and what it means for Evenly.
 3. **R3** Experiment: the same build in Chrome on the Android emulator (JS SDK) vs the APK (native plugins), same device, same data; if the JS SDK is clearly faster, propose a plan for moving Android to it, including relinking existing Android users.
 4. **R4** Emulator: clear its data when it's slow; automate in the harness if it works.
 5. Later product question: allow adding expenses offline (APP-6), now that writes are queued anyway.
+
+### Results of R1–R4 (2026-10-28)
+
+- **R1 done** (APP-9): renaming a trip, adding/removing a member, leaving, deleting and the name's copies in trips take effect at once. Creating a trip keeps waiting: a trip opened before the server has it shows "Trip not found" (rules deny reading a document the server doesn't have yet). Joining and invite codes wait too.
+- **R2 done**: single-tab Firestore cache on the web. Big trip, slow network: returning launch 805 → 716 ms, trip seen before 308 → 247 ms. A second tab falls back to a memory cache (Firestore does this itself on `failed-precondition`).
+- **R4 done**: clearing the emulator's data brings writes back to ~30 ms; `scripts/perf.mjs` does it (and re-seeds the demo trip) when writes are slow.
+- **R3 measured**, same AVD, same data (big trip), same build, emulators on the LAN:
+
+| Step                                     | APK (native plugins) | Chrome on the same device (JS SDK) |
+| ---------------------------------------- | -------------------: | ---------------------------------: |
+| Signed in → trips from the offline cache |                  420 |                                120 |
+| Home → trip with expenses (seen before)  |                  773 |                                269 |
+| Save → back on the trip                  |                  168 |                                142 |
+| Add expense → form                       |                   36 |                                 29 |
+
+Turning off the debug build's bridge logging (`loggingBehavior: "none"`) changed nothing (758 ms to open the trip). The native Firestore path plus the bridge is ~3× slower at reading data than the JS SDK in the same WebView. (Start-up isn't compared: the Chrome run reloads a tab in a warm browser; the APK cold start includes Android and WebView start-up, ~1.7 s on the AVD.)
+
+**Proposal R5**: run the Firebase JS SDK on Android too (drop the Capacitor Firebase plugins): one code path on every platform, faster data on Android, a smaller APK. Cost: the anonymous identity lives in the native SDK and can't be handed to the JS SDK without a backend, so every Android user gets a new identity once and needs a relink (`scripts/relink.ts`, as done before). Needs an ADR and the user's OK.

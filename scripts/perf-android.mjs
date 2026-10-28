@@ -3,7 +3,7 @@
 //   node scripts/perf-android.mjs [--runs 5] [--serial <adb serial>] [--label "after X"]
 // Each run: force-stop → cold start (`am start -W`: Android's own launch time) → the app's marks read over the
 // WebView's DevTools connection → open the main trip → Add expense → Save. The first run seeds data: a user
-// named "Perf Android" with the same trips as scripts/perf.mjs --size big.
+// named "Perf Android" (or "Perf Chrome") with the same trips as scripts/perf.mjs --size big.
 import { execSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
@@ -15,8 +15,17 @@ const opt = (name, def) => (args.includes(name) ? args[args.indexOf(name) + 1] :
 const RUNS = Number(opt("--runs", 5));
 const LABEL = opt("--label", "");
 const SERIAL = opt("--serial", "");
-const PKG = "br.com.kinast.evenly.debug";
+/** --chrome <url>: the website in Chrome on the same device instead (JS SDK vs the app's native plugins, R3). */
+const CHROME = opt("--chrome", "");
+const PKG = CHROME ? "com.android.chrome" : "br.com.kinast.evenly.debug";
 const ACTIVITY = `${PKG}/br.com.kinast.evenly.MainActivity`;
+const NAME = CHROME ? "Perf Chrome" : "Perf Android";
+const launch = () =>
+  adb(
+    CHROME
+      ? `shell am start -W -a android.intent.action.VIEW -d ${CHROME} ${PKG}`
+      : `shell am start -W -n ${ACTIVITY}`,
+  );
 const PORT = 9223;
 
 const sdk = process.env.ANDROID_HOME ?? `${process.env.LOCALAPPDATA}/Android/Sdk`;
@@ -49,13 +58,20 @@ console.log(`\n→ ${file}`);
 process.exit(0);
 
 async function oneRun() {
-  adb(`shell am force-stop ${PKG}`);
-  await sleep(1000);
-  const start = adb(`shell am start -W -n ${ACTIVITY}`);
-  record("cold start: Android launch (am start TotalTime)", Number(/TotalTime: (\d+)/.exec(start)?.[1]));
-
-  const browser = await connect();
-  const page = await findPage(browser);
+  let browser, page;
+  if (CHROME) {
+    // A reload of the same tab (a second tab would lose the offline cache): the site's returning launch.
+    browser = await connect();
+    page = await findPage(browser);
+    await page.goto(CHROME);
+  } else {
+    adb(`shell am force-stop ${PKG}`);
+    await sleep(1000);
+    const start = launch();
+    record("cold start: Android launch (am start TotalTime)", Number(/TotalTime: (\d+)/.exec(start)?.[1]));
+    browser = await connect();
+    page = await findPage(browser);
+  }
   await waitMark(page, "painted:home");
   record("cold start → trips on screen (page clock)", await markAt(page, "painted:home"));
   for (const name of [
@@ -98,8 +114,9 @@ async function connect() {
   for (let i = 0; i < 50; i++) {
     const pid = adb(`shell pidof ${PKG}`).split(/\s+/)[0];
     const sockets = adb("shell cat /proc/net/unix");
-    if (pid && sockets.includes(`webview_devtools_remote_${pid}`)) {
-      adb(`forward tcp:${PORT} localabstract:webview_devtools_remote_${pid}`);
+    const socket = CHROME ? "chrome_devtools_remote" : `webview_devtools_remote_${pid}`;
+    if (pid && sockets.includes(socket)) {
+      adb(`forward tcp:${PORT} localabstract:${socket}`);
       return chromium.connectOverCDP(`http://127.0.0.1:${PORT}`);
     }
     await sleep(200);
@@ -109,24 +126,38 @@ async function connect() {
 
 async function findPage(browser) {
   for (let i = 0; i < 50; i++) {
-    const page = browser.contexts().flatMap((c) => c.pages())[0];
+    const pages = browser.contexts().flatMap((c) => c.pages());
+    const page = CHROME ? pages.find((p) => p.url().startsWith(CHROME)) : pages[0];
     if (page) return page;
     await sleep(200);
   }
   throw new Error("no page in the WebView");
 }
 
-/** Once per device: a user named "Perf Android" with the --size big trips, the main one opened once so its
+/** Once per device: a user named "Perf Android"/"Perf Chrome" with the --size big trips, the main one opened once so its
  * expenses are in the offline cache (a returning user). */
 async function setUp() {
-  adb(`shell pm clear ${PKG}`); // debug app only: a clean user on the current emulators
-  adb(`shell am start -W -n ${ACTIVITY}`);
+  if (CHROME) {
+    // No first-run screens; Chrome keeps its data (its user is reused or created below).
+    adb(
+      `shell "echo 'chrome --disable-fre --no-default-browser-check --no-first-run' > /data/local/tmp/chrome-command-line"`,
+    );
+    adb(`shell am set-debug-app --persistent ${PKG}`);
+    adb(`shell am force-stop ${PKG}`);
+  } else adb(`shell pm clear ${PKG}`); // debug app only: a clean user on the current emulators
+  launch();
   const browser = await connect();
   const page = await findPage(browser);
   await page.waitForFunction(() => !!document.querySelector("h1"), undefined, { timeout: 30_000 });
+  if (CHROME) {
+    // Past ID-10's "get the app" step: the timings are about the site itself.
+    await page.evaluate(() => localStorage.setItem("evenly.installFirstSkipped", "1"));
+    await page.reload();
+    await page.waitForFunction(() => !!document.querySelector("h1"), undefined, { timeout: 30_000 });
+  }
   if (await page.evaluate(() => !!document.querySelector("input[autocomplete=given-name]"))) {
     await page.focus("input[autocomplete=given-name]");
-    await page.keyboard.type("Perf Android");
+    await page.keyboard.type(NAME);
     await page.keyboard.press("Enter");
   }
   await page.waitForFunction(
@@ -146,7 +177,7 @@ async function setUp() {
       },
     );
     const me = (await res.json()).userInfo
-      .filter((u) => u.displayName === "Perf Android")
+      .filter((u) => u.displayName === NAME)
       .sort((a, b) => b.createdAt - a.createdAt)[0];
     if (!me) throw new Error("couldn't find the Perf Android account");
     await seed(me.localId);
@@ -196,7 +227,7 @@ async function seed(uid) {
     const now = Date.now();
     const ids = Array.from({ length: 8 }, (_, i) => (i === 0 ? "me" : `g${i - 1}`));
     const trip = (id, name, people, createdAt) => {
-      const members = { me: { name: "Perf Android", uid, joinedAt: now - 1e9 } };
+      const members = { me: { name: NAME, uid, joinedAt: now - 1e9 } };
       for (let i = 0; i < people - 1; i++)
         members[`g${i}`] = { name: `Guest ${i}`, joinedAt: now - 1e9 + i + 1 };
       return setDoc(doc(db, `trips/${id}`), {
