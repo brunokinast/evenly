@@ -23,14 +23,14 @@ export function ExpenseDetailsSheet({
   const [, navigate] = useLocation();
   const e = expense;
   const cur = view.trip.currency;
-  // MEM-6 order: members in the split or who paid; former members after them.
+  // MEM-6 order, so my own share is the first row; former members after them.
   const ids = e
     ? [
-        ...view.listed.filter((id) => id in e.shares || id === e.payerId),
-        ...[...Object.keys(e.shares), e.payerId].filter((id) => !view.people.has(id)),
-      ].filter((id, i, all) => all.indexOf(id) === i)
+        ...view.listed.filter((id) => id in e.shares),
+        ...Object.keys(e.shares).filter((id) => !view.people.has(id)),
+      ]
     : [];
-  const myShare = e?.shares[view.myMemberId];
+  const payer = e ? who(view, e.payerId) : null;
 
   return (
     <Sheet
@@ -38,24 +38,14 @@ export function ExpenseDetailsSheet({
       onClose={onClose}
       title={e?.description ?? ""}
       subtitle={e ? whenLabel(e.spentAt) : undefined}
-      action={
-        e && (
-          <Button
-            size="sm"
-            onClick={() => void openExpenseForm(navigate, `/trip/${view.trip.id}/expense/${e.id}/edit`)}
-          >
-            <Pencil aria-hidden />
-            {t("common.edit")}
-          </Button>
-        )
-      }
     >
-      {e && (
+      {e && payer && (
         <>
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-col items-center gap-1.5 pt-1 pb-2 text-center">
             <span className="text-[34px] leading-10 font-bold">{money(e.amountCents, cur)}</span>
-            <span className="rounded-full bg-accent-soft px-3 py-1.5 text-caption font-semibold text-accent-text">
-              {myShare ? t("details.yourShare", { amount: money(myShare, cur) }) : t("details.notInSplit")}
+            <span className="flex max-w-full items-center gap-2 text-caption text-fg-muted">
+              <Avatar id={payer.id} name={payer.name} size="sm" guest={payer.guest} />
+              <span className="truncate">{t("details.paidBy", { name: label(view, e.payerId) })}</span>
             </span>
           </div>
           <section>
@@ -69,27 +59,19 @@ export function ExpenseDetailsSheet({
                     compact
                     leading={<Avatar id={id} name={p.name} size="sm" guest={p.guest} />}
                     title={label(view, id)}
-                    caption={
-                      id === e.payerId ? (
-                        <span className="text-positive">
-                          {t("details.paid", { amount: money(e.amountCents, cur) })}
-                        </span>
-                      ) : undefined
-                    }
-                    trailing={
-                      <span className="shrink-0 text-row">
-                        {id in e.shares ? (
-                          money(e.shares[id]!, cur)
-                        ) : (
-                          <span className="font-normal text-fg-muted">{t("details.notInSplitRow")}</span>
-                        )}
-                      </span>
-                    }
+                    trailing={<span className="shrink-0 text-row">{money(e.shares[id]!, cur)}</span>}
                   />
                 );
               })}
             </ListGroup>
           </section>
+          <Button
+            className="w-full"
+            onClick={() => void openExpenseForm(navigate, `/trip/${view.trip.id}/expense/${e.id}/edit`)}
+          >
+            <Pencil aria-hidden />
+            {t("common.edit")}
+          </Button>
         </>
       )}
     </Sheet>

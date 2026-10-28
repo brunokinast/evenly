@@ -114,7 +114,10 @@ export function TripScreen({ tripId, tab: tabParam }: { tripId: string; tab?: st
         id="tabpanel"
         role="tabpanel"
         aria-label={t(`trip.tab.${tab}`)}
-        className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pt-2 pb-28"
+        className={cn(
+          "flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pt-2",
+          tab === "expenses" ? "pb-28" : "pb-6",
+        )}
       >
         {!view || expenses.status === "loading" ? (
           <SkeletonRows />
@@ -128,16 +131,19 @@ export function TripScreen({ tripId, tab: tabParam }: { tripId: string; tab?: st
       </div>
 
       <div className="relative shrink-0">
-        <Button
-          variant="primary"
-          data-fab
-          className="absolute right-4 bottom-[calc(100%+16px)] z-10 min-h-13 rounded-full pr-5 pl-4 shadow-float"
-          onClick={() => void openExpenseForm(navigate, `/trip/${tripId}/expense/new`)}
-          disabled={!view}
-        >
-          <Plus aria-hidden />
-          {t("trip.addExpense")}
-        </Button>
+        {/* specs/design.md "Add expense button": only on Expenses, where the new expense shows. */}
+        {tab === "expenses" && (
+          <Button
+            variant="primary"
+            data-fab
+            className="absolute right-4 bottom-[calc(100%+16px)] z-10 min-h-13 rounded-full pr-5 pl-4 shadow-float"
+            onClick={() => void openExpenseForm(navigate, `/trip/${tripId}/expense/new`)}
+            disabled={!view}
+          >
+            <Plus aria-hidden />
+            {t("trip.addExpense")}
+          </Button>
+        )}
         <nav
           role="tablist"
           aria-label={t("trip.tabs")}

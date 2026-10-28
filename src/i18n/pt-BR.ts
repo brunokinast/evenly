@@ -135,14 +135,10 @@ export const ptBR: Record<MessageKey, string> = {
   "date.today": "Hoje",
   "date.yesterday": "Ontem",
   "expenses.paidBy": "Pago por {name}.",
+  "details.paidBy": "Pago por {name}",
   "split.all": "Dividido entre todos",
   "split.n": "Dividido entre {n}",
   "split.custom": "Divisão personalizada",
-
-  "details.yourShare": "Sua parte {amount}",
-  "details.notInSplit": "Você não está nesta divisão",
-  "details.paid": "Pagou {amount}",
-  "details.notInSplitRow": "Fora da divisão",
 
   "balances.total": "Total",
   "balances.perPerson": "Por pessoa",

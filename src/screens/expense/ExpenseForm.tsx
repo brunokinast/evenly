@@ -185,7 +185,8 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
         <label className="flex flex-col items-center gap-1 pt-5 pb-2">
           <span className="sr-only">{t("form.amount")}</span>
           <MoneyInput
-            autoFocus
+            // EXP-9: Add focuses the amount; Edit opens without the keyboard (nothing to guess).
+            autoFocus={!existing}
             enterKeyHint="next"
             cents={f.cents}
             format={(c) => money(c, cur)}
@@ -335,7 +336,7 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
           }}
         />
       )}
-      <FocusFirst />
+      {!existing && <FocusFirst />}
     </div>
   );
 }

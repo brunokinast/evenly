@@ -134,14 +134,10 @@ export const en = {
   "date.today": "Today",
   "date.yesterday": "Yesterday",
   "expenses.paidBy": "Paid by {name}.",
+  "details.paidBy": "Paid by {name}",
   "split.all": "Split between all",
   "split.n": "Split between {n}",
   "split.custom": "Custom split",
-
-  "details.yourShare": "Your share {amount}",
-  "details.notInSplit": "You're not in this split",
-  "details.paid": "Paid {amount}",
-  "details.notInSplitRow": "Not in split",
 
   "balances.total": "Total",
   "balances.perPerson": "Per person",

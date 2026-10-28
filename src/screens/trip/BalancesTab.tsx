@@ -11,7 +11,7 @@ import { cn } from "@/lib/cn";
 import { label, who } from "./labels";
 import type { TripView } from "./TripScreen";
 
-/** Balances tab (BAL-1..8, PDF): stats, your payments, balances, other payments, export. */
+/** Balances tab (BAL-1..8, PDF): stats, balances, your payments, other payments, export. */
 export function BalancesTab({ view }: { view: TripView }) {
   const { trip, expenses } = view;
   const cur = trip.currency;
@@ -52,30 +52,6 @@ export function BalancesTab({ view }: { view: TripView }) {
         <Stat k={t("trip.tab.members")} v={trip.members.length.toLocaleString(locale)} />
       </div>
 
-      {pays.length === 0 ? (
-        <ListGroup>
-          <Row leading={<CheckTile />} title={t("balances.allSettled")} wrap />
-        </ListGroup>
-      ) : (
-        <section>
-          <GroupHeader>{t("balances.yours")}</GroupHeader>
-          <ListGroup>
-            {mine.length ? (
-              mine.map((p, i) => (
-                <PaymentRow
-                  key={i}
-                  view={view}
-                  p={p}
-                  tone={p.from === view.myMemberId ? "negative" : "positive"}
-                />
-              ))
-            ) : (
-              <Row compact leading={<CheckTile />} title={t("balances.settledUp")} />
-            )}
-          </ListGroup>
-        </section>
-      )}
-
       <section>
         <GroupHeader>{t("balances.balances")}</GroupHeader>
         <ListGroup>
@@ -107,6 +83,30 @@ export function BalancesTab({ view }: { view: TripView }) {
           })}
         </ListGroup>
       </section>
+
+      {pays.length === 0 ? (
+        <ListGroup>
+          <Row leading={<CheckTile />} title={t("balances.allSettled")} wrap />
+        </ListGroup>
+      ) : (
+        <section>
+          <GroupHeader>{t("balances.yours")}</GroupHeader>
+          <ListGroup>
+            {mine.length ? (
+              mine.map((p, i) => (
+                <PaymentRow
+                  key={i}
+                  view={view}
+                  p={p}
+                  tone={p.from === view.myMemberId ? "negative" : "positive"}
+                />
+              ))
+            ) : (
+              <Row compact leading={<CheckTile />} title={t("balances.settledUp")} />
+            )}
+          </ListGroup>
+        </section>
+      )}
 
       {others.length > 0 && (
         <section>

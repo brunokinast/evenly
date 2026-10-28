@@ -14,7 +14,7 @@ const variants: Record<Variant, string> = {
 const sizes = {
   /** Every action in screens and sheets. */
   md: "min-h-12 px-[18px] py-2.5 text-row [&_svg]:size-5",
-  /** Actions in a header: Invite in the trip bar, Edit in Expense details. */
+  /** Actions in a header: Invite in the trip bar. */
   sm: "min-h-10 px-3 py-2 text-caption font-semibold [&_svg]:size-[18px]",
 };
 

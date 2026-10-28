@@ -133,6 +133,14 @@ test("EXP BAL expenses, details, custom split, edit, delete and balances, live f
     .locator("section", { has: bia.getByRole("heading", { name: "Balances" }) })
     .locator(":scope > div > *");
   await expect(balanceRows).toHaveText([/You/, /Ana/, /Gus/]);
+  // design.md "Balances tab order": balances, then your payments, then other payments.
+  await expect(bia.getByRole("tabpanel").getByRole("heading")).toHaveText([
+    /Balances/i,
+    /Your payments/i,
+    /Other payments/i,
+  ]);
+  // design.md "Add expense button": only on the Expenses tab.
+  await expect(bia.getByRole("button", { name: "Add expense" })).toBeHidden();
   await bia.screenshot({ path: info.outputPath("balances-bia.png") });
   await tab(ana, "Balances");
   await expect(ana.getByText("Bia pays you")).toBeVisible();
@@ -143,10 +151,18 @@ test("EXP BAL expenses, details, custom split, edit, delete and balances, live f
   await tab(ana, "Expenses");
   await ana.getByRole("button", { name: /Dinner/ }).click();
   const details = ana.getByRole("dialog", { name: "Dinner" });
-  await expect(details.getByText("Your share $33.34")).toBeVisible();
+  // EXP flow 2: payer under the amount; shares in the MEM-6 order, my own first.
+  await expect(details.getByText("Paid by You")).toBeVisible();
+  await expect(details.locator("section > div > *")).toHaveText([
+    /You.*\$33\.34/,
+    /Gus.*\$33\.33/,
+    /Bia.*\$33\.33/,
+  ]);
   await ana.screenshot({ path: info.outputPath("expense-details.png") });
   await details.getByRole("button", { name: "Edit" }).click();
   await expect(ana.getByRole("heading", { name: "Edit expense" })).toBeVisible();
+  // EXP-9: Edit opens without the keyboard.
+  await expect(ana.getByRole("textbox", { name: "Amount" })).not.toBeFocused();
   await ana.getByRole("button", { name: /Split/ }).click();
   await ana.getByRole("button", { name: "Custom amounts" }).click();
   const biaAmount = ana.getByRole("textbox", { name: "Amount for Bia" });
@@ -166,7 +182,9 @@ test("EXP BAL expenses, details, custom split, edit, delete and balances, live f
   // EXP-13: changing the total of a custom split resets it to equal.
   await ana.getByRole("button", { name: /Dinner/ }).click();
   await ana.getByRole("dialog", { name: "Dinner" }).getByRole("button", { name: "Edit" }).click();
-  await ana.getByRole("textbox", { name: "Amount" }).press("Backspace");
+  // Edit opens without focus (EXP-9): tap the amount first, like a person would.
+  await ana.getByRole("textbox", { name: "Amount" }).click();
+  await ana.keyboard.press("Backspace");
   await expect(ana.getByText("Split reset to equal")).toBeVisible();
   await expect(ana.getByRole("button", { name: /Split/ })).toContainText("Equally between all");
 
