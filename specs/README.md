@@ -13,5 +13,6 @@ Evenly lets a group of friends split shared costs on a trip with as little frict
 ## Principles
 - **Zero friction**: no accounts, passwords or emails required to use the app.
 - **Live by default**: anything a user sees updates immediately when anyone changes it. No refresh, no restart.
+- **Fast to use** (top priority): every input has a sensible default; the common path is the shortest path (e.g. add expense = amount, description, Save). Screens with a text input open with it focused and the keyboard up. Options stay out of sight until needed: no extra menus, steps or configuration.
 - **Simple over clever**: fewer screens, fewer options, obvious actions.
 - **Money is exact**: amounts are whole cents; splits always add up to the total.

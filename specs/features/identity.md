@@ -6,7 +6,7 @@ Users don't create accounts. On first open, the app silently gives the device an
 ## Flows
 1. **First open**: the app sets up an identity, then shows a welcome screen asking "What's your name?". After the user enters a name, they land on Home.
 2. **Returning**: the app opens straight to Home with the same identity and trips.
-3. **Change name**: the user can change their display name later (see OQ-1).
+3. **Change name**: from a small Profile sheet on Home, the user can change their display name.
 
 ## Acceptance criteria
 - **ID-1** Given a first-time user, when the app opens, then an identity is created without asking for any credentials.
@@ -16,6 +16,7 @@ Users don't create accounts. On first open, the app silently gives the device an
 - **ID-5** Given a user changes their name, then every trip member sees the new name live.
 - **ID-6** If identity setup fails (e.g. offline), the user sees a clear "Unable to connect" message with a Try again button.
 - **ID-7** A user's name is visible only to people who share at least one trip with them.
+- **ID-8** The welcome screen opens with the name field focused and the keyboard up; Enter submits.
 
 ## Notes
-- Identity is tied to the device/browser. Losing it means losing access to your trips (see OQ-2).
+- Identity is tied to the device/browser. There is no sign-in; losing the device's app data means losing access to your trips. This is an accepted trade-off for zero friction.
