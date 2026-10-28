@@ -71,3 +71,13 @@ export async function addExpense(page: Page, digits: string, description: string
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByRole("tab", { name: "Expenses" })).toBeVisible();
 }
+
+/** In the open Date and time sheet's calendar (EXP-17), picks yesterday, going back a month if needed. */
+export async function pickYesterday(page: Page) {
+  const now = new Date();
+  const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+  if (yesterday.getMonth() !== now.getMonth())
+    await page.getByRole("button", { name: "Previous month" }).click();
+  const name = new Intl.DateTimeFormat("en-US", { dateStyle: "full" }).format(yesterday);
+  await page.getByRole("button", { name, exact: true }).click();
+}

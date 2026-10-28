@@ -48,5 +48,11 @@ export function dayLabel(ms: number) {
   return ago === 0 ? t("date.today") : ago === 1 ? t("date.yesterday") : shortDay.format(ms);
 }
 
+/** "Today, Oct 26", "Yesterday, Oct 25", or "Mon, Oct 19" (EXP-17). */
+export function dayDateLabel(ms: number) {
+  const ago = daysAgo(dayKey(ms), Date.now());
+  return ago <= 1 ? `${dayLabel(ms)}, ${shortDate(ms)}` : shortDay.format(ms);
+}
+
 /** "Today, 8:15 PM". */
 export const whenLabel = (ms: number) => `${dayLabel(ms)}, ${timeLabel(ms)}`;

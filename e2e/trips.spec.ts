@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { addExpense, createTrip, inviteCode, join, newUser, tab } from "./helpers";
+import { addExpense, createTrip, inviteCode, join, newUser, pickYesterday, tab } from "./helpers";
 
 test("TRIP-1 TRIP-10 creating a trip stays on Home with it on top; Members shows the invite card", async ({
   browser,
@@ -214,19 +214,60 @@ test("EXP BAL expenses, details, custom split, edit, delete and balances, live f
   await expect(bia.getByText("All settled! No payments needed.")).toBeVisible();
 });
 
-test("EXP-11 an empty date or time says which is missing", async ({ browser }) => {
+test("EXP-11 EXP-17 date and time open as rows, with calendar, wheels and shortcuts", async ({
+  browser,
+}, info) => {
   const ana = await newUser(browser, "Ana");
   await createTrip(ana, "Prazo", "BRL");
   await tab(ana, "Expenses");
   await ana.getByRole("button", { name: "Add expense" }).click();
   await ana.getByRole("button", { name: /When/ }).click();
-  await ana.getByLabel("Expense date").fill("");
-  await ana.getByRole("button", { name: "Done" }).click();
-  await expect(ana.getByRole("alert")).toHaveText("Pick a date.");
-  await ana.getByLabel("Expense date").fill("2020-01-01");
-  await ana.getByLabel("Expense time").fill("");
-  await ana.getByRole("button", { name: "Done" }).click();
-  await expect(ana.getByRole("alert")).toHaveText("Pick a time.");
+  const sheet = ana.getByRole("dialog", { name: "Date and time" });
+  const dateRow = sheet.getByRole("button", { name: /^Date/ });
+  const timeRow = sheet.getByRole("button", { name: /^Time/ });
+  // Opens with both values filled in and nothing expanded.
+  await expect(dateRow).toContainText("Today,");
+  await expect(dateRow).toHaveAttribute("aria-expanded", "false");
+  await expect(timeRow).toHaveAttribute("aria-expanded", "false");
+  await expect(sheet.locator("[inert]")).toHaveCount(2); // both pickers closed and out of reach
+  await sheet.screenshot({ path: info.outputPath("when-closed.png") });
+
+  // The date opens a calendar; future months can't be reached.
+  await dateRow.click();
+  await expect(dateRow).toHaveAttribute("aria-expanded", "true");
+  await expect(sheet.getByRole("button", { name: "Next month" })).toBeDisabled();
+  await pickYesterday(ana);
+  await expect(dateRow).toContainText("Yesterday,");
+  await sheet.screenshot({ path: info.outputPath("when-date.png") });
+
+  // The time opens wheels and closes the calendar; a shortcut moves them.
+  await timeRow.click();
+  await expect(dateRow).toHaveAttribute("aria-expanded", "false");
+  await sheet.getByRole("button", { name: /Lunch/ }).click();
+  await expect(timeRow).toContainText("12:30 PM");
+  await expect(sheet.getByRole("button", { name: /Lunch/ })).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    sheet.getByRole("listbox", { name: "Hour" }).getByRole("option", { selected: true }),
+  ).toHaveText("12 PM");
+  await expect(
+    sheet.getByRole("listbox", { name: "Minute" }).getByRole("option", { selected: true }),
+  ).toHaveText("30");
+  await sheet.getByRole("listbox", { name: "Minute" }).getByRole("option", { name: "45" }).click();
+  await expect(timeRow).toContainText("12:45 PM");
+  await sheet.screenshot({ path: info.outputPath("when-time.png") });
+
+  // Now goes back to today; a later time today is refused.
+  await sheet.getByRole("button", { name: /Now/ }).click();
+  await expect(dateRow).toContainText("Today,");
+  await expect(sheet.getByRole("button", { name: "Done" })).toBeEnabled();
+  if (new Date().getHours() < 23) {
+    await sheet.getByRole("listbox", { name: "Hour" }).press("ArrowDown");
+    await expect(sheet.getByRole("alert")).toHaveText("The date and time can't be in the future.");
+    await expect(sheet.getByRole("button", { name: "Done" })).toBeDisabled();
+    await sheet.getByRole("listbox", { name: "Hour" }).press("ArrowUp");
+  }
+  await sheet.getByRole("button", { name: "Done" }).click();
+  await expect(sheet).toBeHidden();
 });
 
 test("EXP-14 expenses are grouped by day, newest first, with a total", async ({ browser }, info) => {
@@ -238,9 +279,8 @@ test("EXP-14 expenses are grouped by day, newest first, with a total", async ({ 
   await ana.keyboard.type("2000");
   await ana.getByRole("textbox", { name: "What was it for?" }).fill("Taxi");
   await ana.getByRole("button", { name: /When/ }).click();
-  const yesterday = new Date(Date.now() - 86_400_000);
-  const day = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, "0")}-${String(yesterday.getDate()).padStart(2, "0")}`;
-  await ana.getByLabel("Expense date").fill(day);
+  await ana.getByRole("button", { name: /^Date/ }).click();
+  await pickYesterday(ana);
   await ana.getByRole("button", { name: "Done" }).click();
   await ana.getByRole("button", { name: "Save" }).click();
   await expect(ana.getByRole("heading", { name: "Today" })).toBeVisible();

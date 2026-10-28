@@ -1,16 +1,17 @@
 import { useState } from "react";
-import { Check } from "lucide-react";
+import { CalendarDays, Check, ChevronDown, Clock } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
+import { Calendar } from "@/components/Calendar";
 import { MoneyInput } from "@/components/MoneyInput";
 import { Segmented } from "@/components/Segmented";
 import { Sheet } from "@/components/Sheet";
-import { dayKey, fromKeys, timeKey } from "@/domain/dates";
+import { Wheel } from "@/components/Wheel";
 import { listOrder, type Person } from "@/domain/members";
 import { formatPlain } from "@/domain/money";
 import { customShares } from "@/domain/split";
 import type { Trip } from "@/domain/types";
-import { locale, money, t } from "@/i18n";
+import { dayDateLabel, locale, money, t, timeLabel } from "@/i18n";
 import { cn } from "@/lib/cn";
 
 type Common = { trip: Trip; people: Map<string, Person>; myId: string };
@@ -161,7 +162,7 @@ export function SplitSheet(p: SplitProps) {
   );
 }
 
-/** When: date and time, not in the future (EXP-11). */
+/** When: date and time, not in the future (EXP-11), as two rows that open a picker (EXP-17). */
 export function WhenSheet(p: {
   open: boolean;
   value: number;
@@ -169,63 +170,149 @@ export function WhenSheet(p: {
   onClose: () => void;
 }) {
   return (
-    <Sheet open={p.open} onClose={p.onClose} title={t("form.dateTime")}>
+    <Sheet open={p.open} onClose={p.onClose} title={t("form.dateTime")} focusField={false}>
       {p.open && <WhenForm {...p} />}
     </Sheet>
   );
 }
 
+const midnight = (ms: number) => {
+  const d = new Date(ms);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+};
+const pad = (n: number) => String(n).padStart(2, "0");
+const timeAt = (h: number, m: number) => timeLabel(new Date(2000, 0, 1, h, m).getTime());
+// 24h languages show "20", 12h ones "8 PM".
+const hourFmt = new Intl.DateTimeFormat(locale, { hour: "numeric" });
+const h23 = hourFmt.resolvedOptions().hourCycle === "h23";
+const HOURS = Array.from({ length: 24 }, (_, h) => (h23 ? pad(h) : hourFmt.format(new Date(2000, 0, 1, h))));
+const MINUTES = Array.from({ length: 60 }, (_, m) => pad(m));
+const SHORTCUTS = [
+  ["form.breakfast", 8, 0],
+  ["form.lunch", 12, 30],
+  ["form.dinner", 20, 0],
+] as const;
+
 function WhenForm({ value, onPick }: { value: number; onPick: (ms: number) => void }) {
-  const [day, setDay] = useState(dayKey(value));
-  const [time, setTime] = useState(timeKey(value));
-  // EXP-11: say what is wrong: a missing date, a missing time, or a moment in the future.
-  const [error, setError] = useState<"form.noDate" | "form.noTime" | "form.future" | null>(null);
-  const [today] = useState(() => dayKey(Date.now()));
-  const field =
-    "min-h-12 w-full min-w-0 rounded-ctl border border-transparent bg-surface-2 px-3.5 text-body focus:border-accent focus:outline-none";
+  const [now] = useState(Date.now);
+  const [day, setDay] = useState(() => midnight(value));
+  const [h, setH] = useState(() => new Date(value).getHours());
+  const [m, setM] = useState(() => new Date(value).getMinutes());
+  const [open, setOpen] = useState<"date" | "time" | null>(null);
+  const at = (d: Date, hh: number, mm: number) =>
+    new Date(d.getFullYear(), d.getMonth(), d.getDate(), hh, mm).getTime();
+  const ms = at(day, h, m);
+  const future = ms > now;
+  const today = midnight(now);
+  const nowD = new Date(now);
+  const shortcuts = [
+    { label: t("form.now"), h: nowD.getHours(), m: nowD.getMinutes(), now: true },
+    ...SHORTCUTS.map(([k, hh, mm]) => ({ label: t(k), h: hh, m: mm, now: false })),
+  ];
+  const toggle = (k: "date" | "time") => setOpen((o) => (o === k ? null : k));
   return (
-    <form
-      className="flex flex-col gap-3"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (!day) return setError("form.noDate");
-        if (!time) return setError("form.noTime");
-        const ms = fromKeys(day, time);
-        if (ms > Date.now()) return setError("form.future");
-        onPick(ms);
-      }}
-    >
-      <div className="grid grid-cols-[3fr_2fr] gap-2">
-        <input
-          type="date"
-          aria-label={t("form.date")}
-          max={today}
-          value={day}
-          onChange={(e) => {
-            setDay(e.target.value);
-            setError(null);
-          }}
-          className={field}
+    <>
+      <div className="overflow-hidden rounded-card bg-surface-2">
+        <PickerRow
+          icon={<CalendarDays />}
+          k={t("form.date")}
+          v={dayDateLabel(ms)}
+          open={open === "date"}
+          onClick={() => toggle("date")}
         />
-        <input
-          type="time"
-          aria-label={t("form.time")}
-          value={time}
-          onChange={(e) => {
-            setTime(e.target.value);
-            setError(null);
-          }}
-          className={field}
+        <Panel open={open === "date"}>
+          <Calendar value={day} max={today} onPick={setDay} />
+        </Panel>
+        <div className="mx-3.5 border-t border-border" />
+        <PickerRow
+          icon={<Clock />}
+          k={t("form.time")}
+          v={timeAt(h, m)}
+          open={open === "time"}
+          onClick={() => toggle("time")}
         />
+        <Panel open={open === "time"}>
+          <div className="relative flex items-center justify-center gap-1">
+            <div aria-hidden className="absolute inset-x-0 top-[88px] h-11 rounded-ctl bg-surface" />
+            <Wheel label={t("form.hour")} options={HOURS} value={h} onChange={setH} />
+            <span aria-hidden className="relative text-[24px] font-extrabold">
+              :
+            </span>
+            <Wheel label={t("form.minute")} options={MINUTES} value={m} onChange={setM} />
+          </div>
+        </Panel>
       </div>
-      {error && (
+      <div role="group" aria-label={t("form.shortcuts")} className="grid grid-cols-4 gap-2">
+        {shortcuts.map((s) => {
+          const on = s.h === h && s.m === m && (!s.now || +day === +today);
+          const disabled = !s.now && at(day, s.h, s.m) > now;
+          return (
+            <button
+              key={s.label}
+              type="button"
+              aria-pressed={on}
+              disabled={disabled}
+              onClick={() => {
+                if (s.now) setDay(today);
+                setH(s.h);
+                setM(s.m);
+              }}
+              className="group flex min-h-14 min-w-0 flex-col items-center justify-center rounded-ctl bg-surface-2 px-1 py-1.5 disabled:opacity-40 aria-pressed:bg-accent-soft aria-pressed:text-accent-text aria-pressed:outline-2 aria-pressed:-outline-offset-2 aria-pressed:outline-accent"
+            >
+              <span className="max-w-full truncate text-tag text-fg-muted group-aria-pressed:text-accent-text">
+                {s.label}
+              </span>
+              <span className="text-caption font-bold whitespace-nowrap">{timeAt(s.h, s.m)}</span>
+            </button>
+          );
+        })}
+      </div>
+      {future && (
         <p role="alert" className="text-caption text-negative">
-          {t(error)}
+          {t("form.future")}
         </p>
       )}
-      <Button type="submit" variant="primary" className="w-full">
+      <Button variant="primary" className="w-full" disabled={future} onClick={() => onPick(ms)}>
         {t("common.done")}
       </Button>
-    </form>
+    </>
+  );
+}
+
+/** A Date and time row: icon tile, label over value, chevron; accent while its picker is open. */
+function PickerRow(p: { icon: React.ReactNode; k: string; v: string; open: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-expanded={p.open}
+      onClick={p.onClick}
+      className="group flex min-h-16 w-full items-center gap-3 px-3.5 py-2.5 text-left"
+    >
+      <span className="grid size-9 shrink-0 place-items-center rounded-ctl bg-surface text-fg-muted group-aria-expanded:bg-accent-soft group-aria-expanded:text-accent-text [&>svg]:size-5">
+        {p.icon}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-caption text-fg-muted">{p.k}</span>
+        <span className="block truncate text-row group-aria-expanded:text-accent-text">{p.v}</span>
+      </span>
+      <ChevronDown className="size-5 shrink-0 text-fg-muted transition-transform group-aria-expanded:rotate-180 motion-reduce:transition-none" />
+    </button>
+  );
+}
+
+/** Slides open under its row; inert while closed so its controls are out of reach. */
+function Panel({ open, children }: { open: boolean; children: React.ReactNode }) {
+  return (
+    <div
+      inert={!open}
+      className={cn(
+        "grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none",
+        open ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+      )}
+    >
+      <div className="overflow-hidden">
+        <div className="px-3 pb-3.5">{children}</div>
+      </div>
+    </div>
   );
 }

@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { dayKey, daysAgo, fromKeys, groupByDay, timeKey } from "./dates";
+import { dayKey, daysAgo, groupByDay } from "./dates";
 
-const at = (day: string, time: string) => fromKeys(day, time);
+// Local date and time, as the device sees it.
+const at = (day: string, time: string) => new Date(`${day}T${time}`).getTime();
 
 describe("dates", () => {
-  it("round-trips local date and time keys", () => {
-    const ms = at("2026-10-27", "20:15");
-    expect(dayKey(ms)).toBe("2026-10-27");
-    expect(timeKey(ms)).toBe("20:15");
+  it("keys a time by its local day", () => {
+    expect(dayKey(at("2026-10-27", "00:05"))).toBe("2026-10-27");
+    expect(dayKey(at("2026-10-27", "23:55"))).toBe("2026-10-27");
   });
 
   it("counts days ago for Today / Yesterday labels", () => {
