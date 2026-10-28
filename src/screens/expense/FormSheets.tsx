@@ -240,32 +240,32 @@ function WhenForm({ value, onPick }: { value: number; onPick: (ms: number) => vo
             </span>
             <Wheel label={t("form.minute")} options={MINUTES} value={m} onChange={setM} />
           </div>
+          <div role="group" aria-label={t("form.shortcuts")} className="mt-3 grid grid-cols-4 gap-2">
+            {shortcuts.map((s) => {
+              const on = s.h === h && s.m === m && (!s.now || +day === +today);
+              const disabled = !s.now && at(day, s.h, s.m) > now;
+              return (
+                <button
+                  key={s.label}
+                  type="button"
+                  aria-pressed={on}
+                  disabled={disabled}
+                  onClick={() => {
+                    if (s.now) setDay(today);
+                    setH(s.h);
+                    setM(s.m);
+                  }}
+                  className="group flex min-h-14 min-w-0 flex-col items-center justify-center rounded-ctl bg-surface px-1 py-1.5 disabled:opacity-40 aria-pressed:bg-accent-soft aria-pressed:text-accent-text aria-pressed:outline-2 aria-pressed:-outline-offset-2 aria-pressed:outline-accent"
+                >
+                  <span className="max-w-full truncate text-tag text-fg-muted group-aria-pressed:text-accent-text">
+                    {s.label}
+                  </span>
+                  <span className="text-caption font-bold whitespace-nowrap">{timeAt(s.h, s.m)}</span>
+                </button>
+              );
+            })}
+          </div>
         </Panel>
-      </div>
-      <div role="group" aria-label={t("form.shortcuts")} className="grid grid-cols-4 gap-2">
-        {shortcuts.map((s) => {
-          const on = s.h === h && s.m === m && (!s.now || +day === +today);
-          const disabled = !s.now && at(day, s.h, s.m) > now;
-          return (
-            <button
-              key={s.label}
-              type="button"
-              aria-pressed={on}
-              disabled={disabled}
-              onClick={() => {
-                if (s.now) setDay(today);
-                setH(s.h);
-                setM(s.m);
-              }}
-              className="group flex min-h-14 min-w-0 flex-col items-center justify-center rounded-ctl bg-surface-2 px-1 py-1.5 disabled:opacity-40 aria-pressed:bg-accent-soft aria-pressed:text-accent-text aria-pressed:outline-2 aria-pressed:-outline-offset-2 aria-pressed:outline-accent"
-            >
-              <span className="max-w-full truncate text-tag text-fg-muted group-aria-pressed:text-accent-text">
-                {s.label}
-              </span>
-              <span className="text-caption font-bold whitespace-nowrap">{timeAt(s.h, s.m)}</span>
-            </button>
-          );
-        })}
       </div>
       {future && (
         <p role="alert" className="text-caption text-negative">
