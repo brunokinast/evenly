@@ -66,18 +66,20 @@ for (const [dir, dp] of [
   }
 }
 
-// Android launch screen (API 31+): the coin alone in --fg, on a 288dp canvas inside the 192dp circle the
-// system shows. One xxxhdpi PNG per theme; Android scales it down for other densities.
+// Android launch screen (API 31+): the logo (coin and name in a row) in --fg, on a 288dp canvas, sized so
+// its corners stay inside the 192dp circle the system shows. One xxxhdpi PNG per theme; Android scales it
+// down for other densities.
 for (const [dir, fg] of [
   ["drawable-xxxhdpi", "#171A21"],
   ["drawable-night-xxxhdpi", "#ECEEF2"],
 ]) {
   const size = 288 * 4;
-  const inner = Math.round(size * 0.62);
+  const w = Math.round(size * 0.61);
+  const h = Math.round((w * lh) / lw);
   const page = await browser.newPage({ viewport: { width: size, height: size } });
   await page.setContent(
-    `<body style="margin:0;display:grid;place-items:center;height:${size}px"><div style="width:${inner}px;height:${inner}px">` +
-      `${glyph.replaceAll("#FFFFFF", fg).replace("<svg", `<svg width="${inner}" height="${inner}"`)}</div></body>`,
+    `<body style="margin:0;display:grid;place-items:center;height:${size}px">` +
+      `${logo.replaceAll("#1A1405", fg).replace("<svg", `<svg width="${w}" height="${h}"`)}</body>`,
   );
   mkdirSync(`${res}/${dir}`, { recursive: true });
   await page.screenshot({ path: `${res}/${dir}/splash_icon.png`, omitBackground: true });
