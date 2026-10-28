@@ -5,19 +5,29 @@ import { installMethod, type InstallMethod } from "@/domain/install";
 // APP-3 / APP-7: the latest GitHub Release's APK (Firebase Hosting refuses .apk files on the free plan).
 const APK_URL: string | null = "https://github.com/brunokinast/evenly/releases/latest/download/evenly.apk";
 const DISMISS_KEY = "evenly.installCardDismissed";
+const SKIP_FIRST_KEY = "evenly.installFirstSkipped";
 
 type PromptEvent = Event & { prompt(): Promise<void>; userChoice: Promise<{ outcome: string }> };
 
 let deferred: PromptEvent | null = null;
-let dismissed = readDismissed();
+let dismissed = readFlag(DISMISS_KEY);
+let firstSkipped = readFlag(SKIP_FIRST_KEY);
 let state = compute();
 const listeners = new Set<() => void>();
 
-function readDismissed() {
+function readFlag(key: string) {
   try {
-    return localStorage.getItem(DISMISS_KEY) === "1";
+    return localStorage.getItem(key) === "1";
   } catch {
     return false;
+  }
+}
+
+function saveFlag(key: string) {
+  try {
+    localStorage.setItem(key, "1");
+  } catch {
+    // Storage blocked: remembered for this visit only.
   }
 }
 
@@ -37,7 +47,7 @@ function compute() {
     canPrompt: deferred !== null,
     apkUrl: APK_URL,
   });
-  return { method, dismissed, apkUrl: APK_URL };
+  return { method, dismissed, firstSkipped, apkUrl: APK_URL };
 }
 
 function refresh() {
@@ -77,10 +87,13 @@ export async function promptInstall() {
 /** APP-7 "Not now": hides the Home card on this device for good. */
 export function dismissInstallCard() {
   dismissed = true;
-  try {
-    localStorage.setItem(DISMISS_KEY, "1");
-  } catch {
-    // Storage blocked: hidden for this visit only.
-  }
+  saveFlag(DISMISS_KEY);
+  refresh();
+}
+
+/** ID-10 "Continue in Safari / the browser": straight to the name from now on, on this browser. */
+export function skipInstallFirst() {
+  firstSkipped = true;
+  saveFlag(SKIP_FIRST_KEY);
   refresh();
 }

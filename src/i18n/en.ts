@@ -19,6 +19,14 @@ export const en = {
 
   "welcome.title": "What's your name?",
   "welcome.body": "Friends see it in the trips you share. No account needed.",
+  "installFirst.ios.title": "Add Evenly to your Home Screen first",
+  "installFirst.ios.body":
+    "On iPhone, the Home Screen app keeps its own data, apart from Safari. Start there so your trips stay with you.",
+  "installFirst.ios.skip": "Continue in Safari",
+  "installFirst.apk.title": "Get the Android app first",
+  "installFirst.apk.body":
+    "The Android app keeps its own data, apart from this browser. Start there so your trips stay with you.",
+  "installFirst.apk.skip": "Continue in the browser",
   "name.label": "Your name",
   "name.tooShort": "Use at least 2 characters.",
   "name.tooLong": "Use at most 50 characters.",
@@ -46,10 +54,12 @@ export const en = {
   "install.ios.step1": "Tap Share in the browser's toolbar.",
   "install.ios.step2": "Scroll down and tap Add to Home Screen.",
   "install.ios.step3": "Tap Add. Evenly is now on your home screen.",
+  "install.ios.note": "The Home Screen app starts fresh: trips you have here in Safari won't be in it.",
   "install.apk.title": "Get the Android app",
   "install.apk.body":
     "Open the downloaded file to install it. If Android asks, allow your browser to install apps. If you have the old Evenly app, uninstall it first.",
   "install.apk.download": "Download",
+  "install.apk.note": "The app starts fresh: trips you have here in the browser won't be in it.",
 
   "newTrip.title": "New trip",
   "newTrip.name": "Trip name",

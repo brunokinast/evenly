@@ -35,3 +35,8 @@ export function installMethod(ctx: InstallContext): InstallMethod {
 export function showInstallCard(method: InstallMethod, tripCount: number, dismissed: boolean): boolean {
   return method !== null && tripCount === 0 && !dismissed;
 }
+
+/** ID-10: before the name, suggest installing where the installed app would be a separate identity. */
+export function showInstallFirst(method: InstallMethod, skipped: boolean): method is "apk" | "ios" {
+  return (method === "apk" || method === "ios") && !skipped;
+}

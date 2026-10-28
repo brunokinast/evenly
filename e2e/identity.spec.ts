@@ -117,6 +117,57 @@ test("APP-2 theme choice applies instantly and is remembered", async ({ page }, 
   await page.screenshot({ path: info.outputPath("home-dark.png") });
 });
 
+test.describe("ID-10 install first, before the name", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test("ID-10 Android browser: Get the Android app first, or continue in the browser (remembered)", async ({
+    page,
+  }, info) => {
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: "Get the Android app first" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Download" })).toHaveAttribute(
+      "href",
+      "https://github.com/brunokinast/evenly/releases/latest/download/evenly.apk",
+    );
+    await page.screenshot({ path: info.outputPath("install-first-android.png") });
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.screenshot({ path: info.outputPath("install-first-android-dark.png") });
+    await page.getByRole("button", { name: "Continue in the browser" }).click();
+    await expect(welcomeHeading(page)).toBeVisible();
+    await page.reload();
+    await expect(welcomeHeading(page)).toBeVisible();
+  });
+
+  test.describe("on an iPhone", () => {
+    const { userAgent, viewport } = devices["iPhone 15"];
+    test.use({ userAgent, viewport });
+
+    test("ID-10 iPhone Safari: Add to Home Screen first with the steps, or continue in Safari", async ({
+      page,
+    }, info) => {
+      await page.goto("/");
+      await expect(page.getByRole("heading", { name: "Add Evenly to your Home Screen first" })).toBeVisible();
+      await expect(page.getByText("Scroll down and tap Add to Home Screen.")).toBeVisible();
+      await page.screenshot({ path: info.outputPath("install-first-ios.png") });
+      await page.emulateMedia({ colorScheme: "dark" });
+      await page.screenshot({ path: info.outputPath("install-first-ios-dark.png") });
+      await page.getByRole("button", { name: "Continue in Safari" }).click();
+      await expect(welcomeHeading(page)).toBeVisible();
+    });
+  });
+
+  test("ID-10 a computer goes straight to the name", async ({ browser }) => {
+    const page = await browser.newPage({
+      ...devices["Desktop Chrome"],
+      baseURL: "http://localhost:5173",
+      locale: "en-US",
+    });
+    await page.goto("/");
+    await expect(welcomeHeading(page)).toBeVisible();
+    await page.close();
+  });
+});
+
 test.describe("on an iPhone", () => {
   const { userAgent, viewport } = devices["iPhone 15"];
   test.use({ userAgent, viewport });
@@ -179,6 +230,8 @@ test("testing-only Reset account goes back to Welcome with a new identity", asyn
   await page.getByRole("button", { name: "Reset account (testing)" }).click();
   await expect(welcomeHeading(page)).toBeVisible();
   await expect(welcomeField(page)).toHaveValue("");
+  // A fresh start forgets "Continue in the browser" too (ID-10).
   await page.reload();
+  await page.getByRole("button", { name: "Continue in the browser" }).click();
   await expect(welcomeHeading(page)).toBeVisible();
 });

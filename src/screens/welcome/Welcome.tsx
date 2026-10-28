@@ -1,14 +1,23 @@
 import { useId } from "react";
 import { ArrowRight } from "lucide-react";
+import { useInstall } from "@/app/install";
 import { Logo } from "@/components/Logo";
 import { SubmitField } from "@/components/SubmitField";
+import { showInstallFirst } from "@/domain/install";
 import { checkName } from "@/domain/names";
 import { t } from "@/i18n";
 import { cn } from "@/lib/cn";
 import { useNameForm } from "../useNameForm";
+import { InstallFirst } from "./InstallFirst";
 
-/** First impression (specs/design.md "Welcome"); ID-2, ID-3, ID-8: a name before Home. */
+/** First impression (specs/design.md "Welcome"); ID-2, ID-3, ID-8: a name before Home; ID-10 first. */
 export function Welcome() {
+  const { method, firstSkipped } = useInstall();
+  if (showInstallFirst(method, firstSkipped)) return <InstallFirst method={method} />;
+  return <NameStep />;
+}
+
+function NameStep() {
   const form = useNameForm("");
   const id = useId();
   const ready = checkName(form.value).ok;

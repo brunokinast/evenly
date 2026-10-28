@@ -19,6 +19,14 @@ export const ptBR: Record<MessageKey, string> = {
 
   "welcome.title": "Qual é o seu nome?",
   "welcome.body": "Seus amigos veem o nome nas viagens que vocês compartilham. Não precisa de conta.",
+  "installFirst.ios.title": "Adicione o Evenly à Tela de Início primeiro",
+  "installFirst.ios.body":
+    "No iPhone, o app da Tela de Início guarda os dados separados do Safari. Comece por lá para não perder suas viagens.",
+  "installFirst.ios.skip": "Continuar no Safari",
+  "installFirst.apk.title": "Baixe o app Android primeiro",
+  "installFirst.apk.body":
+    "O app Android guarda os dados separados deste navegador. Comece por lá para não perder suas viagens.",
+  "installFirst.apk.skip": "Continuar no navegador",
   "name.label": "Seu nome",
   "name.tooShort": "Use pelo menos 2 caracteres.",
   "name.tooLong": "Use no máximo 50 caracteres.",
@@ -47,10 +55,13 @@ export const ptBR: Record<MessageKey, string> = {
   "install.ios.step1": "Toque em Compartilhar na barra do navegador.",
   "install.ios.step2": "Role para baixo e toque em Adicionar à Tela de Início.",
   "install.ios.step3": "Toque em Adicionar. O Evenly agora está na sua tela inicial.",
+  "install.ios.note":
+    "O app da Tela de Início começa do zero: as viagens que você tem aqui no Safari não aparecem nele.",
   "install.apk.title": "Baixar o app Android",
   "install.apk.body":
     "Abra o arquivo baixado para instalar. Se o Android pedir, permita que o navegador instale apps. Se você tem o app Evenly antigo, desinstale-o antes.",
   "install.apk.download": "Baixar",
+  "install.apk.note": "O app começa do zero: as viagens que você tem aqui no navegador não aparecem nele.",
 
   "newTrip.title": "Nova viagem",
   "newTrip.name": "Nome da viagem",
