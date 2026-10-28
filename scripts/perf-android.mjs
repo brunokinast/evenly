@@ -20,6 +20,12 @@ const CHROME = opt("--chrome", "");
 const PKG = CHROME ? "com.android.chrome" : "br.com.kinast.evenly.debug";
 const ACTIVITY = `${PKG}/br.com.kinast.evenly.MainActivity`;
 const NAME = CHROME ? "Perf Chrome" : "Perf Android";
+/** The few labels the runs look for, in the device's language (src/i18n). */
+const TEXT = {
+  en: { home: "Your trips", add: "Add expense", form: "New expense", save: "Save" },
+  "pt-BR": { home: "Suas viagens", add: "Nova despesa", form: "Nova despesa", save: "Salvar" },
+};
+const text = async (page) => TEXT[await page.evaluate(() => document.documentElement.lang)] ?? TEXT.en;
 const launch = () =>
   adb(
     CHROME
@@ -89,7 +95,7 @@ async function oneRun() {
   await waitMark(page, "painted:trip");
   record("Home → trip with expenses", (await markAt(page, "painted:trip")) - t);
 
-  t = await clickText(page, "button", "Add expense");
+  t = await clickText(page, "button", (await text(page)).add);
   await waitMark(page, "painted:form");
   record("Add expense → form ready", (await markAt(page, "painted:form", -1)) - t);
   await page.keyboard.type("1234");
@@ -97,12 +103,12 @@ async function oneRun() {
   await page.keyboard.type("Perf lunch");
   await page.keyboard.press("Enter");
   await sleep(300);
-  t = await clickText(page, "button", "Save");
+  t = await clickText(page, "button", (await text(page)).save);
   await page.waitForFunction(
-    () =>
-      document.querySelector("h1")?.textContent?.trim() !== "New expense" &&
+    (newTitle) =>
+      document.querySelector("h1")?.textContent?.trim() !== newTitle &&
       document.body.innerText.includes("Perf lunch"),
-    undefined,
+    (await text(page)).form,
     { polling: "raf", timeout: 30_000 },
   );
   record("Save → back on trip, expense listed", (await now(page)) - t);
@@ -161,8 +167,8 @@ async function setUp() {
     await page.keyboard.press("Enter");
   }
   await page.waitForFunction(
-    () => document.querySelector("h1")?.textContent?.trim() === "Your trips",
-    undefined,
+    (titles) => titles.includes(document.querySelector("h1")?.textContent?.trim()),
+    Object.values(TEXT).map((x) => x.home),
     {
       timeout: 30_000,
     },

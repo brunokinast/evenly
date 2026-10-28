@@ -114,3 +114,15 @@ Turning off the debug build's bridge logging (`loggingBehavior: "none"`) changed
 **Proposal R5**: run the Firebase JS SDK on Android too (drop the Capacitor Firebase plugins): one code path on every platform, faster data on Android, a smaller APK. Cost: the anonymous identity lives in the native SDK and can't be handed to the JS SDK without a backend, so every Android user gets a new identity once and needs a relink (`scripts/relink.ts`, as done before). Needs an ADR and the user's OK. **Decision (2026-10-28): not now**; revisit after the real-phone measurements (rebuild-plan 6b step 6).
 
 Both as APKs on the same AVD (`node scripts/android.mjs dev --js-sdk` vs `npm run android:dev`), big trip: cold start → trips (page clock) 1213 → 1007 ms, Home → trip 760 → 431 ms, Save 162 → 187 ms (noise). The JS-SDK build reaches the emulators over plain HTTP from the app's https://localhost page, so that build alone allows mixed content (`capacitor.config.ts`); against the real project everything is HTTPS.
+
+**Real phone (2026-10-28)**: Galaxy S25 (SM-S931B, Android 17), debug APKs over Wi-Fi against this PC's emulators, big trip, median of 5, ms:
+
+| Step                                      | Native plugins | JS SDK |
+| ----------------------------------------- | -------------: | -----: |
+| Android launch (`am start` TotalTime)     |            310 |    291 |
+| Cold start → trips on screen (page clock) |            224 |    224 |
+| Home → trip with expenses                 |            151 |     95 |
+| Add expense → form ready                  |              9 |      9 |
+| Save → back on the trip                   |             37 |     35 |
+
+Every journey is well inside its target on both. The JS SDK only wins on opening a trip (~55 ms), not worth giving every Android user a new identity. **R5: no** (keep the native plugins); the `--js-sdk` build stays for a re-check on a slower phone. The S25 is high-end: a mid phone is ~3–4× slower on scripting, which the lab harness's 4× CPU throttle already covers.
