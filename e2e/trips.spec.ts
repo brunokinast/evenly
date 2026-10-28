@@ -370,7 +370,7 @@ test("APP-6 offline shows the banner and disables network actions", async ({ bro
   await expect(ana.getByRole("button", { name: "New trip" })).toBeEnabled();
 });
 
-test("PDF-1 PDF-3 export downloads the trip summary", async ({ browser }) => {
+test("PDF-1 PDF-3 export downloads the trip summary", async ({ browser }, info) => {
   const ana = await newUser(browser, "Ana");
   // Headless browsers can't show a share sheet; take the download path (PDF-4 on the web).
   await ana.evaluate(() => Object.defineProperty(navigator, "canShare", { value: undefined }));
@@ -381,6 +381,63 @@ test("PDF-1 PDF-3 export downloads the trip summary", async ({ browser }) => {
   const download = ana.waitForEvent("download");
   await ana.getByRole("button", { name: "Export as PDF" }).click();
   expect((await download).suggestedFilename()).toBe("Lisbon_2026_summary.pdf");
+  await (await download).saveAs(info.outputPath("latin.pdf"));
+});
+
+test("PDF-6 names in any script: only the fonts and characters the trip needs are fetched", async ({
+  browser,
+}, info) => {
+  const ana = await newUser(browser, "Ana");
+  await ana.evaluate(() => Object.defineProperty(navigator, "canShare", { value: undefined }));
+  const asked: [string, string][] = [];
+  ana.on("request", (r) => {
+    const url = new URL(r.url());
+    if (url.host === "fonts.googleapis.com") {
+      // The space is always asked for too (word spacing inside a run).
+      asked.push([
+        url.searchParams.get("family")!.split(":")[0]!,
+        url.searchParams.get("text")!.replace(" ", ""),
+      ]);
+    }
+  });
+  await createTrip(ana, "東京 2026");
+  const guestField = ana.getByRole("textbox", { name: "Guest name" });
+  for (const guest of ["さくら", "محمد", "Дмитрий", "प्रिया"]) {
+    await guestField.fill(guest);
+    await guestField.press("Enter");
+    await expect(ana.getByRole("tabpanel").getByText(guest)).toBeVisible();
+  }
+  await tab(ana, "Expenses");
+  await addExpense(ana, "4200", "Sushi 🍣 with Ngọc Łukasz");
+  await tab(ana, "Balances");
+  const download = ana.waitForEvent("download");
+  await ana.getByRole("button", { name: "Export as PDF" }).click();
+  await (await download).saveAs(info.outputPath("scripts.pdf"));
+  const families = new Map(asked);
+  // Cyrillic is in the bundled font; Korean and the symbol fonts aren't needed.
+  expect([...families.keys()].sort()).toEqual([
+    "Noto Emoji",
+    "Noto Sans Arabic",
+    "Noto Sans Devanagari",
+    "Noto Sans JP",
+  ]);
+  expect([...families.get("Noto Sans JP")!].sort().join("")).toBe([..."さくら東京"].sort().join(""));
+  expect(families.get("Noto Emoji")).toBe("🍣");
+});
+
+test("PDF-6 without Google Fonts (offline) the PDF still exports, other scripts as ?", async ({
+  browser,
+}, info) => {
+  const ana = await newUser(browser, "Ana");
+  await ana.evaluate(() => Object.defineProperty(navigator, "canShare", { value: undefined }));
+  await ana.context().route("https://fonts.googleapis.com/**", (route) => route.abort());
+  await createTrip(ana, "Tóquio 東京");
+  await tab(ana, "Expenses");
+  await addExpense(ana, "1000", "Ramen 🍜");
+  await tab(ana, "Balances");
+  const download = ana.waitForEvent("download");
+  await ana.getByRole("button", { name: "Export as PDF" }).click();
+  await (await download).saveAs(info.outputPath("offline.pdf"));
 });
 
 test("ID-5 MEM-3 a new name shows live for the other members", async ({ browser }) => {

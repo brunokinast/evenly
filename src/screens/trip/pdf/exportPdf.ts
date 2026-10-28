@@ -1,19 +1,19 @@
-// PDF-1..5, specs/design.md "PDF". Loaded on demand (listed in scripts/check-bundle-size.mjs ON_DEMAND),
-// so jsPDF isn't startup code.
-import { jsPDF } from "jspdf";
+// PDF-1..6, specs/design.md "PDF". Loaded on demand (listed in scripts/check-bundle-size.mjs ON_DEMAND),
+// so pdf-lib and the fonts aren't startup code.
+import { PDFDocument, rgb, type PDFPage } from "pdf-lib";
 import { shareFile } from "@/app/share";
 import { balances, paymentsInListOrder, splitsAll, totalSpent } from "@/domain/balances";
 import { byListOrder } from "@/domain/members";
 import { pdfFileName } from "@/domain/trips";
 import { longDate, money, shortDate, t, tn } from "@/i18n";
-import { who } from "./labels";
-import type { TripView } from "./TripScreen";
+import { who } from "../labels";
+import type { TripView } from "../TripScreen";
+import { PdfText, type Rgb, type Style } from "./text";
 
 const W = 595.28; // A4 in pt
 const H = 841.89;
 const M = 40;
 const ROW = 22;
-type Rgb = [number, number, number];
 // The light theme's token values (specs/design.md "Color"); a PDF can't read CSS variables.
 const C: Record<
   "fg" | "muted" | "border" | "surface2" | "accent" | "accentFg" | "positive" | "negative",
@@ -29,37 +29,62 @@ const C: Record<
   negative: [0xc3, 0x3b, 0x2c],
 };
 
-type TextOpts = { size?: number; bold?: boolean; color?: Rgb; right?: boolean; max?: number; caps?: boolean };
+type TextOpts = {
+  size?: number;
+  bold?: boolean;
+  color?: Rgb;
+  right?: boolean;
+  max?: number;
+  caps?: boolean;
+};
 
 export async function exportTripPdf(view: TripView) {
   const { trip, expenses } = view;
   const cur = trip.currency;
-  const doc = new jsPDF({ unit: "pt", format: "a4" });
-  let y = M;
+  const doc = await PDFDocument.create();
   // Real names, not "You": the PDF is shared with others.
   const name = (id: string) => who(view, id).name;
+  const ids = new Set([...trip.members.map((m) => m.id), ...expenses.map((e) => e.payerId)]);
+  const fonts = await PdfText.load(doc, [
+    trip.name,
+    ...[...ids].map(name),
+    ...expenses.map((e) => e.description),
+  ]);
+  const pages: PDFPage[] = [];
+  let page!: PDFPage;
+  const newPage = () => {
+    page = doc.addPage([W, H]);
+    pages.push(page);
+  };
+  newPage();
+  let y = M; // from the top, like the layout below; PDF coordinates go up from the bottom
 
+  const style = (o: TextOpts): Style => ({
+    size: o.size ?? 10,
+    bold: o.bold,
+    color: unit(o.color ?? C.fg),
+    spacing: o.caps ? 0.5 : 0,
+  });
+  const width = (s: string, o: TextOpts = {}) => fonts.width(s, style(o));
   const text = (s: string, x: number, o: TextOpts = {}) => {
-    doc.setFont("helvetica", o.bold ? "bold" : "normal");
-    doc.setFontSize(o.size ?? 10);
-    doc.setTextColor(...(o.color ?? C.fg));
-    const str = o.caps ? s.toLocaleUpperCase() : s;
-    // jsPDF leaves the letter spacing out of right alignment; shift caps back inside the margin.
-    const shift = o.caps && o.right ? 0.5 * str.length : 0;
-    doc.text(o.max ? fit(doc, str, o.max) : str, x - shift, y, {
-      align: o.right ? "right" : "left",
-      charSpace: o.caps ? 0.5 : 0,
+    const st = style(o);
+    let str = o.caps ? s.toLocaleUpperCase() : s;
+    if (o.max) str = fonts.fit(str, o.max, st);
+    // Letter spacing adds after the last letter too; right-aligned caps leave it out.
+    const w = fonts.width(str, st) - (st.spacing ?? 0);
+    fonts.draw(page, str, o.right ? x - w : x, H - y, st);
+  };
+  const rule = (at: number) =>
+    page.drawLine({
+      start: { x: M, y: H - at },
+      end: { x: W - M, y: H - at },
+      thickness: 0.6,
+      color: rgb(...unit(C.border)),
     });
-  };
-  const rule = (at: number) => {
-    doc.setDrawColor(...C.border);
-    doc.setLineWidth(0.6);
-    doc.line(M, at, W - M, at);
-  };
   /** Starts a new page when `h` more points don't fit; `again` redraws a table header there. */
   const ensure = (h: number, again?: () => void) => {
     if (y + h <= H - M - 24) return;
-    doc.addPage();
+    newPage();
     y = M;
     again?.();
   };
@@ -79,15 +104,20 @@ export async function exportTripPdf(view: TripView) {
 
   // Header: the Evenly logo, "Trip summary", the trip name and its facts.
   const logo = await loadLogo();
-  if (logo) doc.addImage(logo, "PNG", M, y, (LOGO_H * 432) / 120, LOGO_H);
+  if (logo) {
+    const img = await doc.embedPng(logo);
+    page.drawImage(img, {
+      x: M,
+      y: H - y - LOGO_H,
+      width: (LOGO_H * 432) / 120,
+      height: LOGO_H,
+    });
+  }
   y += LOGO_H / 2 + 4;
   if (!logo) text("Evenly", M, { size: 14, bold: true });
   text(t("pdf.summary"), W - M, { size: 10, color: C.muted, right: true });
   y += 42;
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(22);
-  const nameLines = doc.splitTextToSize(trip.name, W - 2 * M) as string[];
-  for (const l of nameLines) {
+  for (const l of fonts.wrap(trip.name, W - 2 * M, style({ size: 22, bold: true }))) {
     text(l, M, { size: 22, bold: true });
     y += 26;
   }
@@ -114,8 +144,11 @@ export async function exportTripPdf(view: TripView) {
   const tileW = (W - 2 * M - 2 * 10) / 3;
   tiles.forEach(([k, v], i) => {
     const x = M + i * (tileW + 10);
-    doc.setFillColor(...C.surface2);
-    doc.roundedRect(x, y, tileW, 54, 8, 8, "F");
+    page.drawSvgPath(roundedRect(tileW, 54, 8), {
+      x,
+      y: H - y,
+      color: rgb(...unit(C.surface2)),
+    });
     const top = y;
     y = top + 20;
     text(k, x + 12, { size: 9, color: C.muted, max: tileW - 24 });
@@ -141,8 +174,8 @@ export async function exportTripPdf(view: TripView) {
     const to = name(p.to);
     y += ROW - 7;
     text(from, M, { max: 190 });
-    const fromW = Math.min(doc.getTextWidth(from), 190);
-    arrow(doc, M + fromW + 8, y - 3.5);
+    const fromW = Math.min(width(from), 190);
+    arrow(page, M + fromW + 8, H - (y - 3.5));
     text(to, M + fromW + 30, { max: 190 });
     text(money(p.cents, cur), W - M, { bold: true, right: true });
     y += 7;
@@ -174,11 +207,10 @@ export async function exportTripPdf(view: TripView) {
     y += ROW - 7;
     // The name and its Guest tag share 200pt, so they never reach the Paid column.
     const guest = p.guest && !p.former;
-    doc.setFontSize(8);
-    const nameMax = 200 - (guest ? doc.getTextWidth(t("members.guest")) + 6 : 0);
+    const nameMax = 200 - (guest ? width(t("members.guest"), { size: 8 }) + 6 : 0);
     text(name(id), M, { max: nameMax });
     if (guest) {
-      const nameW = Math.min(doc.getTextWidth(name(id)), nameMax);
+      const nameW = Math.min(width(name(id)), nameMax);
       text(t("members.guest"), M + nameW + 6, { size: 8, color: C.muted });
     }
     text(money(paid.get(id) ?? 0, cur), PAID, { right: true });
@@ -188,7 +220,11 @@ export async function exportTripPdf(view: TripView) {
         ? t("balances.settled")
         : `${t(v > 0 ? "balances.getsBack" : "balances.owes")} ${money(Math.abs(v), cur)}`,
       W - M,
-      { bold: v !== 0, color: v > 0 ? C.positive : v < 0 ? C.negative : C.muted, right: true },
+      {
+        bold: v !== 0,
+        color: v > 0 ? C.positive : v < 0 ? C.negative : C.muted,
+        right: true,
+      },
     );
     y += 7;
     rule(y);
@@ -240,16 +276,21 @@ export async function exportTripPdf(view: TripView) {
   }
 
   // Footer on every page.
-  const pages = doc.getNumberOfPages();
   const today = longDate(Date.now());
-  for (let i = 1; i <= pages; i++) {
-    doc.setPage(i);
+  pages.forEach((p, i) => {
+    page = p;
     y = H - 24;
     text(t("pdf.footer", { date: today }), M, { size: 8, color: C.muted });
-    text(t("pdf.page", { n: i, total: pages }), W - M, { size: 8, color: C.muted, right: true });
-  }
+    text(t("pdf.page", { n: i + 1, total: pages.length }), W - M, {
+      size: 8,
+      color: C.muted,
+      right: true,
+    });
+  });
 
-  await shareFile(doc.output("blob"), pdfFileName(trip.name), trip.name);
+  const bytes = await doc.save();
+  const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
+  await shareFile(blob, pdfFileName(trip.name), trip.name);
 }
 
 const LOGO_H = 28;
@@ -264,19 +305,24 @@ async function loadLogo(): Promise<Uint8Array | null> {
   }
 }
 
-/** A small "→" drawn with lines (the PDF's built-in font has no arrow glyph). */
-function arrow(doc: jsPDF, x: number, y: number) {
-  doc.setDrawColor(...C.muted);
-  doc.setLineWidth(1.2);
-  doc.line(x, y, x + 14, y);
-  doc.line(x + 10, y - 3.5, x + 14, y);
-  doc.line(x + 10, y + 3.5, x + 14, y);
+/** A small "→" drawn with lines, centered on (x, y) in PDF coordinates. */
+function arrow(page: PDFPage, x: number, y: number) {
+  const line = (x1: number, y1: number, x2: number, y2: number) =>
+    page.drawLine({
+      start: { x: x1, y: y1 },
+      end: { x: x2, y: y2 },
+      thickness: 1.2,
+      color: rgb(...unit(C.muted)),
+    });
+  line(x, y, x + 14, y);
+  line(x + 10, y + 3.5, x + 14, y);
+  line(x + 10, y - 3.5, x + 14, y);
 }
 
-/** Truncates text with "…" to fit a width. */
-function fit(doc: jsPDF, s: string, max: number) {
-  if (doc.getTextWidth(s) <= max) return s;
-  let out = s;
-  while (out.length > 1 && doc.getTextWidth(`${out}…`) > max) out = out.slice(0, -1);
-  return `${out}…`;
+/** pdf-lib colors are 0–1. */
+const unit = (c: Rgb): Rgb => [c[0] / 255, c[1] / 255, c[2] / 255];
+
+/** An SVG path for a w×h rectangle with corner radius r, drawn down from its top-left corner. */
+function roundedRect(w: number, h: number, r: number) {
+  return `M ${r} 0 H ${w - r} A ${r} ${r} 0 0 1 ${w} ${r} V ${h - r} A ${r} ${r} 0 0 1 ${w - r} ${h} H ${r} A ${r} ${r} 0 0 1 0 ${h - r} V ${r} A ${r} ${r} 0 0 1 ${r} 0 Z`;
 }

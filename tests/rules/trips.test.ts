@@ -232,6 +232,15 @@ describe("expenses (EXP-1, EXP-3..6, TRIP-8, KI-6)", () => {
     await assertFails(deleteDoc(ref("eve", "e1")));
   });
 
+  it("EXP-6 an expense split between many members (8) is accepted", async () => {
+    const trip = tripDoc();
+    for (const id of ["g1", "g2", "g3", "g4", "g5"])
+      trip.members[id as "mg"] = { name: id, joinedAt: Date.now() };
+    await seed(env, { "trips/t1": trip });
+    const shares = Object.fromEntries(Object.keys(trip.members).map((id) => [id, 1000]));
+    await assertSucceeds(setDoc(ref("bob"), { ...expenseDoc(), amountCents: 8000, shares }));
+  });
+
   it("EXP-5 the payer doesn't have to be a participant", async () => {
     await assertSucceeds(setDoc(ref("bob"), { ...expenseDoc(), payerId: "ma", shares: { mb: 9000 } }));
   });

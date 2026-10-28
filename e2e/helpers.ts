@@ -54,7 +54,8 @@ export const tab = (page: Page, name: "Expenses" | "Balances" | "Members") =>
 export async function inviteCode(page: Page): Promise<string> {
   await page.getByRole("button", { name: "Invite", exact: true }).first().click();
   const dialog = page.getByRole("dialog", { name: "Invite code" });
-  await expect(dialog.getByText(/^\d{3} \d{3}$/)).toBeVisible();
+  // Creating the code waits for the server: see the note in addExpense.
+  await expect(dialog.getByText(/^\d{3} \d{3}$/)).toBeVisible({ timeout: 15_000 });
   const code = (await dialog.getByText(/^\d{3} \d{3}$/).textContent())!.replace(/\D/g, "");
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
@@ -81,7 +82,9 @@ export async function addExpense(page: Page, digits: string, description: string
   await page.keyboard.type(description);
   await page.keyboard.press("Enter");
   await page.getByRole("button", { name: "Save" }).click();
-  await expect(page.getByRole("tab", { name: "Expenses" })).toBeVisible();
+  // Save waits for the server; on the emulators the first write after several quick guest additions can
+  // take ~4 s (docs/rebuild-plan.md).
+  await expect(page.getByRole("tab", { name: "Expenses" })).toBeVisible({ timeout: 15_000 });
 }
 
 /** In the open Date and time sheet's calendar (EXP-17), picks yesterday, going back a month if needed. */
