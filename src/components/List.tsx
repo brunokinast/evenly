@@ -79,6 +79,21 @@ export function Tag({ children }: { children: ReactNode }) {
   );
 }
 
+/** Rounded square with an icon in the accent tint: 44px, or 32px inside compact rows. */
+export function IconTile({ children, small }: { children: ReactNode; small?: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "grid shrink-0 place-items-center rounded-ctl bg-accent-soft text-accent-text",
+        small ? "size-8 [&_svg]:size-[18px]" : "size-11 [&_svg]:size-6",
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
 /** Centered message with an icon tile and optional action (specs/design.md "Empty states"). */
 export function EmptyState({
   icon,

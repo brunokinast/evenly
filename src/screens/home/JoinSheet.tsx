@@ -52,6 +52,8 @@ function JoinForm({ myTrips }: { myTrips: Trip[] }) {
     try {
       const invite = await lookupInvite(digits);
       if (latest.current !== digits) return; // A newer code was typed meanwhile.
+      // INV-3: the code is done; drop the keyboard so the preview and Join button are in view.
+      if (invite && document.activeElement instanceof HTMLElement) document.activeElement.blur();
       setLookup(invite ? { status: "found", invite } : { status: "error", message: t("join.invalid") });
     } catch (e) {
       if (latest.current !== digits) return;
@@ -143,9 +145,7 @@ function JoinForm({ myTrips }: { myTrips: Trip[] }) {
                 disabled={!online}
                 onClick={() => void join(found)}
               >
-                <span className="truncate">
-                  {claimName ? t("join.joinAs", { name: claimName }) : t("join.join")}
-                </span>
+                {claimName ? t("join.joinAs", { name: claimName }) : t("join.join")}
               </Button>
             </>
           )}

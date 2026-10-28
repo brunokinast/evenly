@@ -1,9 +1,23 @@
 import { NAME_MAX } from "./names";
 import { isGuest, type Member, type Trip } from "./types";
 
-/** MEM-6: join order, owner first (the owner joined first). */
+/** Stored member order: join order, owner first (the owner joined first). */
 export function sortMembers(members: Member[]): Member[] {
   return [...members].sort((a, b) => a.joinedAt - b.joinedAt || a.id.localeCompare(b.id));
+}
+
+/** MEM-6: on screen the current user comes first, then everyone else in join order. */
+export function listOrder(memberIds: string[], myId: string): string[] {
+  return memberIds.includes(myId) ? [myId, ...memberIds.filter((id) => id !== myId)] : memberIds;
+}
+
+/** Comparator for ids by `order`; ids not in it (former members) go last. */
+export function byListOrder(order: string[]) {
+  const at = (id: string) => {
+    const i = order.indexOf(id);
+    return i < 0 ? order.length : i;
+  };
+  return (a: string, b: string) => at(a) - at(b);
 }
 
 export type Person = {

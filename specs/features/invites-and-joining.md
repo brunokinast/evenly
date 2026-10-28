@@ -14,7 +14,7 @@ The owner invites friends with a short-lived 6-digit code, created on demand. Fr
 
 - **INV-1** A code is exactly 6 digits and unique among currently valid codes.
 - **INV-2** A code exists only after the owner taps "Invite" and is valid for **1 hour**. A trip has at most one valid code at a time.
-- **INV-3** The join screen opens with the keyboard up, accepts only digits (max 6) and submits automatically at 6 digits. Paste extracts the first 6 digits from the clipboard text.
+- **INV-3** The join screen opens with the keyboard up, accepts only digits (max 6) and submits automatically at 6 digits. Paste extracts the first 6 digits from the clipboard text. Once a valid code is found, the keyboard closes so the trip preview and the Join button are in view.
 - **INV-4** Given an invalid, expired or replaced code, then the user sees "Invalid or expired invite code" and can enter a different one.
 - **INV-5** A non-member can see only the preview fields (name, icon, currency) and the guest names of a trip whose valid code they entered. Nothing else.
 - **INV-6** Given a user joins, then the trip appears on their Home **immediately**, with no refresh or restart, and they appear live in the member list of every other member.

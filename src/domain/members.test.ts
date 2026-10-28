@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { checkGuestName, checkTripName, people, person, sortMembers } from "./members";
+import {
+  byListOrder,
+  checkGuestName,
+  checkTripName,
+  listOrder,
+  people,
+  person,
+  sortMembers,
+} from "./members";
 import type { Member, Trip } from "./types";
 
 const trip = (members: Member[], ownerUid = "u1"): Trip => ({
@@ -21,6 +29,16 @@ describe("members", () => {
       { id: "a", name: "A", uid: "u1", joinedAt: 10 },
     ]);
     expect(m.map((x) => x.id)).toEqual(["a", "b"]);
+  });
+
+  it("MEM-6 lists me first on screen, then everyone else in join order", () => {
+    expect(listOrder(["a", "b", "c", "d"], "c")).toEqual(["c", "a", "b", "d"]);
+    expect(listOrder(["a", "b"], "")).toEqual(["a", "b"]);
+  });
+
+  it("MEM-6 sorts other ids by that order, former members last", () => {
+    const order = listOrder(["a", "b", "c"], "b");
+    expect(["x", "c", "a", "b"].sort(byListOrder(order))).toEqual(["b", "a", "c", "x"]);
   });
 
   it("MEM-4 tells same names apart: me stays plain, the guest tag, else a number in join order", () => {

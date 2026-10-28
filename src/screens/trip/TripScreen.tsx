@@ -7,9 +7,10 @@ import { Button } from "@/components/Button";
 import { IconButton } from "@/components/IconButton";
 import { SkeletonRows } from "@/components/List";
 import { TopBar } from "@/components/TopBar";
+import { TripTile } from "@/components/TripIcon";
 import { useMe } from "@/data/session";
 import { useExpenses, useTrip } from "@/data/trips";
-import { people } from "@/domain/members";
+import { listOrder, people } from "@/domain/members";
 import type { Expense, Trip } from "@/domain/types";
 import { t } from "@/i18n";
 import { cn } from "@/lib/cn";
@@ -32,6 +33,8 @@ export type TripView = {
   trip: Trip;
   expenses: Expense[];
   people: ReturnType<typeof people>;
+  /** MEM-6: member ids as every list shows them, me first, then join order. */
+  listed: string[];
   myMemberId: string;
   isOwner: boolean;
   /** False until the expenses listener has delivered (e.g. deleting the trip waits for it). */
@@ -53,11 +56,16 @@ export function TripScreen({ tripId, tab: tabParam }: { tripId: string; tab?: st
 
   const view = useMemo<TripView | null>(() => {
     if (trip.status !== "ready") return null;
+    const myMemberId = trip.data.memberIdsByUid[me.uid] ?? "";
     return {
       trip: trip.data,
       expenses: expenses.status === "ready" ? expenses.data : [],
       people: people(trip.data, me.uid),
-      myMemberId: trip.data.memberIdsByUid[me.uid] ?? "",
+      listed: listOrder(
+        trip.data.members.map((m) => m.id),
+        myMemberId,
+      ),
+      myMemberId,
       isOwner: trip.data.ownerUid === me.uid,
       expensesLoaded: expenses.status === "ready",
     };
@@ -84,15 +92,12 @@ export function TripScreen({ tripId, tab: tabParam }: { tripId: string; tab?: st
           </IconButton>
         }
         title={view?.trip.name ?? ""}
+        large={{ tile: view && <TripTile icon={view.trip.icon} /> }}
         actions={
           view && (
             <>
               {view.isOwner && (
-                <Button
-                  variant="secondary"
-                  className="min-h-10 shrink-0 px-3 text-caption font-semibold [&_svg]:size-[18px]"
-                  onClick={() => setSheet("invite")}
-                >
+                <Button size="sm" className="shrink-0" onClick={() => setSheet("invite")}>
                   <UserPlus aria-hidden />
                   {t("trip.invite")}
                 </Button>
@@ -109,7 +114,7 @@ export function TripScreen({ tripId, tab: tabParam }: { tripId: string; tab?: st
         id="tabpanel"
         role="tabpanel"
         aria-label={t(`trip.tab.${tab}`)}
-        className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pt-1 pb-28"
+        className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pt-2 pb-28"
       >
         {!view || expenses.status === "loading" ? (
           <SkeletonRows />
@@ -125,6 +130,7 @@ export function TripScreen({ tripId, tab: tabParam }: { tripId: string; tab?: st
       <div className="relative shrink-0">
         <Button
           variant="primary"
+          data-fab
           className="absolute right-4 bottom-[calc(100%+16px)] z-10 min-h-13 rounded-full pr-5 pl-4 shadow-float"
           onClick={() => void openExpenseForm(navigate, `/trip/${tripId}/expense/new`)}
           disabled={!view}

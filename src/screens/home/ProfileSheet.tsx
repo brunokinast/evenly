@@ -3,6 +3,7 @@ import { ChevronRight, RotateCcw, Smartphone } from "lucide-react";
 import { useInstall } from "@/app/install";
 import { setTheme, useTheme, type ThemeChoice } from "@/app/theme";
 import { Button } from "@/components/Button";
+import { ListGroup, Row } from "@/components/List";
 import { Segmented } from "@/components/Segmented";
 import { Sheet } from "@/components/Sheet";
 import { TextField } from "@/components/TextField";
@@ -64,15 +65,15 @@ function ProfileForm({
         ]}
       />
       {method && (
-        <button
-          type="button"
-          onClick={onInstall}
-          className="flex min-h-14 w-full items-center gap-3 rounded-xl px-1 text-left active:bg-surface-2"
-        >
-          <Smartphone className="size-5 shrink-0" aria-hidden />
-          <span className="min-w-0 flex-1 truncate text-row">{t("install.row")}</span>
-          <ChevronRight className="size-5 shrink-0 text-fg-muted" aria-hidden />
-        </button>
+        <ListGroup>
+          <Row
+            compact
+            leading={<Smartphone className="size-5 shrink-0" aria-hidden />}
+            title={t("install.row")}
+            trailing={<ChevronRight className="size-5 shrink-0 text-fg-muted" aria-hidden />}
+            onClick={onInstall}
+          />
+        </ListGroup>
       )}
       <Button type="submit" variant="primary" busy={form.busy} className="w-full">
         {t("common.done")}

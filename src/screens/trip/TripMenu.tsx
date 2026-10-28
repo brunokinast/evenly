@@ -4,6 +4,7 @@ import { useOnline } from "@/app/online";
 import { showToast } from "@/app/toast";
 import { Button } from "@/components/Button";
 import { ConfirmSheet } from "@/components/ConfirmSheet";
+import { ListGroup, Row } from "@/components/List";
 import { Sheet } from "@/components/Sheet";
 import { TextField } from "@/components/TextField";
 import { deleteTrip, leaveTrip, renameTrip } from "@/data/commands";
@@ -30,33 +31,45 @@ export function TripMenu({ open, view, onClose, onAddGuest, onLeaving }: Props) 
     setStep("menu");
     onClose();
   };
-  const item =
-    "flex min-h-14 w-full items-center gap-3 rounded-xl px-1 text-left text-row active:bg-surface-2";
+  const icon = "size-5 shrink-0";
 
   return (
     <>
       <Sheet open={open && step === "menu"} onClose={close} title={trip.name}>
-        {isOwner ? (
-          <>
-            <button type="button" className={item} onClick={onAddGuest}>
-              <UserRoundPlus className="size-5" aria-hidden />
-              {t("menu.addGuest")}
-            </button>
-            <button type="button" className={item} onClick={() => setStep("rename")}>
-              <Pencil className="size-5" aria-hidden />
-              {t("menu.rename")}
-            </button>
-            <button type="button" className={`${item} text-negative`} onClick={() => setStep("delete")}>
-              <Trash2 className="size-5" aria-hidden />
-              {t("menu.delete")}
-            </button>
-          </>
-        ) : (
-          <button type="button" className={`${item} text-negative`} onClick={() => setStep("leave")}>
-            <LogOut className="size-5" aria-hidden />
-            {t("menu.leave")}
-          </button>
-        )}
+        {/* specs/design.md "⋯ menu sheet": one grouped list, destructive last. */}
+        <ListGroup>
+          {isOwner ? (
+            <>
+              <Row
+                compact
+                leading={<UserRoundPlus className={icon} aria-hidden />}
+                title={t("menu.addGuest")}
+                onClick={onAddGuest}
+              />
+              <Row
+                compact
+                leading={<Pencil className={icon} aria-hidden />}
+                title={t("menu.rename")}
+                onClick={() => setStep("rename")}
+              />
+              <Row
+                compact
+                className="text-negative"
+                leading={<Trash2 className={icon} aria-hidden />}
+                title={t("menu.delete")}
+                onClick={() => setStep("delete")}
+              />
+            </>
+          ) : (
+            <Row
+              compact
+              className="text-negative"
+              leading={<LogOut className={icon} aria-hidden />}
+              title={t("menu.leave")}
+              onClick={() => setStep("leave")}
+            />
+          )}
+        </ListGroup>
       </Sheet>
 
       <Sheet open={open && step === "rename"} onClose={close} title={t("rename.title")}>

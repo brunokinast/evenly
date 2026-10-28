@@ -5,7 +5,7 @@ import { doc, setDoc, type Firestore } from "firebase/firestore";
 /** Starts a rules test environment against the Firestore emulator (run via `npm run test:rules`). */
 export function rulesEnv(): Promise<RulesTestEnvironment> {
   return initializeTestEnvironment({
-    projectId: "demo-evenly",
+    projectId: "demo-evenly-rules", // its own project: clearing it never touches the preview's data
     firestore: { rules: readFileSync("firestore.rules", "utf8"), host: "127.0.0.1", port: 8080 },
   });
 }

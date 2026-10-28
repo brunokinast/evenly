@@ -35,9 +35,12 @@ const dtf = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale, o
 const time = dtf({ hour: "numeric", minute: "2-digit" });
 const shortDay = dtf({ weekday: "short", month: "short", day: "numeric" });
 const longDay = dtf({ month: "short", day: "numeric", year: "numeric" });
+const dayMonth = dtf({ month: "short", day: "numeric" });
 
 export const timeLabel = (ms: number) => time.format(ms);
 export const longDate = (ms: number) => longDay.format(ms);
+/** "Oct 26". */
+export const shortDate = (ms: number) => dayMonth.format(ms);
 
 /** "Today", "Yesterday", or "Mon, Oct 26". */
 export function dayLabel(ms: number) {

@@ -18,7 +18,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { TripIcon as TripIconId } from "@/domain/types";
-import { cn } from "@/lib/cn";
+import { IconTile } from "./List";
 
 /** TRIP-4 ids → Lucide icons (specs/design.md "Icons"). */
 export const TRIP_ICON: Record<TripIconId, LucideIcon> = {
@@ -41,17 +41,11 @@ export const TRIP_ICON: Record<TripIconId, LucideIcon> = {
 };
 
 /** Trip icon tile: 44px rounded square, accent-soft fill. */
-export function TripTile({ icon, className }: { icon: TripIconId; className?: string }) {
+export function TripTile({ icon }: { icon: TripIconId }) {
   const Icon = TRIP_ICON[icon] ?? Luggage;
   return (
-    <span
-      aria-hidden
-      className={cn(
-        "grid size-11 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent-text [&_svg]:size-6",
-        className,
-      )}
-    >
+    <IconTile>
       <Icon />
-    </span>
+    </IconTile>
   );
 }

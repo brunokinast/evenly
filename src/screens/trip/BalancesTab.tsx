@@ -3,8 +3,9 @@ import { ArrowRight, CircleCheck, FileDown } from "lucide-react";
 import { showToast } from "@/app/toast";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
-import { GroupHeader, ListGroup, Row } from "@/components/List";
+import { GroupHeader, IconTile, ListGroup, Row } from "@/components/List";
 import { balances, settlements, totalSpent, type Payment } from "@/domain/balances";
+import { byListOrder } from "@/domain/members";
 import { locale, money, t } from "@/i18n";
 import { cn } from "@/lib/cn";
 import { label, who } from "./labels";
@@ -15,19 +16,20 @@ export function BalancesTab({ view }: { view: TripView }) {
   const { trip, expenses } = view;
   const cur = trip.currency;
   const [exporting, setExporting] = useState(false);
-  const { bal, pays, order } = useMemo(() => {
+  const { bal, pays } = useMemo(() => {
     const order = trip.members.map((m) => m.id);
     const bal = balances(order, expenses);
-    return { bal, pays: settlements(bal, order), order };
-  }, [trip.members, expenses]);
+    // BAL-8: payments in the MEM-6 order of the payer, then of the receiver.
+    const by = byListOrder(view.listed);
+    const pays = settlements(bal, order).sort((a, b) => by(a.from, b.from) || by(a.to, b.to));
+    return { bal, pays };
+  }, [trip.members, expenses, view.listed]);
 
   const total = totalSpent(expenses);
   const mine = pays.filter((p) => p.from === view.myMemberId || p.to === view.myMemberId);
   const others = pays.filter((p) => p.from !== view.myMemberId && p.to !== view.myMemberId);
-  // BAL-6: highest "gets back" first; former members (still in old expenses) after members.
-  const rows = [...bal.keys()].sort(
-    (a, b) => bal.get(b)! - bal.get(a)! || order.indexOf(a) - order.indexOf(b),
-  );
+  // BAL-6: the MEM-6 order; former members (still in old expenses) after members.
+  const rows = [...bal.keys()].sort(byListOrder(view.listed));
 
   async function exportPdf() {
     setExporting(true);
@@ -119,7 +121,8 @@ export function BalancesTab({ view }: { view: TripView }) {
 
       <Button
         variant="quiet"
-        className="min-h-10 self-center px-3 text-caption [&_svg]:size-[18px]"
+        size="sm"
+        className="self-center"
         busy={exporting}
         onClick={() => void exportPdf()}
       >
@@ -132,7 +135,7 @@ export function BalancesTab({ view }: { view: TripView }) {
 
 function Stat({ k, v }: { k: string; v: string }) {
   return (
-    <div className="flex min-w-0 flex-col gap-0.5 rounded-[14px] border border-border bg-surface px-3 py-2.5">
+    <div className="flex min-w-0 flex-col gap-0.5 rounded-card border border-border bg-surface px-3 py-2.5">
       <span className="truncate text-tag font-normal text-fg-muted">{k}</span>
       <span className="truncate text-[17px] leading-6 font-bold">{v}</span>
     </div>
@@ -141,9 +144,9 @@ function Stat({ k, v }: { k: string; v: string }) {
 
 function CheckTile() {
   return (
-    <span className="grid size-8 shrink-0 place-items-center rounded-[9px] bg-accent-soft text-accent-text">
-      <CircleCheck className="size-[18px]" aria-hidden />
-    </span>
+    <IconTile small>
+      <CircleCheck />
+    </IconTile>
   );
 }
 

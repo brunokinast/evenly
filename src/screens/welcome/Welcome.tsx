@@ -1,5 +1,6 @@
 import { useId } from "react";
-import { ArrowRight, LoaderCircle } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { SubmitField } from "@/components/SubmitField";
 import { checkName } from "@/domain/names";
 import { t } from "@/i18n";
 import { cn } from "@/lib/cn";
@@ -24,34 +25,22 @@ export function Welcome() {
         <label htmlFor={id} className="mt-8 mb-2 text-caption font-semibold text-fg-muted">
           {t("welcome.title")}
         </label>
-        <div className="relative w-full">
-          <input
-            id={id}
-            autoFocus
-            autoComplete="given-name"
-            autoCapitalize="words"
-            enterKeyHint="go"
-            value={form.value}
-            onChange={form.onChange}
-            aria-invalid={form.error ? true : undefined}
-            aria-describedby={`${id}-note`}
-            className={cn(
-              "h-14 w-full rounded-full border border-border bg-surface pr-16 pl-5 text-body text-fg shadow-sm",
-              "placeholder:text-fg-muted focus:border-accent focus:outline-none",
-              form.error && "border-negative",
-            )}
-          />
-          <button
-            type="submit"
-            aria-label={t("common.continue")}
-            className={cn(
-              "absolute top-1/2 right-1.5 grid size-11 -translate-y-1/2 place-items-center rounded-full transition-colors [&_svg]:size-5",
-              ready ? "bg-accent text-accent-fg active:brightness-95" : "bg-surface-2 text-fg-muted",
-            )}
-          >
-            {form.busy ? <LoaderCircle className="animate-spin" aria-hidden /> : <ArrowRight aria-hidden />}
-          </button>
-        </div>
+        <SubmitField
+          id={id}
+          autoFocus
+          tall
+          autoComplete="given-name"
+          autoCapitalize="words"
+          enterKeyHint="go"
+          value={form.value}
+          onChange={form.onChange}
+          invalid={!!form.error}
+          aria-describedby={`${id}-note`}
+          submitLabel={t("common.continue")}
+          icon={<ArrowRight aria-hidden />}
+          ready={ready}
+          busy={form.busy}
+        />
         <p
           id={`${id}-note`}
           role={form.error ? "alert" : undefined}

@@ -8,7 +8,7 @@ An expense records that one member paid an amount on behalf of some members (the
 
 ## Flows
 
-1. **Expense list** (trip screen): grouped by date, newest first by date and time. Each item shows the payer (as their avatar), the description and the amount, plus a second line with the time and the split ("Split between all", "Split between <n>" or "Custom split"). The total spent is shown at the top. Tapping an item opens its details.
+1. **Expense list** (trip screen): grouped by date, newest first by date and time. Each item shows the payer (as their avatar), the description and the amount, plus a second line with the time and the split ("Split between all", "Split between <n>" or "Custom split"). The total spent is shown at the top, centered and large, with the number of expenses under it. Tapping an item opens its details.
 2. **Expense details**: the description, amount, date and time, who paid, each participant's share and the current user's share ("Your share X" or "You're not in this split"). An Edit button opens the edit screen.
 3. **Add expense** (one screen): opens with the **amount field focused and the numeric keyboard up**.
    - Amount → description ("What was it for?") → Save. That's the whole typical flow.

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Copy, LoaderCircle, Share2 } from "lucide-react";
 import { useOnline } from "@/app/online";
 import { showToast } from "@/app/toast";
-import { Button } from "@/components/Button";
+import { Button, ButtonRow } from "@/components/Button";
 import { Sheet } from "@/components/Sheet";
 import { createInvite } from "@/data/commands";
 import type { Trip } from "@/domain/types";
@@ -78,9 +78,8 @@ function InviteBody({ trip }: { trip: Trip }) {
       ) : (
         <LoaderCircle className="mx-auto my-4 size-8 animate-spin text-fg-muted" aria-hidden />
       )}
-      <div className="flex gap-2.5">
+      <ButtonRow>
         <Button
-          className="flex-1"
           disabled={!code || busy}
           onClick={() =>
             navigator.clipboard
@@ -94,7 +93,6 @@ function InviteBody({ trip }: { trip: Trip }) {
         </Button>
         <Button
           variant="primary"
-          className="flex-1"
           disabled={!code || busy}
           onClick={() => {
             if (navigator.share) void navigator.share({ text: shareText }).catch(() => {});
@@ -104,7 +102,7 @@ function InviteBody({ trip }: { trip: Trip }) {
           <Share2 aria-hidden />
           {t("invite.share")}
         </Button>
-      </div>
+      </ButtonRow>
       <Button variant="quiet" disabled={busy || !online} onClick={() => void generate()}>
         {failed ? t("common.tryAgain") : t("invite.new")}
       </Button>

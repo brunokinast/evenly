@@ -6,7 +6,7 @@ import { MoneyInput } from "@/components/MoneyInput";
 import { Segmented } from "@/components/Segmented";
 import { Sheet } from "@/components/Sheet";
 import { dayKey, fromKeys, timeKey } from "@/domain/dates";
-import type { Person } from "@/domain/members";
+import { listOrder, type Person } from "@/domain/members";
 import { formatPlain } from "@/domain/money";
 import { customShares } from "@/domain/split";
 import type { Trip } from "@/domain/types";
@@ -15,6 +15,12 @@ import { cn } from "@/lib/cn";
 
 type Common = { trip: Trip; people: Map<string, Person>; myId: string };
 const nameOf = (p: Common, id: string) => (id === p.myId ? t("common.you") : (p.people.get(id)?.name ?? ""));
+/** MEM-6: me first, then join order. */
+const listed = (p: Common) =>
+  listOrder(
+    p.trip.members.map((m) => m.id),
+    p.myId,
+  ).map((id) => p.trip.members.find((m) => m.id === id)!);
 
 function Checkmark({ on, box }: { on: boolean; box?: boolean }) {
   return (
@@ -22,7 +28,7 @@ function Checkmark({ on, box }: { on: boolean; box?: boolean }) {
       aria-hidden
       className={cn(
         "grid size-6 shrink-0 place-items-center border-2 border-border",
-        box ? "rounded-[7px]" : "rounded-full",
+        box ? "rounded-[6px]" : "rounded-full",
         on && "border-accent bg-accent text-accent-fg",
       )}
     >
@@ -38,14 +44,14 @@ export function PayerSheet(
   return (
     <Sheet open={p.open} onClose={p.onClose} title={t("form.paidBy")}>
       <div role="radiogroup" aria-label={t("form.paidBy")} className="flex flex-col">
-        {p.trip.members.map((m) => (
+        {listed(p).map((m) => (
           <button
             key={m.id}
             type="button"
             role="radio"
             aria-checked={p.value === m.id}
             onClick={() => p.onPick(m.id)}
-            className="flex min-h-14 w-full items-center gap-3 rounded-xl px-1 text-left active:bg-surface-2"
+            className="flex min-h-14 w-full items-center gap-3 rounded-ctl px-1 text-left active:bg-surface-2"
           >
             <Avatar id={m.id} name={m.name} guest={p.people.get(m.id)?.guest} />
             <span className="min-w-0 flex-1 truncate text-row">{nameOf(p, m.id)}</span>
@@ -106,7 +112,7 @@ export function SplitSheet(p: SplitProps) {
       />
       {p.custom && <p className="text-caption text-fg-muted">{t("form.customHint")}</p>}
       <div className="flex flex-col">
-        {p.trip.members.map((m) => {
+        {listed(p).map((m) => {
           const on = p.parts.includes(m.id);
           const name = nameOf(p, m.id);
           return (
@@ -116,7 +122,7 @@ export function SplitSheet(p: SplitProps) {
                 role="checkbox"
                 aria-checked={on}
                 onClick={() => toggle(m.id)}
-                className="flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-xl text-left active:bg-surface-2"
+                className="flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-ctl text-left active:bg-surface-2"
               >
                 <Checkmark on={on} box />
                 <Avatar id={m.id} name={m.name} size="sm" guest={p.people.get(m.id)?.guest} />

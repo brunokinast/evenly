@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Receipt } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
-import { EmptyState, GroupHeader, ListGroup, Row } from "@/components/List";
+import { EmptyState, GroupHeader, IconTile, ListGroup, Row } from "@/components/List";
 import { totalSpent } from "@/domain/balances";
 import { groupByDay } from "@/domain/dates";
 import { dayLabel, money, t, timeLabel, tn } from "@/i18n";
+import { cn } from "@/lib/cn";
 import { ExpenseDetailsSheet } from "./ExpenseDetailsSheet";
 import { label, splitLabel, who } from "./labels";
 import type { TripView } from "./TripScreen";
@@ -17,22 +18,26 @@ export function ExpensesTab({ view }: { view: TripView }) {
     return (
       <EmptyState
         icon={
-          <span className="grid size-11 place-items-center rounded-xl bg-accent-soft text-accent-text">
-            <Receipt className="size-6" aria-hidden />
-          </span>
+          <IconTile>
+            <Receipt />
+          </IconTile>
         }
         text={t("expenses.empty")}
       />
     );
   }
   const open = expenses.find((e) => e.id === openId) ?? null;
+  // APP-8: a long total steps down a size instead of breaking inside the number.
+  const total = money(totalSpent(expenses), trip.currency);
   return (
     <>
-      <div className="flex flex-col gap-0.5 px-1 pt-1">
-        <span className="text-caption text-fg-muted">
-          {t("expenses.total")} · {tn("expenses.count", expenses.length)}
+      {/* specs/design.md "Trip total". */}
+      <div className="flex flex-col items-center px-1 pt-2 pb-1 text-center">
+        <span className="text-caption text-fg-muted">{t("expenses.total")}</span>
+        <span className={cn("whitespace-nowrap", total.length > 11 ? "text-total" : "text-amount")}>
+          {total}
         </span>
-        <span className="text-total">{money(totalSpent(expenses), trip.currency)}</span>
+        <span className="text-caption text-fg-muted">{tn("expenses.count", expenses.length)}</span>
       </div>
       {groupByDay(expenses).map((group) => (
         <section key={group.day}>

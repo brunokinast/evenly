@@ -18,7 +18,7 @@ Members are the people expenses are split between. A member is either an **app u
 - **MEM-3** An app-user member's name always shows their current display name.
 - **MEM-4** When two members show the same name, they're told apart: "(You)" for the current user, the guest tag for guests, otherwise a short distinguishing suffix.
 - **MEM-5** Given an app-user member leaves or is removed, then they become a guest with their current name, keeping their place in the list, their expenses and their balance. The owner can remove a guest only if the guest isn't in any expense; otherwise the UI explains why ("Remove them from expenses first").
-- **MEM-6** Members are listed in the order they joined; the owner is first.
+- **MEM-6** Wherever people are listed (Members tab, balances, payments, expense details, the payer and split pickers, the PDF), the current user comes first, then everyone else in the order they joined (so the owner leads the rest). The order is the same in every list.
 - **MEM-7** Given a joining user claims guest G, then G becomes that user: every expense involving G now shows the user, and G no longer appears as a guest. Claiming is optional and each guest can be claimed once.
 - **MEM-8** The owner can't leave their own trip (they can delete it instead).
 - **MEM-9** Given a member leaves or is removed, the trip disappears live from their Home and they lose access immediately.

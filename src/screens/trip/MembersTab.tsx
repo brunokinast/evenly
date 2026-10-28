@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronRight, UserPlus } from "lucide-react";
+import { ChevronRight, Plus, UserPlus, Users } from "lucide-react";
 import { useOnline } from "@/app/online";
 import { showToast } from "@/app/toast";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { ConfirmSheet } from "@/components/ConfirmSheet";
-import { GroupHeader, ListGroup, Row, Tag } from "@/components/List";
+import { GroupHeader, IconTile, ListGroup, Row, Tag } from "@/components/List";
+import { SubmitField } from "@/components/SubmitField";
 import { Sheet } from "@/components/Sheet";
 import { addGuest, removeMember } from "@/data/commands";
 import { checkGuestName } from "@/domain/members";
@@ -25,27 +26,33 @@ export function MembersTab({ view, onInvite, focusGuest }: Props) {
   return (
     <>
       {isOwner && trip.members.length === 1 && (
-        <div className="flex items-center gap-3 rounded-card bg-accent-soft p-3.5">
-          <span className="min-w-0 flex-1 text-caption">
-            <strong className="block text-row">{t("members.inviteTitle")}</strong>
-            {t("members.inviteBody")}
-          </span>
-          <Button variant="primary" onClick={onInvite} className="shrink-0">
+        // specs/design.md "Invite card": secondary, since Add expense is the screen's one primary.
+        <section className="flex flex-col gap-3 rounded-card border border-border bg-surface p-3.5">
+          <div className="flex items-center gap-3">
+            <IconTile>
+              <Users />
+            </IconTile>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-row">{t("members.inviteTitle")}</h2>
+              <p className="text-caption text-fg-muted">{t("members.inviteBody")}</p>
+            </div>
+          </div>
+          <Button onClick={onInvite}>
             <UserPlus aria-hidden />
             {t("trip.invite")}
           </Button>
-        </div>
+        </section>
       )}
       <section>
         <GroupHeader>{tn("members.count", trip.members.length)}</GroupHeader>
         <ListGroup>
-          {trip.members.map((m) => {
-            const p = view.people.get(m.id)!;
+          {view.listed.map((id) => {
+            const p = view.people.get(id)!;
             const tappable = isOwner && !p.me;
             return (
               <Row
-                key={m.id}
-                leading={<Avatar id={m.id} name={m.name} guest={p.guest} />}
+                key={id}
+                leading={<Avatar id={id} name={p.name} guest={p.guest} />}
                 title={
                   <>
                     {p.name}
@@ -55,7 +62,7 @@ export function MembersTab({ view, onInvite, focusGuest }: Props) {
                   </>
                 }
                 trailing={tappable && <ChevronRight className="size-5 shrink-0 text-fg-muted" aria-hidden />}
-                onClick={tappable ? () => setSelected(m.id) : undefined}
+                onClick={tappable ? () => setSelected(id) : undefined}
               />
             );
           })}
@@ -79,6 +86,7 @@ function AddGuest({ view, focus }: { view: TripView; focus: number }) {
   }, [focus]);
 
   async function submit() {
+    if (!online) return; // APP-6
     const check = checkGuestName(name, view.trip.members);
     if (!check.ok) {
       const key =
@@ -100,26 +108,24 @@ function AddGuest({ view, focus }: { view: TripView; focus: number }) {
         void submit();
       }}
     >
-      <div className="flex gap-2">
-        <input
-          ref={input}
-          value={name}
-          onChange={(e) => {
-            setName(e.target.value);
-            setError(null);
-          }}
-          placeholder={t("members.guestName")}
-          aria-label={t("members.guestName")}
-          aria-invalid={error ? true : undefined}
-          autoComplete="off"
-          autoCapitalize="words"
-          enterKeyHint="done"
-          className="min-h-12 w-full min-w-0 rounded-ctl border border-transparent bg-surface-2 px-3.5 text-body placeholder:text-fg-muted focus:border-accent focus:outline-none"
-        />
-        <Button type="submit" disabled={!online} className="shrink-0">
-          {t("common.add")}
-        </Button>
-      </div>
+      <SubmitField
+        ref={input}
+        value={name}
+        onChange={(e) => {
+          setName(e.target.value);
+          setError(null);
+        }}
+        placeholder={t("members.guestName")}
+        aria-label={t("members.guestName")}
+        invalid={!!error}
+        autoComplete="off"
+        autoCapitalize="words"
+        enterKeyHint="done"
+        submitLabel={t("common.add")}
+        icon={<Plus aria-hidden />}
+        ready={name.trim().length > 0}
+        submitDisabled={!online}
+      />
       {error && (
         <p role="alert" className="text-caption text-negative">
           {error}

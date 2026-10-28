@@ -47,5 +47,6 @@ Any feature, bug or change request goes through the `change-workflow` skill (`.c
 - e2e: `playwright.config.ts` starts the emulators and dev server itself; each test is a fresh browser = a fresh anonymous user. Tests run with reduced motion so screenshots never catch a sheet mid-slide.
 - Sheets add one history entry (Android back). Navigating away from a sheet must use `navigate(url, { replace: true })`, or back lands on the stale entry. `ExpenseForm` leaves with `history.back()` when opened from the trip (`state.fromTrip`).
 - PDF export is lazy (`import("./exportPdf")`); its chunks are listed in `ON_DEMAND` in `scripts/check-bundle-size.mjs`. New on-demand code must be added there.
-- Rules tests reuse a Firestore emulator already running on :8080 (e.g. the LAN preview); otherwise they start one.
+- Rules tests reuse a Firestore emulator already running on :8080 (e.g. the LAN preview); otherwise they start one. They use project `demo-evenly-rules` so `clearFirestore()` never wipes the preview's `demo-evenly` data. Scripts that join the demo trip must remove themselves after (`seed-demo.mjs --remove-name`).
+- People lists use `view.listed` (MEM-6: me first, then join order); computations keep `trip.members` order. Button pairs go in `ButtonRow`; one-field forms use `SubmitField`.
 - TypeScript is pinned to 6.0 (typescript-eslint support); Firebase JS SDK to 12 (Capacitor Firebase plugins).

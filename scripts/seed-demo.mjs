@@ -3,6 +3,8 @@
 // guests to claim, and a few days of expenses (equal and custom splits).
 //   node scripts/seed-demo.mjs          → adds it if missing
 //   node scripts/seed-demo.mjs --reset  → rewrites it (removes anyone who joined)
+//   node scripts/seed-demo.mjs --remove-name "<name>"  → removes members with that name who aren't in
+//     any expense (the e2e test cleans up after itself this way)
 import { initializeTestEnvironment } from "@firebase/rules-unit-testing";
 import { doc, getDoc, setDoc, writeBatch, collection, getDocs } from "firebase/firestore";
 
@@ -17,6 +19,28 @@ const env = await initializeTestEnvironment({
 
 await env.withSecurityRulesDisabled(async (ctx) => {
   const db = ctx.firestore();
+  const removeAt = process.argv.indexOf("--remove-name");
+  if (removeAt > 0) {
+    const name = process.argv[removeAt + 1];
+    const trip = (await getDoc(doc(db, `trips/${TRIP}`))).data();
+    if (!trip) return;
+    const used = new Set();
+    for (const e of (await getDocs(collection(db, `trips/${TRIP}/expenses`))).docs) {
+      used.add(e.data().payerId);
+      Object.keys(e.data().shares).forEach((id) => used.add(id));
+    }
+    const gone = Object.entries(trip.members).filter(([id, m]) => m.name === name && !used.has(id));
+    for (const [id, m] of gone) {
+      delete trip.members[id];
+      if (m.uid) {
+        delete trip.memberIdsByUid[m.uid];
+        trip.memberUids = trip.memberUids.filter((u) => u !== m.uid);
+      }
+    }
+    await setDoc(doc(db, `trips/${TRIP}`), trip);
+    console.log(`Removed ${gone.length} "${name}" from the demo trip.`);
+    return;
+  }
   const reset = process.argv.includes("--reset");
   if (!reset && (await getDoc(doc(db, `trips/${TRIP}`))).exists()) {
     console.log(`Demo trip already there. Join it with code ${DEMO_CODE}.`);

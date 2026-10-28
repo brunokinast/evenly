@@ -36,7 +36,7 @@ There is no user profile collection. The display name lives in the Firebase Auth
 
 - **memberId** is an opaque random ID. Expenses reference members by memberId, never by uid. So claiming a guest (MEM-7) is just "attach a uid to the guest's entry", and leaving (MEM-5) is "detach the uid": the entry becomes a guest with the same name. No expense ever changes.
 - `members[m].name` is the guest's name, or for app users a **copy** of their Auth display name. Renaming updates every copy in one batch (ID-5).
-- Member order (MEM-6) = `joinedAt` ascending; the owner joined first. A claimed guest keeps its original `joinedAt`.
+- Member order = `joinedAt` ascending; the owner joined first. Screens show the current user first, then this order (MEM-6); computations (BAL-2) use this order as stored. A claimed guest keeps its original `joinedAt`.
 - Invariant (rule-checked on every write): `memberUids` as a set == keys of `memberIdsByUid`, and `ownerUid` is in it.
 
 ### `trips/{tripId}/expenses/{expenseId}`

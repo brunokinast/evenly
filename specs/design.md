@@ -39,7 +39,7 @@ All text meets WCAG AA (4.5:1) on its background in both themes. Text never uses
 
 | Role                                            | Size / line height | Weight |
 | ----------------------------------------------- | ------------------ | ------ |
-| Amount display (Add expense)                    | 44 / 52            | 700    |
+| Amount display (Add expense, trip total)        | 44 / 52            | 700    |
 | Screen title                                    | 24 / 30            | 700    |
 | Section total (e.g. "Total spent")              | 28 / 34            | 700    |
 | Row title, button                               | 16 / 22            | 600    |
@@ -52,7 +52,7 @@ Inputs are never smaller than 16px (prevents iOS zoom on focus).
 ### Spacing, radius, elevation
 
 - Spacing on a 4px grid: 4, 8, 12, 16, 24, 32. Screen side padding 16.
-- Radius: 10 (buttons, inputs, chips), 16 (cards, list groups), 24 (sheet top corners), full (avatars, tags).
+- Radius: 10 (labeled buttons, inputs, chips, icon tiles, code boxes), 16 (cards, list groups, stat tiles), 24 (sheet top corners), full (avatars, tags, choice pills, icon-only buttons, the floating Add button). Small inner shapes: 6 (checkboxes), 7 (segments inside a segmented control, following its curve). No other radii.
 - Elevation: flat by default. Only sheets, the floating Add button and toasts cast a shadow. Lists are grouped on one `--surface` card with dividers, not a card per row.
 
 ## Layout and mobile patterns
@@ -61,20 +61,24 @@ Inputs are never smaller than 16px (prevents iOS zoom on focus).
 - **Safe areas**: top bar and bottom bars pad by `env(safe-area-inset-*)`; `viewport-fit=cover`.
 - **Tap targets** at least 48×48px; rows are full-width tap targets.
 - **Long text** (APP-8): one line with an ellipsis in rows, top bars, tabs and pills (`min-width: 0` on flex children); wraps in sheet headers and details. Layout must hold at 320px wide with 50-character names.
-- **Top bar**: back (chevron) left, title, then actions right. Home: profile avatar. Trip: an **Invite** button (owner only, labeled, never hidden in a menu) and the "⋯" menu for the rarer owner actions. No hamburger menus.
-- **Bottom action bar** (Home): "Join trip" (secondary) and "New trip" (primary) side by side, always reachable by thumb.
+- **Top bar**: Home: the screen title left, profile avatar right. Trip: **two rows**. The first has back (chevron) on the left and, on the right, an **Invite** button (owner only, small, labeled, never hidden in a menu) and the "⋯" menu. The second has the trip icon tile and the trip name in the screen-title size; a long name wraps to two lines, then ends with an ellipsis. Add/Edit expense: close (✕), a compact title, and Delete when editing. No hamburger menus.
+- **Bottom action bar** (Home): "Join trip" (secondary) and "New trip" (primary) side by side, always reachable by thumb. When either label doesn't fit on one line (long translations, small phones), they stack full-width with New trip at the bottom. The same applies to every pair of buttons in the app.
 - **Bottom tab bar** (Trip only): Expenses · Balances · Members. Labels always visible; active tab = `--fg` label with a marigold pill behind the icon.
 - **Add expense button**: floating, bottom-right above the tab bar, marigold, "+ Add expense". Visible on every Trip tab, since adding an expense is the most common action.
 - **Bottom sheets** for small choices and short forms (payer, split, date, invite code, profile, join, trip menu, new trip): drag handle, title, content, max 85% height, dismiss by tapping the backdrop or swiping down. The sheet keeps focus inside while open. An open sheet **updates in place** when something inside it changes (toggling a person, switching split mode); it never closes and reopens. Single-choice pickers (payer, date) close on pick.
 - **Full screens** only for Add/Edit expense (needs the keyboard and the whole screen) and Welcome.
 - **Keyboard first**: screens with a text input focus it on open (EXP-9, TRIP-10, ID-8, INV-3).
+- **The keyboard closes once typing is done**: a sheet without a text field takes focus off the field underneath (the pickers opened from Add expense), and Join drops the keyboard as soon as a code is found (INV-3). Fields meant for repeated entry (Add guest) keep it.
 - **The keyboard never covers the field being typed in.** The app shell's height follows the visible viewport (`interactive-widget=resizes-content` for Android, `visualViewport` for iOS), so bottom bars and sheets sit directly above the keyboard, and a focused field is scrolled into view.
 - **Offline banner** (APP-6): a slim `--fg` on `--surface-2` bar under the top bar, "You're offline. Changes will be possible when you reconnect." Network actions are disabled while it shows.
 
 ## Components
 
-- **Buttons**: primary (marigold fill, `--accent-fg` text), secondary (`--surface-2` fill), quiet (`--fg-muted` text only, for minor actions like "Generate a new code"), destructive (`--negative` text; filled only inside its confirmation). A disabled primary turns neutral (`--surface-2` fill, muted text), never a faded marigold. One primary per screen. Busy state: spinner replaces the label and the button is disabled (EXP-8).
+- **Buttons**: two sizes: standard (48px; every action in screens and sheets) and small (40px, caption-size semibold label; actions in a header: Invite in the trip bar, Edit in Expense details). Labeled buttons use the 10 radius; icon-only buttons are round; the floating Add button is fully rounded. A label is never cut: it fits on one line, or the buttons beside it stack (see Bottom action bar), and as a last resort it wraps. Variants: primary (marigold fill, `--accent-fg` text), secondary (`--surface-2` fill), quiet (`--fg-muted` text only, for minor actions like "Generate a new code"), destructive (`--negative` text; filled only inside its confirmation). A disabled primary turns neutral (`--surface-2` fill, muted text), never a faded marigold. One primary per screen (a sheet counts as its own screen). Busy state: spinner replaces the label and the button is disabled (EXP-8).
+- **Text field**: one style everywhere: `--surface-2` fill, no border until focused (marigold border), red border on error, 48px tall (56px on Welcome), 10 radius, 16px text. A visible label above when a form has more than one field; otherwise the placeholder names it (the label stays for screen readers). Placeholders are short enough to never be cut.
+- **Field with a submit button**: for one-field forms that are the whole screen or are submitted over and over (Welcome name, Add guest): the field with a round icon button inside its right edge (44px on Welcome, 40px elsewhere) (→ "Continue" on Welcome, + "Add" on Add guest), neutral until the input is valid, marigold once it is. Enter submits too.
 - **List row**: leading avatar or icon tile (40px), title + caption, trailing amount or chevron. Divider inset to the text.
+- **Trip total** (top of the Expenses tab): centered: "Total spent" caption, the amount in the amount-display size (the section-total size when it's long, so it never breaks), and "6 expenses" under it.
 - **Expense row** (compact, always two lines): payer's small avatar (the only payer cue; screen readers get "Paid by <name>"), description, amount, and a caption with the time and split: "8:15 PM · Split between all" (or "Split between 3", "Custom split"). Grouped under date headers (Today, Yesterday, then dates); ordered newest first by date and time. Tapping a row opens **Expense details**.
 - **Expense details** (bottom sheet, for reading): header with the description and "<date>, <time>", and a small secondary **Edit** button top-right (opens the edit screen). Below, the amount large and left-aligned, with a "Your share X" chip (or "You're not in this split"). Then one list of people with each share; the payer's row has a green "Paid X" caption (a payer outside the split is listed with "Not in split"). No primary button: the sheet is for reading.
 - **Trip icon tile**: 44px rounded square, `--accent-soft` fill, icon in `--accent-text`.
@@ -86,11 +90,13 @@ Inputs are never smaller than 16px (prevents iOS zoom on focus).
 - **Icon picker** (New trip): all 16 icons visible in a 6-column grid; no horizontal scrolling.
 - **Money input**: every amount field (the main amount and custom split amounts) works the same way: digits fill from the right in cents, the caret stays at the end, and the value is formatted as you type. In a custom split, fields not typed in show the person's automatic share as grey placeholder text; typing replaces it, and clearing the field returns to the automatic share.
 - **Code input** (Join): 6 boxes backed by one numeric input; paste fills all; auto-submits at 6 digits.
-- **Toast**: bottom, above bars, auto-hides after 3s, for confirmations ("Expense added") and notices ("Split reset to equal").
+- **Toast**: bottom, above the bars and above the floating Add button (never covering it), auto-hides after 3s, for confirmations ("Expense added") and notices ("Split reset to equal").
 - **Confirmation**: a bottom sheet with the consequence in plain words and the destructive button in `--negative`. The browser's `confirm()` is never used.
 - **Empty states**: centered vertically and horizontally in the free space; one short sentence of what to do plus the action button. No illustrations.
 - **Install card** (APP-7, Home empty state only): one `--surface` card under the empty-state text: a 44px tile with the `smartphone` icon, title "Get Evenly on your home screen", caption "Opens instantly, like any other app.", then a secondary button with the device's action ("Get the Android app", "Add to Home Screen" or "Install app") and a quiet "Not now". Secondary, not primary: New trip stays the screen's one primary action.
-- **Welcome** (first impression, ID-2, ID-8): one centered block in the visible space (it stays centered above the keyboard): the app icon (72px, rounded), "Welcome to Evenly" (screen title), a small "What's your name?" label, the name field (56px tall) with a round marigold → button inside its right edge (labeled "Continue"; neutral until the name has 2 characters; spinner while saving), and one caption below: "Friends see it in the trips you share. No account needed." An error replaces the caption. Enter submits too. No other buttons or links.
+- **Welcome** (first impression, ID-2, ID-8): one centered block in the visible space (it stays centered above the keyboard): the app icon (72px, rounded), "Welcome to Evenly" (screen title), a small "What's your name?" label, the name field (56px tall) as a field with a submit button (→, labeled "Continue"; marigold once the name has 2 characters; spinner while saving), and one caption below: "Friends see it in the trips you share. No account needed." An error replaces the caption. Enter submits too. No other buttons or links.
+- **"⋯" menu sheet**: the actions as one grouped list (like the Settings list): icon and label per 52px row; a destructive action in `--negative`, last.
+- **Invite card** (Members tab, owner alone in the trip): a `--surface` card with the people icon tile, "Invite your friends" and one line of explanation, then a secondary Invite button (the floating Add expense stays the screen's one primary).
 - **Profile sheet**: "Your name" field, Theme (System / Light / Dark segmented control, applies instantly), the Install app row (APP-3, when available), then a primary Done.
 - **Balances tab order**: stats row, "Your payments", member balances, "Other payments", Export as PDF. What you personally need to do comes first.
 - **Suggested payments**: two groups. "Your payments": what you pay (`--negative`) or receive (`--positive`), or "You're settled up". Then "Other payments" between other members, in neutral color, shown only if there are any.
@@ -104,6 +110,17 @@ Inputs are never smaller than 16px (prevents iOS zoom on focus).
 - **Remove member** (owner): tap a member row → member sheet → "Remove from trip". Removing an app user turns them into a guest, and the sheet says so. A guest who is in expenses can't be removed: the button is disabled and the sheet says why (MEM-5).
 - **Claim a guest** (MEM-7): in the Join sheet, under the trip preview: "Are you one of these? (optional)" with the guest names as choice pills; the button becomes "Join as <name>".
 - **Export as PDF**: end of the Balances tab.
+
+## PDF
+
+An A4 report in the light theme's token values (Helvetica, since the PDF can't use the app font):
+
+- **Header**: the app mark (marigold rounded square with "=") and "Evenly" in bold, "Trip summary" muted on the right; then the trip name (22pt bold, wraps) and "Created <date> · <currency> · <n> members · <n> expenses".
+- **Summary**: three tiles on `--surface-2`: Total spent, Per person, Expenses.
+- **Suggested payments**: "Ana → Bia" rows with the amount right-aligned, or "All settled! No payments needed."
+- **People**: a table in the MEM-6 order: name (with "Guest"), paid, share, balance ("Gets back" in `--positive`, "Owes" in `--negative`, "Settled" muted).
+- **Expenses**: a table oldest first: date (short, e.g. "26 Oct"), description, paid by, split ("All", "3 people", "Custom"), amount; thin dividers, long text ends with "…". Total row at the end.
+- **Footer** on every page: "Made with Evenly · <export date>" left, "Page x of y" right.
 
 ## Icons
 

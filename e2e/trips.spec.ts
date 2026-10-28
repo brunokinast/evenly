@@ -33,7 +33,7 @@ test("INV-1..7 MEM-1 MEM-7 TRIP-5 invite, preview, claim a guest and join live",
   await createTrip(ana, "Lisbon", "EUR");
 
   // MEM-1: the owner adds guests; the field stays focused for the next one.
-  const guestField = ana.getByRole("textbox", { name: "Add a guest by name" });
+  const guestField = ana.getByRole("textbox", { name: "Guest name" });
   await guestField.fill("Gus");
   await guestField.press("Enter");
   await expect(ana.getByRole("tabpanel").getByText("Gus")).toBeVisible();
@@ -58,6 +58,8 @@ test("INV-1..7 MEM-1 MEM-7 TRIP-5 invite, preview, claim a guest and join live",
   await expect(dialog.getByText("Lisbon")).toBeVisible();
   await expect(dialog.getByText("EUR")).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Gus" })).toBeVisible();
+  // INV-3: the code is done, so the keyboard closes.
+  await expect(bia.getByRole("textbox", { name: "Invite code" })).not.toBeFocused();
   await dialog.getByRole("button", { name: "Bea" }).click();
   await expect(dialog.getByRole("button", { name: "Join as Bea" })).toBeVisible();
   await bia.screenshot({ path: info.outputPath("join-preview.png") });
@@ -68,6 +70,10 @@ test("INV-1..7 MEM-1 MEM-7 TRIP-5 invite, preview, claim a guest and join live",
   await expect(ana.getByRole("tabpanel").getByText("Bia")).toBeVisible();
   await expect(ana.getByRole("tabpanel").getByText("Bea")).toBeHidden();
   await expect(ana.getByRole("heading", { name: "3 members" })).toBeVisible();
+  // MEM-6: everyone sees themself first, then join order (Bia took Bea's place, after Gus).
+  await expect(ana.getByRole("tabpanel")).toHaveText(/Ana[\s\S]*Gus[\s\S]*Bia/);
+  await tab(bia, "Members");
+  await expect(bia.getByRole("tabpanel")).toHaveText(/Bia[\s\S]*Ana[\s\S]*Gus/);
   await ana.screenshot({ path: info.outputPath("members-owner.png") });
 
   // TRIP-5: on Bia's Home right away.
@@ -94,8 +100,8 @@ test("EXP BAL expenses, details, custom split, edit, delete and balances, live f
   const ana = await newUser(browser, "Ana");
   const bia = await newUser(browser, "Bia");
   await createTrip(ana, "Porto", "USD");
-  await ana.getByRole("textbox", { name: "Add a guest by name" }).fill("Gus");
-  await ana.getByRole("textbox", { name: "Add a guest by name" }).press("Enter");
+  await ana.getByRole("textbox", { name: "Guest name" }).fill("Gus");
+  await ana.getByRole("textbox", { name: "Guest name" }).press("Enter");
   await expect(ana.getByRole("tabpanel").getByText("Gus")).toBeVisible();
   const code = await inviteCode(ana);
   await join(bia, code, "Porto");
@@ -121,6 +127,12 @@ test("EXP BAL expenses, details, custom split, edit, delete and balances, live f
   await tab(bia, "Balances");
   await expect(bia.getByText("You pay Ana")).toBeVisible();
   await expect(bia.getByText("Gus pays Ana")).toBeVisible();
+  // BAL-6: balances in the MEM-6 order, not by amount: You (Bia), then Ana, then Gus.
+  const balanceRows = bia
+    .getByRole("tabpanel")
+    .locator("section", { has: bia.getByRole("heading", { name: "Balances" }) })
+    .locator(":scope > div > *");
+  await expect(balanceRows).toHaveText([/You/, /Ana/, /Gus/]);
   await bia.screenshot({ path: info.outputPath("balances-bia.png") });
   await tab(ana, "Balances");
   await expect(ana.getByText("Bia pays you")).toBeVisible();
@@ -191,7 +203,8 @@ test("EXP-14 expenses are grouped by day, newest first, with a total", async ({ 
   await ana.getByRole("button", { name: "Save" }).click();
   await expect(ana.getByRole("heading", { name: "Today" })).toBeVisible();
   await expect(ana.getByRole("heading", { name: "Yesterday" })).toBeVisible();
-  await expect(ana.getByText("Total spent · 2 expenses")).toBeVisible();
+  await expect(ana.getByText("Total spent", { exact: true })).toBeVisible();
+  await expect(ana.getByText("2 expenses", { exact: true })).toBeVisible();
   await expect(ana.getByText("R$65.50")).toBeVisible();
   await ana.screenshot({ path: info.outputPath("expenses-list.png") });
 });
@@ -201,8 +214,8 @@ test("MEM-5 MEM-9 TRIP-11 TRIP-7 leave, remove, rename and delete, live", async 
   const bia = await newUser(browser, "Bia");
   const cai = await newUser(browser, "Cai");
   await createTrip(ana, "Rio");
-  await ana.getByRole("textbox", { name: "Add a guest by name" }).fill("Gus");
-  await ana.getByRole("textbox", { name: "Add a guest by name" }).press("Enter");
+  await ana.getByRole("textbox", { name: "Guest name" }).fill("Gus");
+  await ana.getByRole("textbox", { name: "Guest name" }).press("Enter");
   const code = await inviteCode(ana);
   await join(bia, code, "Rio");
   await join(cai, code, "Rio");
@@ -308,6 +321,15 @@ test.describe("in Portuguese", () => {
     await expect(page.getByRole("heading", { name: "Boas-vindas ao Evenly" })).toBeVisible();
     await page.getByRole("textbox", { name: "Qual é o seu nome?" }).fill("Ana");
     await page.keyboard.press("Enter");
+    // Button labels are never cut (design.md "Bottom action bar"): at 360px wide the Portuguese labels
+    // don't fit side by side, so the buttons stack.
+    await page.setViewportSize({ width: 360, height: 760 });
+    const joinBox = (await page.getByRole("button", { name: "Entrar na viagem" }).boundingBox())!;
+    const newBox = (await page.getByRole("button", { name: "Nova viagem" }).boundingBox())!;
+    expect(joinBox.y + joinBox.height).toBeLessThanOrEqual(newBox.y);
+    expect(joinBox.width).toBeCloseTo(newBox.width, 0);
+    await page.screenshot({ path: info.outputPath("home-pt.png") });
+    await page.setViewportSize({ width: 412, height: 839 });
     await page.getByRole("button", { name: "Nova viagem" }).click();
     // TRIP-3: PT-BR defaults to BRL.
     await expect(page.getByRole("button", { name: "BRL", exact: true })).toHaveAttribute(

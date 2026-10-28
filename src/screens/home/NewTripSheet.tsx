@@ -92,7 +92,7 @@ function NewTripForm() {
               aria-label={t(`icon.${id}`)}
               aria-pressed={icon === id}
               onClick={() => setIcon(id)}
-              className="grid h-12 min-w-0 place-items-center rounded-xl bg-surface-2 aria-pressed:bg-accent-soft aria-pressed:text-accent-text aria-pressed:outline-2 aria-pressed:-outline-offset-2 aria-pressed:outline-accent"
+              className="grid h-12 min-w-0 place-items-center rounded-ctl bg-surface-2 aria-pressed:bg-accent-soft aria-pressed:text-accent-text aria-pressed:outline-2 aria-pressed:-outline-offset-2 aria-pressed:outline-accent"
             >
               <Icon className="size-5" aria-hidden />
             </button>

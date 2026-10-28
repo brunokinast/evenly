@@ -171,6 +171,13 @@
     animation: none;
   }
 }
+:root {
+  --toast-bottom: 140px; /* above the bottom bars */
+}
+/* specs/design.md "Toast": above the floating Add button, never over it. */
+:root:has([data-fab]) {
+  --toast-bottom: calc(150px + env(safe-area-inset-bottom));
+}
 .toast {
   animation: fade-in 200ms ease-out;
 }

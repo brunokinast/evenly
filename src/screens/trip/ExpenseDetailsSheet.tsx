@@ -23,10 +23,10 @@ export function ExpenseDetailsSheet({
   const [, navigate] = useLocation();
   const e = expense;
   const cur = view.trip.currency;
-  // Members in trip order who are in the split or paid; former members after them.
+  // MEM-6 order: members in the split or who paid; former members after them.
   const ids = e
     ? [
-        ...view.trip.members.map((m) => m.id).filter((id) => id in e.shares || id === e.payerId),
+        ...view.listed.filter((id) => id in e.shares || id === e.payerId),
         ...[...Object.keys(e.shares), e.payerId].filter((id) => !view.people.has(id)),
       ].filter((id, i, all) => all.indexOf(id) === i)
     : [];
@@ -41,8 +41,7 @@ export function ExpenseDetailsSheet({
       action={
         e && (
           <Button
-            variant="secondary"
-            className="min-h-10 px-3 text-caption font-semibold [&_svg]:size-[18px]"
+            size="sm"
             onClick={() => void openExpenseForm(navigate, `/trip/${view.trip.id}/expense/${e.id}/edit`)}
           >
             <Pencil aria-hidden />
