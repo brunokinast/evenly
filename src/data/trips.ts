@@ -4,6 +4,7 @@ import { isWellFormed } from "@/domain/balances";
 import { sortMembers } from "@/domain/members";
 import type { Expense, Member, Trip } from "@/domain/types";
 import { FirebaseFirestore, firebaseReady } from "./firebase";
+import { launchTrips, saveTrips } from "./launchCopy";
 import { mark, source } from "@/lib/perf";
 import { peekLive, useLive, holdLive, type Live } from "./live";
 
@@ -88,8 +89,12 @@ export function useMyTrips(uid: string): Live<Trip[]> {
     () => lostVersion,
   );
   return useMemo(
-    () => (live.status === "ready" ? { status: "ready", data: withoutLost(live.data) } : live),
-    [live, version], // eslint-disable-line react-hooks/exhaustive-deps
+    () => {
+      if (live.status === "ready") return { status: "ready", data: withoutLost(live.data) };
+      const copy = live.status === "loading" ? launchTrips(uid) : null; // APP-10 (web), until the live list
+      return copy ? { status: "ready", data: copy } : live;
+    },
+    [live, version, uid], // eslint-disable-line react-hooks/exhaustive-deps
   );
 }
 
@@ -129,7 +134,9 @@ function useMyTripsQuery(uid: string): Live<Trip[]> {
             if (s.metadata?.hasPendingWrites) unconfirmed.add(trip);
             return trip;
           });
-        emit({ status: "ready", data: trips.sort((a, b) => b.createdAt - a.createdAt) });
+        trips.sort((a, b) => b.createdAt - a.createdAt);
+        saveTrips(uid, trips); // APP-10: the next launch on the website shows this at once
+        emit({ status: "ready", data: trips });
       }),
     ),
   );

@@ -17,7 +17,7 @@ This is a clean-room rebuild. Never read, search or reference the old app (`../e
 
 - Spec first: a behavior change updates the spec (and gets the user's OK) before code; spec and code change in the same commit. Tests name the AC IDs they cover.
 - Only `src/data/` imports Firebase. `src/domain/` is pure TypeScript.
-- Everything on screen is live: data comes from the shared listener hooks in `src/data/`. No one-off reads for on-screen data, no manual caches, no writing to local state after a write.
+- Everything on screen is live: data comes from the shared listener hooks in `src/data/`. No one-off reads for on-screen data, no manual caches (one exception: the web launch copy of Home's list, ADR 0007), no writing to local state after a write.
 - Every write is one document or one batched write that the Security Rules validate. No Cloud Functions, no transactions.
 - Writes that change existing documents aren't awaited by screens (local-first, EXP-8/APP-9; `docs/architecture.md`); in `src/data/` use `FirebaseFirestore`/`FirebaseAuthentication` from `./firebase`, not from the plugin packages.
 - Money is integer cents; times are integer ms. Format with `Intl`, never by hand.

@@ -23,6 +23,18 @@ test("TRIP-1 TRIP-10 creating a trip stays on Home with it on top; Members shows
   await ana.screenshot({ path: info.outputPath("home-list.png") });
 });
 
+test("APP-10 the website shows the last trip list at once on reopening, before the login is confirmed", async ({
+  browser,
+}) => {
+  const ana = await newUser(browser, "Ana");
+  await createTrip(ana, "Lisbon");
+  await ana.getByRole("button", { name: "Back to your trips" }).click();
+  // The server never confirms the saved login: the trips still show, from the copy.
+  await ana.route("**/accounts:lookup*", () => {});
+  await ana.reload();
+  await expect(ana.getByRole("main").getByText("Lisbon")).toBeVisible({ timeout: 3000 });
+});
+
 test("TRIP-2 a trip name is required", async ({ browser }) => {
   const ana = await newUser(browser, "Ana");
   await ana.getByRole("button", { name: "New trip" }).click();

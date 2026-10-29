@@ -3,6 +3,7 @@ import type { User } from "@capacitor-firebase/authentication";
 import { renameMeInTrips } from "./commands";
 import { mark } from "@/lib/perf";
 import { FirebaseAuthentication, firebaseReady, nativeFirebase, usesEmulators } from "./firebase";
+import { confirmIdentity, launchIdentity } from "./launchCopy";
 import { myTripsForWrite } from "./trips";
 
 export type Session =
@@ -11,14 +12,19 @@ export type Session =
   | { status: "error" } // ID-6: couldn't create the identity
   | { status: "ready"; uid: string; name: string | null }; // name null → Welcome (ID-2)
 
-let session: Session = { status: "loading" };
+// APP-10 (web): start as the last visit's identity while Auth re-checks the saved login with the server.
+const early = launchIdentity();
+let session: Session = early ? { status: "ready", ...early } : { status: "loading" };
+if (early) mark("launch-copy");
+let authed = false;
 const listeners = new Set<() => void>();
 
 /** The first open's identity creation; the Welcome name waits for it before saving (ID-6). */
 let creating: Promise<void> | null = null;
 
 function set(next: Session) {
-  if (next.status === "ready" && session.status !== "ready") mark("auth-ready");
+  if (next.status === "ready" && !authed) mark("auth-ready");
+  authed ||= next.status === "ready";
   if (next.status === "ready") creating = null;
   session = next;
   listeners.forEach((l) => l());
@@ -43,13 +49,14 @@ async function signIn(firstOpen = false) {
 let listening = false;
 
 async function start() {
-  set({ status: "loading" });
+  if (!early) set({ status: "loading" });
   await firebaseReady;
   // The plugin holds the first auth state until a listener is attached, so a restored session (ID-4)
   // arrives here before we'd ever create a new identity.
   let heard = false;
   await FirebaseAuthentication.addListener("authStateChange", ({ user }) => {
     heard = true;
+    confirmIdentity(user?.uid ?? null, user?.displayName || null);
     if (user) set(fromUser(user));
     else void signIn(true);
   });
@@ -137,7 +144,10 @@ export async function setDisplayName(name: string): Promise<{ synced: Promise<vo
   }
   await FirebaseAuthentication.updateProfile({ displayName: name });
   const { user } = await FirebaseAuthentication.getCurrentUser();
-  if (user) set(fromUser(user));
+  if (user) {
+    confirmIdentity(user.uid, user.displayName || null);
+    set(fromUser(user));
+  }
   // APP-9: the Auth profile needs the server, but the trips' copies show at once and sync in the background;
   // `synced` settles when the server has them (the caller shows a notice if it refuses).
   return { synced: renameMeInTrips(await myTripsForWrite(myUid()), name) };

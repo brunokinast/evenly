@@ -58,6 +58,7 @@ Through the Capacitor Firebase plugins on every platform: `@capacitor-firebase/a
 - **Join preview**: looking up a code (`lookupInvite`) is a one-off read by design: the attempt must be counted first (INV-9), and the preview is only shown in the Join sheet.
 - **Writes** are plain async functions in `src/data/` (`createTrip`, `joinTrip`, `saveExpense`…). They don't update local state: the listener delivers the change, just as it does for other members. Screens show a busy state only for writes that wait (below), and errors.
 - **Local-first writes** (EXP-8, APP-9): Firestore applies a write to its local cache at once (listeners show it in a few ms) and syncs it in the background; the returned promise settles only when the server answers. So screens don't await writes that only change existing documents: they go on at once and `.catch` a refusal into a notice ("Couldn't save…"). Writes that need the server first still wait: creating a trip (it can't be opened before the server has it), joining, invite codes, deleting a trip (reads the expenses on the server first).
+- **Web launch copy** (APP-10, ADR 0007): `launchCopy.ts` keeps my uid, name and Home's list in localStorage on the web; the session and Home start from it while Auth re-checks the login, and Auth's answer confirms or discards it.
 - **Warm listeners**: `warmLive` starts a key's shared listener before a screen uses it (Home starts a trip's listeners on touch-down, F6); unused, it ends after the usual idle time.
 
 ## Domain logic (`src/domain/`)
