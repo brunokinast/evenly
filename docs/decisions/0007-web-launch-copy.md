@@ -17,3 +17,5 @@ On every launch the Firebase Auth JS SDK re-checks the stored user with the serv
 - Trips show on the website as soon as the code runs (~0.2 s on a slow phone in the lab instead of ~0.7 s).
 - For that moment the list can be stale (e.g. a trip I was just removed from); opening one waits for live data as usual, and the live list replaces the copy.
 - `localStorage` holds trip names and member names on the device, as Firestore's own offline cache already does.
+- Changes made before Auth answers use the copy's identity. If Auth then returns a different one (rare: the saved login was lost), the server refuses them and a notice says so (APP-9). Changing the name waits for Auth's answer.
+- The copy keeps only trips the server has confirmed: Home holds the listed trips' listeners (F9), and a listener on a trip the server doesn't have yet would be refused and the trip would look lost.

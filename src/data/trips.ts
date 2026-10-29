@@ -123,21 +123,27 @@ const myTripsQuery = (uid: string) => ({
 function useMyTripsQuery(uid: string): Live<Trip[]> {
   return useLive(`myTrips/${uid}`, (emit) =>
     listen(() =>
-      FirebaseFirestore.addCollectionSnapshotListener(myTripsQuery(uid), (event, error) => {
-        if (error || !event) return emit({ status: "gone" });
-        mark(`snapshot:trips:${source(event.snapshots[0]?.metadata)}`, event.snapshots.length);
-        const trips = event.snapshots
-          .filter((s) => s.data)
-          .map((s) => {
-            const trip = toTrip(s.id, s.data!);
-            rawOf.set(trip, rawJson(s.data));
-            if (s.metadata?.hasPendingWrites) unconfirmed.add(trip);
-            return trip;
-          });
-        trips.sort((a, b) => b.createdAt - a.createdAt);
-        saveTrips(uid, trips); // APP-10: the next launch on the website shows this at once
-        emit({ status: "ready", data: trips });
-      }),
+      FirebaseFirestore.addCollectionSnapshotListener(
+        // Metadata changes too: a new trip's server confirmation flips it to onServer (F9, APP-10 copy).
+        { ...myTripsQuery(uid), includeMetadataChanges: true },
+        (event, error) => {
+          if (error || !event) return emit({ status: "gone" });
+          mark(`snapshot:trips:${source(event.snapshots[0]?.metadata)}`, event.snapshots.length);
+          const trips = event.snapshots
+            .filter((s) => s.data)
+            .map((s) => {
+              const trip = toTrip(s.id, s.data!);
+              rawOf.set(trip, rawJson(s.data));
+              if (s.metadata?.hasPendingWrites) unconfirmed.add(trip);
+              return trip;
+            });
+          trips.sort((a, b) => b.createdAt - a.createdAt);
+          // APP-10: the next launch on the website shows this at once. Only trips the server has: a held listener
+          // on one it doesn't (created just before closing) would be refused and the trip would look lost.
+          saveTrips(uid, withoutLost(trips).filter(onServer));
+          emit({ status: "ready", data: trips });
+        },
+      ),
     ),
   );
 }

@@ -23,12 +23,18 @@ const listeners = new Set<() => void>();
 let creating: Promise<void> | null = null;
 /** Set while Welcome shows before the identity creation could start (F11): hands it the attempt once it does. */
 let settleCreating: ((attempt: Promise<void>) => void) | null = null;
+/** Auth restored a saved login while Welcome was showing for a "first open" (F11 guessed wrong): never rename it. */
+let restored = false;
+/** Resolves on Auth's first answer: before it, the web Auth SDK has no current user to update (APP-10). */
+let answered: () => void;
+const authAnswered = new Promise<void>((resolve) => (answered = resolve));
 
 function set(next: Session) {
   if (next.status === "ready" && !authed) mark("auth-ready");
   authed ||= next.status === "ready";
   if (next.status === "ready") creating = null;
   if (next.status !== "creating" && next.status !== "loading") {
+    restored ||= next.status === "ready" && !!settleCreating;
     settleCreating?.(next.status === "ready" ? Promise.resolve() : Promise.reject(new Error("setup failed")));
     settleCreating = null;
   }
@@ -63,8 +69,9 @@ let listening = false;
  * run) or, as a fallback, under "firebase:authUser:" keys; only the database list is read, nothing is opened.
  */
 async function certainlyFirstOpen(): Promise<boolean> {
-  if (nativeFirebase || !indexedDB?.databases) return false;
+  if (nativeFirebase) return false;
   try {
+    if (!indexedDB?.databases) return false;
     const stored = [localStorage, sessionStorage].some((s) =>
       Object.keys(s).some((k) => k.startsWith("firebase:authUser:")),
     );
@@ -90,6 +97,7 @@ async function start() {
   let heard = false;
   await FirebaseAuthentication.addListener("authStateChange", ({ user }) => {
     heard = true;
+    answered();
     confirmIdentity(user?.uid ?? null, user?.displayName || null);
     if (user) set(fromUser(user));
     else void signIn(true);
@@ -175,7 +183,10 @@ export async function setDisplayName(name: string): Promise<{ synced: Promise<vo
       set({ status: "error" }); // ID-6, shown now that the user continued
       throw e;
     }
+    // A saved, named login came back instead of a new identity: keep its name (the app moves on to Home).
+    if (restored && session.status === "ready" && session.name) return { synced: Promise.resolve() };
   }
+  if (!nativeFirebase) await authAnswered; // the native SDK has its user at once
   await FirebaseAuthentication.updateProfile({ displayName: name });
   const { user } = await FirebaseAuthentication.getCurrentUser();
   if (user) {
