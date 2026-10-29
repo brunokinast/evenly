@@ -48,6 +48,7 @@ Any feature, bug or change request goes through the `change-workflow` skill (`.c
 
 ## Gotchas
 
+- After deploying Firestore rules, check the output says `released rules firestore.rules to cloud.firestore`: on 2026-10-28 the rules were uploaded but never released, and the live database kept the old app's rules for a day.
 - Call `await firebaseReady` (`src/data/firebase.ts`) before any Firebase plugin call.
 - Tailwind colors are only the design tokens (`bg-surface`, `text-fg-muted`, …); default palette is disabled. Type roles: `text-amount|code|title|total|heading|row|body|caption|tag` (also listed in `src/lib/cn.ts` for tailwind-merge); no one-off sizes. Radii: `rounded-ctl|card|sheet`.
 - e2e: `playwright.config.ts` starts the emulators and dev server itself; each test is a fresh browser = a fresh anonymous user. Tests run with reduced motion so screenshots never catch a sheet mid-slide.

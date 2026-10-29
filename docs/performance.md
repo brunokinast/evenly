@@ -63,6 +63,22 @@ Web, typical trip (6 people, 40 expenses), slow network, CPU 4×, median of 3, m
 - **Web launch waits on Auth**: on start the Auth JS SDK always re-checks the stored user with the server (`accounts:lookup`, plus a token refresh when the saved token is over an hour old) before the first auth state, and Firestore waits for that user even to read its offline cache. The native SDKs don't (Android: auth-ready ~130 ms on the S25). **F10 done** (user OK, APP-10, ADR 0007): on the web, Home shows a copy of the last visit's list while Auth checks: returning launch → trips 735 → 384. Tapping a trip in the first ~0.4 s still waits for Auth (harness, which taps at once: trip 133 → ~440), so launch → trip open is about the same in total (~0.85 s); the list just shows sooner.
 - **F11 done**: on a first open the Firebase chunks were preloaded alongside the main chunk and shared the slow connection, so the name screen waited for all 318 kB. Now the preload is added only when the files are local (service worker or Android app), and Welcome shows before the Auth SDK has loaded when this browser has certainly never stored a login (no Auth IndexedDB database, no `firebase:authUser:` keys). First open → name screen 2270 → 1443; name → Home unchanged (~830). The harness now waits 2.5 s before typing the name (a real person's minimum; the identity is created meanwhile).
 
+## Real servers (2026-10-29)
+
+Live site (Hosting + Firestore in São Paulo), Chrome on this PC with the phone profile: CPU 4×, and either the PC's own connection or slow 4G on top. One test account, a "Perf test" trip with 12–20 expenses (deleted after), median of 4, ms:
+
+| Journey                                 | PC network | slow 4G |
+| --------------------------------------- | ---------: | ------: |
+| First open → name screen                |            |    1679 |
+| Name entered → Home                     |            |    1388 |
+| Create trip → listed on Home            |            |     566 |
+| Returning launch → trips on screen      |        346 |     352 |
+| Home → trip (held listeners, F9)        |         68 |      72 |
+| Add expense → form ready                |         31 |      30 |
+| Save → back on the trip, expense listed |         66 |      64 |
+
+All inside the targets; the real servers match the lab numbers. Returning launch doesn't depend on the network (the launch copy shows before any request). Name → Home is slower than the lab (~830) because creating the anonymous identity is a real round trip on slow 4G.
+
 ## Findings
 
 | #   | Where                                        | Cost (big, slow)                                    | Cause (evidence)                                                                                                                                                                                                                                        | Proposed fix                                                                                                                                                                           | Behavior change?                                                            |
