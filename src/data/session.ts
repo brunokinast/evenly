@@ -1,19 +1,43 @@
 import { useSyncExternalStore } from "react";
-import { FirebaseAuthentication, type User } from "@capacitor-firebase/authentication";
-import { Capacitor } from "@capacitor/core";
+import type { User } from "@capacitor-firebase/authentication";
 import { renameMeInTrips } from "./commands";
-import { firebaseReady, usesEmulators } from "./firebase";
+import { mark } from "@/lib/perf";
+import { FirebaseAuthentication, firebaseReady, nativeFirebase, usesEmulators } from "./firebase";
+import { confirmIdentity, launchIdentity } from "./launchCopy";
 import { myTripsForWrite } from "./trips";
 
 export type Session =
   | { status: "loading" }
+  | { status: "creating" } // ID-1 first open: the identity is being created; Welcome shows meanwhile (ID-6)
   | { status: "error" } // ID-6: couldn't create the identity
   | { status: "ready"; uid: string; name: string | null }; // name null → Welcome (ID-2)
 
-let session: Session = { status: "loading" };
+// APP-10 (web): start as the last visit's identity while Auth re-checks the saved login with the server.
+const early = launchIdentity();
+let session: Session = early ? { status: "ready", ...early } : { status: "loading" };
+if (early) mark("launch-copy");
+let authed = false;
 const listeners = new Set<() => void>();
 
+/** The first open's identity creation; the Welcome name waits for it before saving (ID-6). */
+let creating: Promise<void> | null = null;
+/** Set while Welcome shows before the identity creation could start (F11): hands it the attempt once it does. */
+let settleCreating: ((attempt: Promise<void>) => void) | null = null;
+/** Auth restored a saved login while Welcome was showing for a "first open" (F11 guessed wrong): never rename it. */
+let restored = false;
+/** Resolves on Auth's first answer: before it, the web Auth SDK has no current user to update (APP-10). */
+let answered: () => void;
+const authAnswered = new Promise<void>((resolve) => (answered = resolve));
+
 function set(next: Session) {
+  if (next.status === "ready" && !authed) mark("auth-ready");
+  authed ||= next.status === "ready";
+  if (next.status === "ready") creating = null;
+  if (next.status !== "creating" && next.status !== "loading") {
+    restored ||= next.status === "ready" && !!settleCreating;
+    settleCreating?.(next.status === "ready" ? Promise.resolve() : Promise.reject(new Error("setup failed")));
+    settleCreating = null;
+  }
   session = next;
   listeners.forEach((l) => l());
 }
@@ -22,30 +46,64 @@ function fromUser(user: User): Session {
   return { status: "ready", uid: user.uid, name: user.displayName || null };
 }
 
-async function signIn() {
-  set({ status: "loading" });
+/** ID-1. On a first open (`firstOpen`) Welcome shows while this runs, and a failure waits for Continue. */
+async function signIn(firstOpen = false) {
+  set({ status: firstOpen ? "creating" : "loading" });
+  const attempt = FirebaseAuthentication.signInAnonymously().then(() => {}); // authStateChange delivers the user
+  if (firstOpen && settleCreating) {
+    settleCreating(attempt);
+    settleCreating = null;
+  } else if (firstOpen) creating = attempt;
   try {
-    await FirebaseAuthentication.signInAnonymously(); // ID-1; authStateChange delivers the user
+    await attempt;
   } catch {
-    set({ status: "error" });
+    if (!firstOpen) set({ status: "error" });
   }
 }
 
 let listening = false;
 
+/**
+ * F11 (web): true only when this browser has certainly never stored a login, so Welcome can show before the
+ * Auth SDK has even downloaded. Firebase Auth keeps the user in this IndexedDB database (created on its first
+ * run) or, as a fallback, under "firebase:authUser:" keys; only the database list is read, nothing is opened.
+ */
+async function certainlyFirstOpen(): Promise<boolean> {
+  if (nativeFirebase) return false;
+  try {
+    if (!indexedDB?.databases) return false;
+    const stored = [localStorage, sessionStorage].some((s) =>
+      Object.keys(s).some((k) => k.startsWith("firebase:authUser:")),
+    );
+    if (stored) return false;
+    return !(await indexedDB.databases()).some((db) => db.name === "firebaseLocalStorageDb");
+  } catch {
+    return false;
+  }
+}
+
 async function start() {
-  set({ status: "loading" });
+  if (!early) set({ status: "loading" });
+  if (!early && (await certainlyFirstOpen()) && session.status === "loading") {
+    creating = new Promise((resolve, reject) => {
+      settleCreating = (attempt) => attempt.then(resolve, reject);
+    });
+    creating.catch(() => {}); // a failure is shown when the user continues (ID-6)
+    set({ status: "creating" });
+  }
   await firebaseReady;
   // The plugin holds the first auth state until a listener is attached, so a restored session (ID-4)
   // arrives here before we'd ever create a new identity.
   let heard = false;
   await FirebaseAuthentication.addListener("authStateChange", ({ user }) => {
     heard = true;
+    answered();
+    confirmIdentity(user?.uid ?? null, user?.displayName || null);
     if (user) set(fromUser(user));
-    else void signIn();
+    else void signIn(true);
   });
   listening = true;
-  if (Capacitor.isNativePlatform()) void afterReload(() => heard);
+  if (nativeFirebase) void afterReload(() => heard);
 }
 
 /**
@@ -117,9 +175,25 @@ export function myUid(): string {
  * ID-1..3, ID-5: saves the display name in the Auth profile, then its copies in my trips (one batch).
  * The Auth profile has no change listener, so this is the one place that re-reads after a write.
  */
-export async function setDisplayName(name: string) {
+export async function setDisplayName(name: string): Promise<{ synced: Promise<void> }> {
+  if (creating) {
+    try {
+      await creating;
+    } catch (e) {
+      set({ status: "error" }); // ID-6, shown now that the user continued
+      throw e;
+    }
+    // A saved, named login came back instead of a new identity: keep its name (the app moves on to Home).
+    if (restored && session.status === "ready" && session.name) return { synced: Promise.resolve() };
+  }
+  if (!nativeFirebase) await authAnswered; // the native SDK has its user at once
   await FirebaseAuthentication.updateProfile({ displayName: name });
   const { user } = await FirebaseAuthentication.getCurrentUser();
-  if (user) set(fromUser(user));
-  await renameMeInTrips(await myTripsForWrite(myUid()), name);
+  if (user) {
+    confirmIdentity(user.uid, user.displayName || null);
+    set(fromUser(user));
+  }
+  // APP-9: the Auth profile needs the server, but the trips' copies show at once and sync in the background;
+  // `synced` settles when the server has them (the caller shows a notice if it refuses).
+  return { synced: renameMeInTrips(await myTripsForWrite(myUid()), name) };
 }

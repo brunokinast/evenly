@@ -15,3 +15,5 @@ node_modules/.tmp/
 .emulator-data/
 backups/
 .firebase/
+dist-perf/
+perf-results/

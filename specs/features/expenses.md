@@ -28,7 +28,7 @@ An expense records that one member paid an amount on behalf of some members (the
 - **EXP-5** The payer doesn't have to be a participant.
 - **EXP-6** Payer and participants must be current members of the trip.
 - **EXP-7** "Each person pays" shows the per-person share, matching BAL-2.
-- **EXP-8** Saving shows progress and prevents double submission; on failure the form keeps its input and shows the error.
+- **EXP-8** Save and Delete take effect at once: the form closes and the trip shows the change right away, while it syncs to the server in the background (Firestore's local-first writes); a second tap can't save twice. If the server refuses the change (e.g. access to the trip was lost), a notice says it couldn't be saved and the trip shows the server's version.
 - **EXP-9** Opening Add expense focuses the amount field with the numeric keyboard visible; pressing Enter/Next moves to description; Enter on description closes the keyboard (so Paid by, Split and When are in view to change); Save saves. Opening Edit expense focuses nothing (the keyboard stays down), since it isn't known what the user wants to change.
 - **EXP-10** With only amount and description entered, Save creates an expense paid by the current user, split equally between all members, dated now.
 - **EXP-11** Date and time default to now and can't be in the future. The Date and time sheet always has a date and a time (nothing can be left empty); days after today can't be picked, and a time later than now on today shows "The date and time can't be in the future." with Done disabled.

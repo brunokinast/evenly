@@ -44,7 +44,7 @@ Unit tests sit next to the file they test (`split.test.ts`).
 Through the Capacitor Firebase plugins on every platform: `@capacitor-firebase/authentication` and `@capacitor-firebase/firestore`. On Android they use the native Firebase SDKs; on the web they wrap the Firebase JS SDK. Why: ADR 0002.
 
 - **Auth**: anonymous sign-in on first open (ID-1). The display name is the Auth profile's `displayName`, so a returning user goes straight to Home without waiting for a database read (ID-4, APP-4).
-- **Offline cache** is on: reopening shows the last data instantly, then live updates arrive. The app is still online-only for actions (APP-6): writes are disabled while offline.
+- **Offline cache** is on: reopening shows the last data instantly, then live updates arrive. The app is still online-only for actions (APP-6): writes are disabled while offline. On the web it is a single-tab cache (faster launches; a second tab of the site falls back to a memory cache, docs/performance.md R2).
 
 ## How live data reaches screens (the one pattern)
 
@@ -56,7 +56,10 @@ Through the Capacitor Firebase plugins on every platform: `@capacitor-firebase/a
 - **Cache gotcha**: when a trip listener loses access (trip deleted, member removed), Firestore's offline cache can keep the old trip and Home's query may keep showing it. `useMyTrips` hides a trip whose listener reported "gone" while the query still returns that same version (`src/data/trips.ts`).
 - **Rename in all trips** (ID-5): `setDisplayName` takes Home's live list, or one read of the same query when Home never loaded (a name entered on Welcome by a user who already has trips, e.g. migrated). The read feeds a write, never the screen.
 - **Join preview**: looking up a code (`lookupInvite`) is a one-off read by design: the attempt must be counted first (INV-9), and the preview is only shown in the Join sheet.
-- **Writes** are plain async functions in `src/data/` (`createTrip`, `joinTrip`, `saveExpense`…). They don't update local state: the listener delivers the change, just as it does for other members. Screens show busy state and errors (EXP-8).
+- **Writes** are plain async functions in `src/data/` (`createTrip`, `joinTrip`, `saveExpense`…). They don't update local state: the listener delivers the change, just as it does for other members. Screens show a busy state only for writes that wait (below), and errors.
+- **Local-first writes** (EXP-8, APP-9): Firestore applies a write to its local cache at once (listeners show it in a few ms) and syncs it in the background; the returned promise settles only when the server answers. So screens don't await writes that only change existing documents: they go on at once and `.catch` a refusal into a notice ("Couldn't save…"). Writes that need the server first still wait: creating a trip (it can't be opened before the server has it), joining, invite codes, deleting a trip (reads the expenses on the server first).
+- **Web launch copy** (APP-10, ADR 0007): `launchCopy.ts` keeps my uid, name and Home's list in localStorage on the web; the session and Home start from it while Auth re-checks the login, and Auth's answer confirms or discards it.
+- **Warm listeners**: `warmLive` starts a key's shared listener before a screen uses it (Home starts a trip's listeners on touch-down, F6); unused, it ends after the usual idle time.
 
 ## Domain logic (`src/domain/`)
 
@@ -86,7 +89,7 @@ Tokens from `specs/design.md` as CSS variables, mapped into Tailwind. Theme ligh
 
 ## PWA and performance (APP-3, APP-4)
 
-- `vite-plugin-pwa`: manifest + service worker that precaches the app shell, so repeat opens don't hit the network for code.
+- `vite-plugin-pwa`: manifest + service worker that precaches the app shell, so repeat opens don't hit the network for code. On-demand code (PDF export and its fonts, the `?perf` panel) isn't precached: it's cached on first use (F7). `index.html` preloads the Firebase SDK chunks so they download alongside the main chunk (F3).
 - Budget: JavaScript loaded at startup ≤ 350 kB gzipped, checked by `scripts/check-bundle-size.mjs` after `vite build`. It counts every chunk, since the Firebase plugins import their SDKs dynamically right at startup. (Raised from 250 kB in the identity slice: Firestore with its offline cache is ~153 kB and Auth ~29 kB on their own; 350 kB still downloads in well under a second on 4G and repeat opens come from the service worker.) Heavy, rarely used code (PDF export) is loaded only when used and listed in the script's `ON_DEMAND`.
 - First paint shows skeletons in the real layout; never a full-screen spinner after it.
 

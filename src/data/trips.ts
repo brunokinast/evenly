@@ -1,10 +1,12 @@
 import { useMemo, useSyncExternalStore } from "react";
-import { FirebaseFirestore, type DocumentData } from "@capacitor-firebase/firestore";
+import type { DocumentData } from "@capacitor-firebase/firestore";
 import { isWellFormed } from "@/domain/balances";
 import { sortMembers } from "@/domain/members";
 import type { Expense, Member, Trip } from "@/domain/types";
-import { firebaseReady } from "./firebase";
-import { peekLive, useLive, type Live } from "./live";
+import { FirebaseFirestore, firebaseReady } from "./firebase";
+import { launchTrips, saveTrips } from "./launchCopy";
+import { mark, source } from "@/lib/perf";
+import { peekLive, useLive, holdLive, type Live } from "./live";
 
 // Live hooks for on-screen data (docs/architecture.md). Each is one shared Firestore listener.
 
@@ -52,6 +54,10 @@ function listen(attach: () => Promise<string>) {
  */
 const lostTrips = new Map<string, string>(); // tripId → raw JSON of the version we lost access to
 const rawOf = new WeakMap<Trip, string>();
+const unconfirmed = new WeakSet<Trip>(); // Home's trips with a local write the server hasn't confirmed yet
+
+/** False while the server may not have this trip (just created here): listening to it there would be refused. */
+export const onServer = (trip: Trip) => !unconfirmed.has(trip);
 let lostVersion = 0;
 const lostListeners = new Set<() => void>();
 
@@ -83,8 +89,12 @@ export function useMyTrips(uid: string): Live<Trip[]> {
     () => lostVersion,
   );
   return useMemo(
-    () => (live.status === "ready" ? { status: "ready", data: withoutLost(live.data) } : live),
-    [live, version], // eslint-disable-line react-hooks/exhaustive-deps
+    () => {
+      if (live.status === "ready") return { status: "ready", data: withoutLost(live.data) };
+      const copy = live.status === "loading" ? launchTrips(uid) : null; // APP-10 (web), until the live list
+      return copy ? { status: "ready", data: copy } : live;
+    },
+    [live, version, uid], // eslint-disable-line react-hooks/exhaustive-deps
   );
 }
 
@@ -113,51 +123,81 @@ const myTripsQuery = (uid: string) => ({
 function useMyTripsQuery(uid: string): Live<Trip[]> {
   return useLive(`myTrips/${uid}`, (emit) =>
     listen(() =>
-      FirebaseFirestore.addCollectionSnapshotListener(myTripsQuery(uid), (event, error) => {
-        if (error || !event) return emit({ status: "gone" });
-        const trips = event.snapshots
-          .filter((s) => s.data)
-          .map((s) => {
-            const trip = toTrip(s.id, s.data!);
-            rawOf.set(trip, rawJson(s.data));
-            return trip;
-          });
-        emit({ status: "ready", data: trips.sort((a, b) => b.createdAt - a.createdAt) });
-      }),
-    ),
-  );
-}
-
-export function useTrip(tripId: string): Live<Trip> {
-  return useLive(`trip/${tripId}`, (emit) => {
-    let last: string | null = null;
-    return listen(() =>
-      FirebaseFirestore.addDocumentSnapshotListener({ reference: `trips/${tripId}` }, (event, error) => {
-        if (error || !event?.snapshot.data) {
-          if (last) loseTrip(tripId, last);
-          return emit({ status: "gone" });
-        }
-        last = rawJson(event.snapshot.data);
-        emit({ status: "ready", data: toTrip(tripId, event.snapshot.data) });
-      }),
-    );
-  });
-}
-
-export function useExpenses(tripId: string): Live<Expense[]> {
-  return useLive(`expenses/${tripId}`, (emit) =>
-    listen(() =>
       FirebaseFirestore.addCollectionSnapshotListener(
-        { reference: `trips/${tripId}/expenses` },
+        // Metadata changes too: a new trip's server confirmation flips it to onServer (F9, APP-10 copy).
+        { ...myTripsQuery(uid), includeMetadataChanges: true },
         (event, error) => {
           if (error || !event) return emit({ status: "gone" });
-          const expenses = event.snapshots
+          mark(`snapshot:trips:${source(event.snapshots[0]?.metadata)}`, event.snapshots.length);
+          const trips = event.snapshots
             .filter((s) => s.data)
-            .map((s) => ({ id: s.id, ...(s.data as Omit<Expense, "id">) }))
-            .filter(isWellFormed); // BAL-1: a malformed expense never breaks the balances
-          emit({ status: "ready", data: expenses });
+            .map((s) => {
+              const trip = toTrip(s.id, s.data!);
+              rawOf.set(trip, rawJson(s.data));
+              if (s.metadata?.hasPendingWrites) unconfirmed.add(trip);
+              return trip;
+            });
+          trips.sort((a, b) => b.createdAt - a.createdAt);
+          // APP-10: the next launch on the website shows this at once. Only trips the server has: a held listener
+          // on one it doesn't (created just before closing) would be refused and the trip would look lost.
+          saveTrips(uid, withoutLost(trips).filter(onServer));
+          emit({ status: "ready", data: trips });
         },
       ),
     ),
   );
 }
+
+export function useTrip(tripId: string): Live<Trip> {
+  return useLive(`trip/${tripId}`, tripListener(tripId));
+}
+
+const tripListener = (tripId: string) => (emit: (value: Live<Trip>) => void) => {
+  let last: string | null = null;
+  return listen(() =>
+    FirebaseFirestore.addDocumentSnapshotListener({ reference: `trips/${tripId}` }, (event, error) => {
+      if (error || !event?.snapshot.data) {
+        if (last) loseTrip(tripId, last);
+        return emit({ status: "gone" });
+      }
+      mark(`snapshot:trip:${source(event.snapshot.metadata)}`);
+      last = rawJson(event.snapshot.data);
+      emit({ status: "ready", data: toTrip(tripId, event.snapshot.data) });
+    }),
+  );
+};
+
+export function useExpenses(tripId: string): Live<Expense[]> {
+  return useLive(`expenses/${tripId}`, expensesListener(tripId));
+}
+
+/** F9 (docs/performance.md): Home keeps its top trips' listeners running, so opening one shows it at once.
+ * Returns the release. */
+export function holdTrip(tripId: string) {
+  const releases = [
+    holdLive(`trip/${tripId}`, tripListener(tripId)),
+    holdLive(`expenses/${tripId}`, expensesListener(tripId)),
+  ];
+  return () => releases.forEach((release) => release());
+}
+
+/** F6: a trip's listeners start on touch-down, ~0.1 s before the tap opens it (for trips Home doesn't hold). */
+export function warmTrip(tripId: string) {
+  holdTrip(tripId)();
+}
+
+const expensesListener = (tripId: string) => (emit: (value: Live<Expense[]>) => void) =>
+  listen(() =>
+    FirebaseFirestore.addCollectionSnapshotListener(
+      { reference: `trips/${tripId}/expenses` },
+      (event, error) => {
+        if (error || !event) return emit({ status: "gone" });
+        mark(`snapshot:expenses:${source(event.snapshots[0]?.metadata)}`, event.snapshots.length);
+        const expenses = event.snapshots
+          .filter((s) => s.data)
+          .map((s) => ({ id: s.id, ...(s.data as Omit<Expense, "id">) }))
+          .filter(isWellFormed); // BAL-1: a malformed expense never breaks the balances
+        emit({ status: "ready", data: expenses });
+      },
+    ),
+  );

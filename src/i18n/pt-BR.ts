@@ -10,6 +10,8 @@ export const ptBR: Record<MessageKey, string> = {
   "common.edit": "Editar",
   "common.add": "Adicionar",
   "common.error": "Algo deu errado. Verifique sua conexão e tente de novo.",
+  "common.notSaved":
+    "Não foi possível salvar essa alteração: talvez você não tenha mais acesso a esta viagem.",
   "common.you": "Você",
   "offline.banner": "Você está offline. Será possível fazer alterações quando reconectar.",
 
@@ -222,6 +224,10 @@ export const ptBR: Record<MessageKey, string> = {
   "form.added": "Despesa adicionada",
   "form.updated": "Despesa atualizada",
   "form.deleted": "Despesa excluída",
+  "form.notSaved":
+    "Não foi possível salvar “{description}”: talvez você não tenha mais acesso a esta viagem.",
+  "form.notDeleted":
+    "Não foi possível excluir “{description}”: talvez você não tenha mais acesso a esta viagem.",
   "form.splitReset": "Divisão voltou a ser igual",
   "form.discardTitle": "Descartar alterações?",
   "form.discardBody": "As alterações nesta despesa serão perdidas.",

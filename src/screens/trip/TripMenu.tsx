@@ -20,10 +20,12 @@ type Props = {
   onAddGuest: () => void;
   /** Called just before I leave or delete, so losing access isn't announced as a surprise. */
   onLeaving: () => void;
+  /** After leaving: back to Home (APP-9: the trip is still there for the others, so it never goes "gone" here). */
+  onLeft: () => void;
 };
 
 /** "⋯" menu: owner → Add guest, Rename, Delete; others → Leave (TRIP-6, TRIP-7, TRIP-11, MEM-5, MEM-8). */
-export function TripMenu({ open, view, onClose, onAddGuest, onLeaving }: Props) {
+export function TripMenu({ open, view, onClose, onAddGuest, onLeaving, onLeft }: Props) {
   const { trip, isOwner } = view;
   const online = useOnline();
   const [step, setStep] = useState<Step>("menu");
@@ -87,6 +89,7 @@ export function TripMenu({ open, view, onClose, onAddGuest, onLeaving }: Props) 
         onClose={close}
         onConfirm={async () => {
           onLeaving();
+          // APP-9: waits for the server (it first reads the trip's expenses there, to delete them all).
           await deleteTrip(trip);
           showToast(t("deleteTrip.done")); // TripScreen goes Home once the trip is gone.
         }}
@@ -103,8 +106,10 @@ export function TripMenu({ open, view, onClose, onAddGuest, onLeaving }: Props) 
         onClose={close}
         onConfirm={async () => {
           onLeaving();
-          await leaveTrip(trip);
-          showToast(t("leave.done", { trip: trip.name })); // TripScreen goes Home once access is gone.
+          // APP-9: off my trips at once (Home's list drops it locally); a refusal comes back as a notice.
+          leaveTrip(trip).catch(() => showToast(t("common.notSaved")));
+          showToast(t("leave.done", { trip: trip.name }));
+          onLeft();
         }}
       />
     </>
@@ -116,7 +121,6 @@ function RenameForm({ view, onDone }: { view: TripView; onDone: () => void }) {
   const online = useOnline();
   const [name, setName] = useState(view.trip.name);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
   return (
     <form
       className="flex flex-col gap-3"
@@ -125,14 +129,9 @@ function RenameForm({ view, onDone }: { view: TripView; onDone: () => void }) {
         const check = checkTripName(name);
         if (!check.ok) return setError(t(check.error === "empty" ? "tripName.empty" : "tripName.tooLong"));
         if (check.name === view.trip.name) return onDone();
-        setBusy(true);
-        try {
-          await renameTrip(view.trip, check.name);
-          onDone();
-        } catch {
-          setError(t("common.error"));
-          setBusy(false);
-        }
+        // APP-9: renamed on screen at once; a refusal comes back as a notice.
+        renameTrip(view.trip, check.name).catch(() => showToast(t("common.notSaved")));
+        onDone();
       }}
     >
       <TextField
@@ -146,7 +145,7 @@ function RenameForm({ view, onDone }: { view: TripView; onDone: () => void }) {
         }}
         error={error}
       />
-      <Button type="submit" variant="primary" className="w-full" busy={busy} disabled={!online}>
+      <Button type="submit" variant="primary" className="w-full" disabled={!online}>
         {t("common.save")}
       </Button>
     </form>

@@ -72,6 +72,14 @@ function subscribe(
   };
 }
 
+/**
+ * Keeps a key's listener running without a screen showing it (e.g. Home holding its top trips, so opening one
+ * finds the data ready). Returns the release; after it the usual idle time applies.
+ */
+export function holdLive<T>(key: string, start: (emit: (value: Live<T>) => void) => () => void) {
+  return subscribe(key, start as never, () => {});
+}
+
 /** Current value of a live key, if something is listening (used by writes that need the latest data). */
 export function peekLive<T>(key: string): Live<T> | undefined {
   return entries.get(key)?.value as Live<T> | undefined;

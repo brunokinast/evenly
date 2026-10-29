@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Receipt } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
 import { EmptyState, GroupHeader, IconTile, ListGroup, Row } from "@/components/List";
 import { totalSpent } from "@/domain/balances";
 import { groupByDay } from "@/domain/dates";
+import type { Expense } from "@/domain/types";
 import { dayLabel, money, t, timeLabel, tn } from "@/i18n";
 import { cn } from "@/lib/cn";
 import { ExpenseDetailsSheet } from "./ExpenseDetailsSheet";
@@ -39,8 +40,29 @@ export function ExpensesTab({ view }: { view: TripView }) {
         </span>
         <span className="text-caption text-fg-muted">{tn("expenses.count", expenses.length)}</span>
       </div>
+      <ExpenseList view={view} onOpen={setOpenId} />
+      <ExpenseDetailsSheet view={view} expense={open} onClose={() => setOpenId(null)} />
+    </>
+  );
+}
+
+/**
+ * The rows, memoized: opening a sheet or any other state change of the tab doesn't re-render them (with 150
+ * expenses that was ~70 ms on a mid phone). Day groups off screen skip layout and paint until scrolled near
+ * (`content-visibility`), so a long trip opens as fast as a short one.
+ */
+const ExpenseList = memo(function ExpenseList({
+  view,
+  onOpen,
+}: {
+  view: TripView;
+  onOpen: (id: Expense["id"]) => void;
+}) {
+  const { expenses, trip } = view;
+  return (
+    <>
       {groupByDay(expenses).map((group) => (
-        <section key={group.day}>
+        <section key={group.day} className="[contain-intrinsic-size:auto_480px] [content-visibility:auto]">
           <GroupHeader>{dayLabel(group.items[0]!.spentAt)}</GroupHeader>
           <ListGroup>
             {group.items.map((e) => {
@@ -60,14 +82,13 @@ export function ExpensesTab({ view }: { view: TripView }) {
                   title={e.description}
                   caption={`${timeLabel(e.spentAt)} · ${splitLabel(view, e)}`}
                   trailing={<span className="shrink-0 text-row">{money(e.amountCents, trip.currency)}</span>}
-                  onClick={() => setOpenId(e.id)}
+                  onClick={() => onOpen(e.id)}
                 />
               );
             })}
           </ListGroup>
         </section>
       ))}
-      <ExpenseDetailsSheet view={view} expense={open} onClose={() => setOpenId(null)} />
     </>
   );
-}
+});

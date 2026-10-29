@@ -19,6 +19,7 @@ import { customShares, equalShares, withoutZeroShares } from "@/domain/split";
 import type { Expense, Trip } from "@/domain/types";
 import { money, t, whenLabel } from "@/i18n";
 import { cn } from "@/lib/cn";
+import { mark, usePaintedMark } from "@/lib/perf";
 import { NotFound } from "../NotFound";
 import { PayerSheet, SplitSheet, WhenSheet } from "./FormSheets";
 
@@ -27,6 +28,7 @@ export function ExpenseFormScreen({ tripId, expenseId }: { tripId: string; expen
   const me = useMe();
   const trip = useTrip(tripId);
   const expenses = useExpenses(tripId);
+  usePaintedMark("painted:form", trip.status === "ready" && expenses.status === "ready");
   const [, navigate] = useLocation();
   const existing =
     expenseId && expenses.status === "ready" ? expenses.data.find((e) => e.id === expenseId) : undefined;
@@ -89,8 +91,7 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
   const start = useMemo(() => initialForm(trip, myId, existing), []); // eslint-disable-line react-hooks/exhaustive-deps
   const [f, setF] = useState<Form>(start);
   const [sheet, setSheet] = useState<SheetName>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const sent = useRef(false);
   const descRef = useRef<HTMLInputElement>(null);
   const people = useMemo(() => peopleOf(trip, myUid), [trip, myUid]);
   const cur = trip.currency;
@@ -116,31 +117,32 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
   // Expenses flow 5: Back (Android, browser) with unsaved changes asks first, like the close button.
   useEffect(() => (dirty ? guardBack(() => setSheet("discard")) : undefined), [dirty]);
 
-  async function save() {
-    if (!valid || busy || !online) return;
+  // EXP-8: Firestore applies the write locally at once (the trip lists it in a few ms) and syncs it in the
+  // background, so the form leaves right away; only a refusal by the server comes back, as a notice.
+  function save() {
+    if (!valid || sent.current || !online) return;
+    sent.current = true;
     const cents = f.cents!;
     const shares = isCustom ? withoutZeroShares(split!.shares) : equalShares(cents, parts, f.payerId);
-    setBusy(true);
-    setError(null);
-    try {
-      await saveExpense(
-        trip.id,
-        {
-          description: f.description.trim().slice(0, 100),
-          amountCents: cents,
-          payerId: f.payerId,
-          shares,
-          split: isCustom ? "custom" : "equal",
-          spentAt: f.spentAt,
-        },
-        existing,
-      );
-      showToast(t(existing ? "form.updated" : "form.added"));
-      leave();
-    } catch {
-      setError(t("common.error")); // EXP-8: input kept
-      setBusy(false);
-    }
+    const description = f.description.trim().slice(0, 100);
+    mark("save:tap");
+    saveExpense(
+      trip.id,
+      {
+        description,
+        amountCents: cents,
+        payerId: f.payerId,
+        shares,
+        split: isCustom ? "custom" : "equal",
+        spentAt: f.spentAt,
+      },
+      existing,
+    ).then(
+      () => mark("save:confirmed"),
+      () => showToast(t("form.notSaved", { description })),
+    );
+    showToast(t(existing ? "form.updated" : "form.added"));
+    leave();
   }
 
   // EXP-7 hint: "Each person pays X" (equal split only).
@@ -274,21 +276,10 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
               : t("form.overError", { amount: money(-remaining, cur) })}
           </p>
         )}
-        {error && (
-          <p role="alert" className="text-caption text-negative">
-            {error}
-          </p>
-        )}
       </form>
 
       <div className="shrink-0 border-t border-border bg-surface px-4 pt-3 pb-[max(16px,env(safe-area-inset-bottom))]">
-        <Button
-          variant="primary"
-          className="w-full"
-          busy={busy}
-          disabled={!valid || !online}
-          onClick={() => void save()}
-        >
+        <Button variant="primary" className="w-full" disabled={!valid || !online} onClick={save}>
           {t("common.save")}
         </Button>
       </div>
@@ -348,8 +339,10 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
           disabled={!online}
           onClose={() => setSheet(null)}
           onConfirm={async () => {
-            await deleteExpense(trip.id, existing.id);
-            showToast(t("form.deleted")); // The screen leaves once the expense is gone.
+            // EXP-8: gone locally at once (the screen then leaves); a refusal comes back as a notice.
+            const description = existing.description;
+            deleteExpense(trip.id, existing.id).catch(() => showToast(t("form.notDeleted", { description })));
+            showToast(t("form.deleted"));
           }}
         />
       )}

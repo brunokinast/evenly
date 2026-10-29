@@ -8,6 +8,10 @@ import { App } from "@/app/App";
 import { App as NativeApp } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
 import { registerSW } from "virtual:pwa-register";
+import { mark, wantsPerfPanel } from "@/lib/perf";
+
+mark("js-ready");
+if (wantsPerfPanel()) void import("@/app/PerfPanel").then((m) => m.mountPerfPanel());
 
 if (Capacitor.isNativePlatform()) {
   // Android Back walks the web history (sheets and screens, src/app/nav.ts); on the first screen it leaves

@@ -17,7 +17,7 @@ Users don't create accounts. On first open, the app silently gives the device an
 - **ID-3** The name is trimmed and must be 2 to 50 characters; otherwise an inline message explains why.
 - **ID-4** Given a returning user on the same device/browser, when they open the app, then they see Home directly with their trips.
 - **ID-5** Given a user changes their name, then every trip member sees the new name live.
-- **ID-6** If identity setup fails (e.g. offline), the user sees a clear "Unable to connect" message with a Try again button.
+- **ID-6** If identity setup fails (e.g. offline), the user sees a clear "Unable to connect" message with a Try again button. On a first open the name screen shows while the identity is being created; if that fails, the message appears when the user continues.
 - **ID-7** A user's name is visible only to people who share at least one trip with them.
 - **ID-8** The welcome screen opens with the name field focused and the keyboard up; Enter submits.
 - **ID-9** The Profile sheet opens without the keyboard (it is opened for the name or the theme alike). Done or Enter saves the name. Closing the sheet any other way (backdrop, swipe down, back) keeps the old name. An invalid name shows the ID-3 message and the sheet stays open.

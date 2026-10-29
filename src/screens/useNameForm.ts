@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { showToast } from "@/app/toast";
 import { setDisplayName } from "@/data/session";
 import { checkName } from "@/domain/names";
 import { t } from "@/i18n";
@@ -22,7 +23,8 @@ export function useNameForm(initial: string, onSaved?: () => void) {
     }
     setBusy(true);
     try {
-      await setDisplayName(check.name);
+      const { synced } = await setDisplayName(check.name);
+      synced.catch(() => showToast(t("common.notSaved"))); // APP-9
       onSaved?.();
     } catch {
       setError(t("name.saveFailed"));

@@ -1,5 +1,5 @@
 // Android builds (Phase 5). The APK carries the web build from dist/.
-//   node scripts/android.mjs dev      emulator-mode web build pointed at this PC's LAN IP, debug APK
+//   node scripts/android.mjs dev [--js-sdk]  emulator-mode web build pointed at this PC's LAN IP, debug APK
 //                                     ("Evenly Dev"), installed on a connected device/emulator if any
 //   node scripts/android.mjs release  production web build, signed release APK in android/evenly.apk
 //   node scripts/android.mjs key      creates the release key (android/release.jks + key.properties)
@@ -41,12 +41,15 @@ if (mode === "key") {
 } else if (mode === "dev") {
   const host = process.env.EMULATOR_HOST ?? lanIp();
   if (!host) throw new Error("No LAN IP found; set EMULATOR_HOST.");
-  run("npx vite build --mode emulator", { env: { ...process.env, VITE_EMULATOR_HOST: host } });
-  run("npx cap sync android");
+  // --js-sdk: the Firebase JS SDK in the WebView instead of the native SDKs (R5 comparison, docs/performance.md).
+  const jsSdk = process.argv.includes("--js-sdk") ? { VITE_JS_SDK: "1" } : {};
+  run("npx vite build --mode emulator", { env: { ...process.env, VITE_EMULATOR_HOST: host, ...jsSdk } });
+  run("npx cap sync android", { env: { ...process.env, ...jsSdk } }); // capacitor.config.ts reads it too
   run(`${gradlew} assembleDebug`, { cwd: "android" });
   const apk = "android/app/build/outputs/apk/debug/app-debug.apk";
   const devices = spawnSync(`${adb} devices`, { shell: true, encoding: "utf8" }).stdout ?? "";
-  if (/\tdevice\b/.test(devices)) run(`${adb} install -r ${apk}`);
+  // A frozen AVD makes `adb install` hang forever: give up after 2 minutes (restart the AVD then).
+  if (/\tdevice\b/.test(devices)) run(`${adb} install -r ${apk}`, { timeout: 120_000 });
   console.log(`\nDebug APK (emulators at ${host}): ${apk}`);
 } else if (mode === "release") {
   if (!existsSync("android/key.properties")) throw new Error("No release key: run `npm run android:key`.");

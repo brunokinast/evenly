@@ -29,6 +29,7 @@ type RowProps = {
   /** Title may wrap (sentences like "Ana pays you"). */
   wrap?: boolean;
   onClick?: ButtonHTMLAttributes<HTMLButtonElement>["onClick"];
+  onPointerDown?: ButtonHTMLAttributes<HTMLButtonElement>["onPointerDown"];
   className?: string;
   children?: ReactNode;
 };
@@ -42,6 +43,7 @@ export function Row({
   compact,
   wrap,
   onClick,
+  onPointerDown,
   className,
   children,
 }: RowProps) {
@@ -62,7 +64,12 @@ export function Row({
     className,
   );
   return onClick ? (
-    <button type="button" onClick={onClick} className={cn(cls, "active:bg-surface-2")}>
+    <button
+      type="button"
+      onClick={onClick}
+      onPointerDown={onPointerDown}
+      className={cn(cls, "active:bg-surface-2")}
+    >
       {content}
     </button>
   ) : (

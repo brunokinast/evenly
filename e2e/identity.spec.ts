@@ -46,11 +46,34 @@ test("ID-4 a returning user goes straight to Home with the same identity", async
   await expect(nameField(page)).toHaveValue("Ana Souza");
 });
 
+test("ID-1 ID-6 the name screen shows at once while the identity is created; Continue waits for it", async ({
+  page,
+}) => {
+  let release!: () => void;
+  const held = new Promise<void>((r) => (release = r));
+  await page.route("**/accounts:signUp*", async (route) => {
+    await held;
+    await route.continue();
+  });
+  await page.goto("/");
+  await expect(welcomeHeading(page)).toBeVisible();
+  await welcomeField(page).fill("Sam Rivera");
+  await welcomeField(page).press("Enter");
+  await expect(welcomeHeading(page)).toBeVisible();
+  release();
+  await expect(page.getByRole("heading", { name: "Your trips" })).toBeVisible();
+  await page.getByRole("button", { name: "Profile" }).click();
+  await expect(nameField(page)).toHaveValue("Sam Rivera");
+});
+
 test("ID-6 a failed identity setup shows Unable to connect, and Try again recovers", async ({
   page,
 }, info) => {
   await page.route("**/identitytoolkit.googleapis.com/**", (route) => route.abort());
   await page.goto("/");
+  // The name screen shows while the identity is created; the failure shows when continuing.
+  await welcomeField(page).fill("Sam");
+  await welcomeField(page).press("Enter");
   await expect(page.getByRole("heading", { name: "Unable to connect" })).toBeVisible();
   await page.screenshot({ path: info.outputPath("unable-to-connect.png") });
   await page.unroute("**/identitytoolkit.googleapis.com/**");

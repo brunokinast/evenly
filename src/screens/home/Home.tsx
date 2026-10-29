@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { openTrip } from "@/app/nav";
 import { ChevronRight, Luggage, Plus, Ticket } from "lucide-react";
@@ -12,7 +12,8 @@ import { EmptyState, IconTile, ListGroup, Row, SkeletonRows } from "@/components
 import { TopBar } from "@/components/TopBar";
 import { TripTile } from "@/components/TripIcon";
 import { useMe } from "@/data/session";
-import { useMyTrips } from "@/data/trips";
+import { holdTrip, onServer, useMyTrips, warmTrip } from "@/data/trips";
+import { usePaintedMark } from "@/lib/perf";
 import { longDate, t } from "@/i18n";
 import { InstallSheets, startInstall, type InstallSheet } from "./InstallSheets";
 import { JoinSheet } from "./JoinSheet";
@@ -20,10 +21,12 @@ import { NewTripSheet } from "./NewTripSheet";
 import { ProfileSheet } from "./ProfileSheet";
 
 type SheetName = "profile" | "newTrip" | "join" | null;
+const HELD_TRIPS = 3;
 
 export function Home() {
   const me = useMe();
   const trips = useMyTrips(me.uid);
+  usePaintedMark("painted:home", trips.status === "ready");
   const online = useOnline();
   const install = useInstall();
   const [, navigate] = useLocation();
@@ -36,6 +39,16 @@ export function Home() {
     setInstallSheet(startInstall(install.method));
   };
   const list = trips.status === "ready" ? trips.data : [];
+  // F9: the top trips load while Home shows, so opening one is instant (still live data, not a copy).
+  const held = list
+    .filter(onServer)
+    .slice(0, HELD_TRIPS)
+    .map((trip) => trip.id)
+    .join(" ");
+  useEffect(() => {
+    const releases = held ? held.split(" ").map(holdTrip) : [];
+    return () => releases.forEach((release) => release());
+  }, [held]);
 
   return (
     <div className="mx-auto flex h-full max-w-[520px] flex-col">
@@ -66,6 +79,7 @@ export function Home() {
                 title={trip.name}
                 caption={`${trip.currency} · ${longDate(trip.createdAt)}`}
                 trailing={<ChevronRight className="size-5 shrink-0 text-fg-muted" aria-hidden />}
+                onPointerDown={() => warmTrip(trip.id)}
                 onClick={() => void openTrip(navigate, `/trip/${trip.id}`)}
               />
             ))}

@@ -3,15 +3,53 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { defineConfig } from "vitest/config";
+import type { Plugin } from "vite";
+
+/**
+ * Firebase's web SDKs load through the Capacitor plugins' lazy `web` chunks, which the page would only ask for
+ * after the main chunk has downloaded and run. Preload them from index.html so they download alongside it.
+ */
+function preloadFirebase(): Plugin {
+  return {
+    name: "preload-firebase",
+    apply: "build",
+    transformIndexHtml: {
+      order: "post",
+      handler(_html, { bundle }) {
+        const chunks = Object.values(bundle ?? {})
+          .filter(
+            (c) =>
+              c.type === "chunk" &&
+              !c.isEntry &&
+              c.moduleIds.some((id) =>
+                /@(capacitor-)?firebase[\\/](firestore|auth|authentication)[\\/]/.test(id),
+              ),
+          )
+          .map((c) => `/${c.fileName}`);
+        // Only when the files are local (service worker cache, Android app): on a first open they'd share a
+        // slow connection with the main chunk and hold back the first screen (docs/performance.md, F11).
+        const files = JSON.stringify(chunks);
+        return [
+          {
+            tag: "script",
+            children: `if (navigator.serviceWorker?.controller || window.Capacitor?.isNativePlatform?.()) for (const f of ${files}) { const l = document.createElement("link"); l.rel = "modulepreload"; l.crossOrigin = ""; l.href = f; document.head.append(l); }`,
+            injectTo: "head" as const,
+          },
+        ];
+      },
+    },
+  };
+}
 
 export default defineConfig({
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
-  // The PDF export's libraries load only on export; pre-bundle them at dev-server start, or discovering them
+  // Lazily imported libraries (PDF export, firebase/auth in src/data/firebase.ts): pre-bundle them at dev-server start, or discovering them
   // then reloads every open page (breaks e2e tests running in parallel).
-  optimizeDeps: { include: ["pdf-lib", "fontkit", "woff2-encoder/decompress"] },
+  optimizeDeps: { include: ["pdf-lib", "fontkit", "woff2-encoder/decompress", "firebase/auth"] },
   plugins: [
     react(),
     tailwindcss(),
+    preloadFirebase(),
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: false, // src/main.tsx registers it on the web only
@@ -31,7 +69,22 @@ export default defineConfig({
           { src: "icon.svg", sizes: "any", type: "image/svg+xml" },
         ],
       },
-      workbox: { globPatterns: ["**/*.{js,css,html,svg,woff2}"], navigateFallback: "/index.html" },
+      workbox: {
+        globPatterns: ["**/*.{js,css,html,svg,woff2}"],
+        // On-demand code (PDF export with its fonts, ~490 kB; the ?perf panel) isn't pre-downloaded with every
+        // install/update: it's cached the first time it's used (hashed names, so never stale).
+        globIgnores: ["**/exportPdf-*", "**/noto-sans-*", "**/PerfPanel-*"],
+        runtimeCaching: [
+          {
+            urlPattern: /\/assets\/(exportPdf|noto-sans|PerfPanel)-/,
+            handler: "CacheFirst",
+            options: { cacheName: "on-demand", expiration: { maxEntries: 10 } }, // old versions age out
+          },
+        ],
+        navigateFallback: "/index.html",
+        // Control the first session too, so on-demand code used then is cached already.
+        clientsClaim: true,
+      },
     }),
   ],
   test: {
