@@ -21,11 +21,17 @@ const listeners = new Set<() => void>();
 
 /** The first open's identity creation; the Welcome name waits for it before saving (ID-6). */
 let creating: Promise<void> | null = null;
+/** Set while Welcome shows before the identity creation could start (F11): hands it the attempt once it does. */
+let settleCreating: ((attempt: Promise<void>) => void) | null = null;
 
 function set(next: Session) {
   if (next.status === "ready" && !authed) mark("auth-ready");
   authed ||= next.status === "ready";
   if (next.status === "ready") creating = null;
+  if (next.status !== "creating" && next.status !== "loading") {
+    settleCreating?.(next.status === "ready" ? Promise.resolve() : Promise.reject(new Error("setup failed")));
+    settleCreating = null;
+  }
   session = next;
   listeners.forEach((l) => l());
 }
@@ -38,7 +44,10 @@ function fromUser(user: User): Session {
 async function signIn(firstOpen = false) {
   set({ status: firstOpen ? "creating" : "loading" });
   const attempt = FirebaseAuthentication.signInAnonymously().then(() => {}); // authStateChange delivers the user
-  if (firstOpen) creating = attempt;
+  if (firstOpen && settleCreating) {
+    settleCreating(attempt);
+    settleCreating = null;
+  } else if (firstOpen) creating = attempt;
   try {
     await attempt;
   } catch {
@@ -48,8 +57,33 @@ async function signIn(firstOpen = false) {
 
 let listening = false;
 
+/**
+ * F11 (web): true only when this browser has certainly never stored a login, so Welcome can show before the
+ * Auth SDK has even downloaded. Firebase Auth keeps the user in this IndexedDB database (created on its first
+ * run) or, as a fallback, under "firebase:authUser:" keys; only the database list is read, nothing is opened.
+ */
+async function certainlyFirstOpen(): Promise<boolean> {
+  if (nativeFirebase || !indexedDB?.databases) return false;
+  try {
+    const stored = [localStorage, sessionStorage].some((s) =>
+      Object.keys(s).some((k) => k.startsWith("firebase:authUser:")),
+    );
+    if (stored) return false;
+    return !(await indexedDB.databases()).some((db) => db.name === "firebaseLocalStorageDb");
+  } catch {
+    return false;
+  }
+}
+
 async function start() {
   if (!early) set({ status: "loading" });
+  if (!early && (await certainlyFirstOpen()) && session.status === "loading") {
+    creating = new Promise((resolve, reject) => {
+      settleCreating = (attempt) => attempt.then(resolve, reject);
+    });
+    creating.catch(() => {}); // a failure is shown when the user continues (ID-6)
+    set({ status: "creating" });
+  }
   await firebaseReady;
   // The plugin holds the first auth state until a listener is attached, so a restored session (ID-4)
   // arrives here before we'd ever create a new identity.

@@ -16,7 +16,7 @@ function preloadFirebase(): Plugin {
     transformIndexHtml: {
       order: "post",
       handler(_html, { bundle }) {
-        return Object.values(bundle ?? {})
+        const chunks = Object.values(bundle ?? {})
           .filter(
             (c) =>
               c.type === "chunk" &&
@@ -25,11 +25,17 @@ function preloadFirebase(): Plugin {
                 /@(capacitor-)?firebase[\\/](firestore|auth|authentication)[\\/]/.test(id),
               ),
           )
-          .map((c) => ({
-            tag: "link",
-            attrs: { rel: "modulepreload", crossorigin: "", href: `/${c.fileName}` },
+          .map((c) => `/${c.fileName}`);
+        // Only when the files are local (service worker cache, Android app): on a first open they'd share a
+        // slow connection with the main chunk and hold back the first screen (docs/performance.md, F11).
+        const files = JSON.stringify(chunks);
+        return [
+          {
+            tag: "script",
+            children: `if (navigator.serviceWorker?.controller || window.Capacitor?.isNativePlatform?.()) for (const f of ${files}) { const l = document.createElement("link"); l.rel = "modulepreload"; l.crossOrigin = ""; l.href = f; document.head.append(l); }`,
             injectTo: "head" as const,
-          }));
+          },
+        ];
       },
     },
   };

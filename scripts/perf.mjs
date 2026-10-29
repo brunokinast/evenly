@@ -109,7 +109,9 @@ async function oneRun() {
   await breakdown(page, "first open", ["js-ready", "firebase-ready", "auth-ready"]);
   record("first open: JS+CSS downloaded (kB)", await downloadedKb(page));
 
-  // Name → Home.
+  // Name → Home, after the time a person takes to read the screen and type a name (the identity is created
+  // meanwhile, ID-6; typing at once would only measure the download that a real person never waits for).
+  await page.waitForTimeout(2500);
   let t = await now(page);
   await page.fill("input[autocomplete=given-name]", "Perf");
   await page.keyboard.press("Enter");
