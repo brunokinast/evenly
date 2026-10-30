@@ -1,4 +1,15 @@
+import { charCount, NAME_MAX } from "./names";
 import { CURRENCIES, type Currency } from "./types";
+
+export type TripNameCheck = { ok: true; name: string } | { ok: false; error: "empty" | "tooLong" };
+
+/** TRIP-2: trimmed, required; at most 50 characters (APP-8). */
+export function checkTripName(raw: string): TripNameCheck {
+  const name = raw.trim();
+  if (!name) return { ok: false, error: "empty" };
+  if (charCount(name) > NAME_MAX) return { ok: false, error: "tooLong" };
+  return { ok: true, name };
+}
 
 /** TRIP-3: PT-BR → BRL, otherwise the last currency used, else USD. */
 export function defaultCurrency(locale: string, lastUsed: string | null): Currency {

@@ -8,7 +8,7 @@ import { ListGroup, Row } from "@/components/List";
 import { Sheet } from "@/components/Sheet";
 import { TextField } from "@/components/TextField";
 import { deleteTrip, leaveTrip, renameTrip } from "@/data/commands";
-import { checkTripName } from "@/domain/members";
+import { checkTripName } from "@/domain/trips";
 import { t } from "@/i18n";
 import type { TripView } from "./TripScreen";
 
@@ -33,7 +33,7 @@ export function TripMenu({ open, view, onClose, onAddGuest, onLeaving, onLeft }:
     setStep("menu");
     onClose();
   };
-  const icon = "size-5 shrink-0";
+  const iconClass = "size-5 shrink-0";
 
   return (
     <>
@@ -44,20 +44,20 @@ export function TripMenu({ open, view, onClose, onAddGuest, onLeaving, onLeft }:
             <>
               <Row
                 compact
-                leading={<UserRoundPlus className={icon} aria-hidden />}
+                leading={<UserRoundPlus className={iconClass} aria-hidden />}
                 title={t("menu.addGuest")}
                 onClick={onAddGuest}
               />
               <Row
                 compact
-                leading={<Pencil className={icon} aria-hidden />}
+                leading={<Pencil className={iconClass} aria-hidden />}
                 title={t("menu.rename")}
                 onClick={() => setStep("rename")}
               />
               <Row
                 compact
                 className="text-negative"
-                leading={<Trash2 className={icon} aria-hidden />}
+                leading={<Trash2 className={iconClass} aria-hidden />}
                 title={t("menu.delete")}
                 onClick={() => setStep("delete")}
               />
@@ -66,7 +66,7 @@ export function TripMenu({ open, view, onClose, onAddGuest, onLeaving, onLeft }:
             <Row
               compact
               className="text-negative"
-              leading={<LogOut className={icon} aria-hidden />}
+              leading={<LogOut className={iconClass} aria-hidden />}
               title={t("menu.leave")}
               onClick={() => setStep("leave")}
             />
@@ -83,8 +83,6 @@ export function TripMenu({ open, view, onClose, onAddGuest, onLeaving, onLeft }:
         title={t("deleteTrip.title")}
         body={t("deleteTrip.body")}
         confirm={t("menu.delete")}
-        cancel={t("common.cancel")}
-        errorText={t("common.error")}
         disabled={!online}
         onClose={close}
         onConfirm={async () => {
@@ -100,8 +98,6 @@ export function TripMenu({ open, view, onClose, onAddGuest, onLeaving, onLeft }:
         title={t("leave.title")}
         body={t("leave.body")}
         confirm={t("menu.leave")}
-        cancel={t("common.cancel")}
-        errorText={t("common.error")}
         disabled={!online}
         onClose={close}
         onConfirm={async () => {

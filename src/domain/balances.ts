@@ -66,7 +66,13 @@ export function paymentsInListOrder(
   return settlements(balance, order).sort((a, b) => by(a.from, b.from) || by(a.to, b.to));
 }
 
-/** An equal split between every current member ("Split between all"). */
-export function splitsAll(e: Expense, memberIds: string[]): boolean {
-  return Object.keys(e.shares).length === memberIds.length && memberIds.every((id) => id in e.shares);
+/** The Balances tab and the PDF: balances, suggested payments (BAL-8) and the balance rows in the MEM-6
+ * order with former members after (BAL-6). `order` = stored member order, `listed` = MEM-6 order. */
+export function settle(order: string[], expenses: Expense[], listed: string[]) {
+  const bal = balances(order, expenses);
+  return {
+    bal,
+    pays: paymentsInListOrder(bal, order, listed),
+    rows: [...bal.keys()].sort(byListOrder(listed)),
+  };
 }

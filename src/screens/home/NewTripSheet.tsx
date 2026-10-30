@@ -8,20 +8,12 @@ import { TextField } from "@/components/TextField";
 import { TRIP_ICON } from "@/components/TripIcon";
 import { createTrip } from "@/data/commands";
 import { useMe } from "@/data/session";
-import { checkTripName } from "@/domain/members";
-import { defaultCurrency } from "@/domain/trips";
+import { checkTripName, defaultCurrency } from "@/domain/trips";
 import { CURRENCIES, TRIP_ICONS, type Currency, type TripIcon } from "@/domain/types";
 import { locale, t } from "@/i18n";
+import { readStored, writeStored } from "@/lib/storage";
 
 const LAST_CURRENCY = "evenly.lastCurrency";
-
-function lastCurrency() {
-  try {
-    return localStorage.getItem(LAST_CURRENCY);
-  } catch {
-    return null;
-  }
-}
 
 /** TRIP-1..4, TRIP-10: icon and currency have defaults; Enter on the name only closes the keyboard. */
 export function NewTripSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -37,7 +29,9 @@ function NewTripForm({ onDone }: { onDone: () => void }) {
   const online = useOnline();
   const [name, setName] = useState("");
   const [icon, setIcon] = useState<TripIcon>("luggage");
-  const [currency, setCurrency] = useState<Currency>(() => defaultCurrency(locale, lastCurrency()));
+  const [currency, setCurrency] = useState<Currency>(() =>
+    defaultCurrency(locale, readStored(LAST_CURRENCY)),
+  );
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -47,11 +41,7 @@ function NewTripForm({ onDone }: { onDone: () => void }) {
     setBusy(true);
     try {
       await createTrip({ name: check.name, icon, currency, myName: me.name });
-      try {
-        localStorage.setItem(LAST_CURRENCY, currency);
-      } catch {
-        // Storage blocked: no remembered currency.
-      }
+      writeStored(LAST_CURRENCY, currency);
       // Stay on Home: the new trip tops the list (TRIP-1); a notice confirms it.
       showToast(t("newTrip.created", { trip: check.name }));
       onDone();
@@ -99,7 +89,7 @@ function NewTripForm({ onDone }: { onDone: () => void }) {
               aria-label={t(`icon.${id}`)}
               aria-pressed={icon === id}
               onClick={() => setIcon(id)}
-              className="grid h-12 min-w-0 place-items-center rounded-ctl bg-surface-2 aria-pressed:bg-accent-soft aria-pressed:text-accent-text aria-pressed:outline-2 aria-pressed:-outline-offset-2 aria-pressed:outline-accent"
+              className="grid h-12 min-w-0 place-items-center rounded-ctl bg-surface-2 pressed-choice"
             >
               <Icon className="size-5" aria-hidden />
             </button>

@@ -2,13 +2,15 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { LoaderCircle } from "lucide-react";
 import { cn } from "@/lib/cn";
 
-type Variant = "primary" | "secondary" | "quiet" | "destructive";
+type Variant = "primary" | "secondary" | "quiet" | "destructive" | "danger";
 
 const variants: Record<Variant, string> = {
   primary: "bg-accent text-accent-fg active:brightness-95 disabled:bg-surface-2 disabled:text-fg-muted",
   secondary: "bg-surface-2 text-fg active:brightness-95 disabled:text-fg-muted",
   quiet: "text-fg-muted font-medium disabled:opacity-50",
   destructive: "text-negative disabled:opacity-50",
+  /** The confirmed destructive action (ConfirmSheet). */
+  danger: "bg-negative text-surface active:brightness-95 disabled:text-fg-muted",
 };
 
 const sizes = {

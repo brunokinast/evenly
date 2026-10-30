@@ -1,6 +1,8 @@
 import { useSyncExternalStore } from "react";
 import { Capacitor } from "@capacitor/core";
 import { installMethod, type InstallMethod } from "@/domain/install";
+import { changes } from "@/lib/changes";
+import { readStored, writeStored } from "@/lib/storage";
 
 // APP-3 / ID-10: the latest GitHub Release's APK (Firebase Hosting refuses .apk files on the free plan).
 const APK_URL: string | null = "https://github.com/brunokinast/evenly/releases/latest/download/evenly.apk";
@@ -9,25 +11,9 @@ const SKIP_FIRST_KEY = "evenly.installFirstSkipped";
 type PromptEvent = Event & { prompt(): Promise<void>; userChoice: Promise<{ outcome: string }> };
 
 let deferred: PromptEvent | null = null;
-let firstSkipped = readFlag(SKIP_FIRST_KEY);
+let firstSkipped = readStored(SKIP_FIRST_KEY) === "1";
 let state = compute();
-const listeners = new Set<() => void>();
-
-function readFlag(key: string) {
-  try {
-    return localStorage.getItem(key) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function saveFlag(key: string) {
-  try {
-    localStorage.setItem(key, "1");
-  } catch {
-    // Storage blocked: remembered for this visit only.
-  }
-}
+const stateChanges = changes();
 
 function installed() {
   return (
@@ -50,7 +36,7 @@ function compute() {
 
 function refresh() {
   state = compute();
-  listeners.forEach((l) => l());
+  stateChanges.notify();
 }
 
 addEventListener("beforeinstallprompt", (e) => {
@@ -64,13 +50,7 @@ addEventListener("appinstalled", () => {
 });
 
 export function useInstall() {
-  return useSyncExternalStore(
-    (l) => {
-      listeners.add(l);
-      return () => listeners.delete(l);
-    },
-    () => state,
-  );
+  return useSyncExternalStore(stateChanges.subscribe, () => state);
 }
 
 /** Shows the browser's own install prompt (method "prompt"). */
@@ -85,6 +65,6 @@ export async function promptInstall() {
 /** ID-10 "Continue in Safari / the browser": straight to the name from now on, on this browser. */
 export function skipInstallFirst() {
   firstSkipped = true;
-  saveFlag(SKIP_FIRST_KEY);
+  writeStored(SKIP_FIRST_KEY, "1");
   refresh();
 }

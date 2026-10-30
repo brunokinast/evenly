@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Copy, LoaderCircle, Share2 } from "lucide-react";
 import { useOnline } from "@/app/online";
-import { shareText } from "@/app/share";
+import { copyText, shareText } from "@/app/share";
 import { showToast } from "@/app/toast";
 import { Button, ButtonRow } from "@/components/Button";
 import { Sheet } from "@/components/Sheet";
@@ -82,11 +82,8 @@ function InviteBody({ trip }: { trip: Trip }) {
       <ButtonRow>
         <Button
           disabled={!code || busy}
-          onClick={() =>
-            navigator.clipboard
-              ?.writeText(code!)
-              .then(() => showToast(t("invite.copied")))
-              .catch(() => showToast(t("invite.codeIs", { code: code! })))
+          onClick={async () =>
+            showToast((await copyText(code!)) ? t("invite.copied") : t("invite.codeIs", { code: code! }))
           }
         >
           <Copy aria-hidden />
@@ -96,11 +93,7 @@ function InviteBody({ trip }: { trip: Trip }) {
           variant="primary"
           disabled={!code || busy}
           onClick={async () => {
-            if (await shareText(text)) return;
-            await navigator.clipboard
-              ?.writeText(text)
-              .then(() => showToast(t("invite.copied")))
-              .catch(() => {});
+            if (!(await shareText(text)) && (await copyText(text))) showToast(t("invite.copied"));
           }}
         >
           <Share2 aria-hidden />

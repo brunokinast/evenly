@@ -251,7 +251,7 @@ function WhenForm({ value, onPick }: { value: number; onPick: (ms: number) => vo
                     setH(s.h);
                     setM(s.m);
                   }}
-                  className="group flex min-h-14 min-w-0 flex-col items-center justify-center rounded-ctl bg-surface px-1 py-1.5 disabled:opacity-40 aria-pressed:bg-accent-soft aria-pressed:text-accent-text aria-pressed:outline-2 aria-pressed:-outline-offset-2 aria-pressed:outline-accent"
+                  className="group flex min-h-14 min-w-0 flex-col items-center justify-center rounded-ctl bg-surface px-1 py-1.5 disabled:opacity-40 pressed-choice"
                 >
                   <span className="max-w-full truncate text-tag text-fg-muted group-aria-pressed:text-accent-text">
                     {s.label}

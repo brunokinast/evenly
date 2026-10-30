@@ -1,5 +1,5 @@
 import { person, type Person } from "@/domain/members";
-import { splitsAll } from "@/domain/balances";
+import { splitsAll } from "@/domain/split";
 import type { Expense } from "@/domain/types";
 import { t } from "@/i18n";
 import type { TripView } from "./TripScreen";

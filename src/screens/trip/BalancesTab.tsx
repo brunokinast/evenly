@@ -4,8 +4,7 @@ import { showToast } from "@/app/toast";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { GroupHeader, IconTile, ListGroup, Row } from "@/components/List";
-import { balances, paymentsInListOrder, totalSpent, type Payment } from "@/domain/balances";
-import { byListOrder } from "@/domain/members";
+import { settle, totalSpent, type Payment } from "@/domain/balances";
 import { locale, money, t } from "@/i18n";
 import { cn } from "@/lib/cn";
 import { label, who } from "./labels";
@@ -16,17 +15,19 @@ export function BalancesTab({ view }: { view: TripView }) {
   const { trip, expenses } = view;
   const cur = trip.currency;
   const [exporting, setExporting] = useState(false);
-  const { bal, pays } = useMemo(() => {
-    const order = trip.members.map((m) => m.id);
-    const bal = balances(order, expenses);
-    return { bal, pays: paymentsInListOrder(bal, order, view.listed) };
-  }, [trip.members, expenses, view.listed]);
+  const { bal, pays, rows } = useMemo(
+    () =>
+      settle(
+        trip.members.map((m) => m.id),
+        expenses,
+        view.listed,
+      ),
+    [trip.members, expenses, view.listed],
+  );
 
   const total = totalSpent(expenses);
   const mine = pays.filter((p) => p.from === view.myMemberId || p.to === view.myMemberId);
   const others = pays.filter((p) => p.from !== view.myMemberId && p.to !== view.myMemberId);
-  // BAL-6: the MEM-6 order; former members (still in old expenses) after members.
-  const rows = [...bal.keys()].sort(byListOrder(view.listed));
 
   async function exportPdf() {
     setExporting(true);

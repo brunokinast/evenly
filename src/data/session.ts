@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 import type { User } from "@capacitor-firebase/authentication";
 import { renameMeInTrips } from "./commands";
+import { changes } from "@/lib/changes";
 import { mark } from "@/lib/perf";
 import { FirebaseAuthentication, firebaseReady, nativeFirebase, usesEmulators } from "./firebase";
 import { confirmIdentity, launchIdentity } from "./launchCopy";
@@ -17,7 +18,7 @@ const early = launchIdentity();
 let session: Session = early ? { status: "ready", ...early } : { status: "loading" };
 if (early) mark("launch-copy");
 let authed = false;
-const listeners = new Set<() => void>();
+const sessionChanges = changes();
 
 /** The first open's identity creation; the Welcome name waits for it before saving (ID-6). */
 let creating: Promise<void> | null = null;
@@ -39,7 +40,7 @@ function set(next: Session) {
     settleCreating = null;
   }
   session = next;
-  listeners.forEach((l) => l());
+  sessionChanges.notify();
 }
 
 function fromUser(user: User): Session {
@@ -128,13 +129,7 @@ void begin();
 
 /** The signed-in user, live. Started once at app load. */
 export function useSession(): Session {
-  return useSyncExternalStore(
-    (l) => {
-      listeners.add(l);
-      return () => listeners.delete(l);
-    },
-    () => session,
-  );
+  return useSyncExternalStore(sessionChanges.subscribe, () => session);
 }
 
 /** The signed-in user with a name, for screens behind the session gate. */

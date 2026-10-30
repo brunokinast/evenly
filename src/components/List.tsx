@@ -31,7 +31,6 @@ type RowProps = {
   onClick?: ButtonHTMLAttributes<HTMLButtonElement>["onClick"];
   onPointerDown?: ButtonHTMLAttributes<HTMLButtonElement>["onPointerDown"];
   className?: string;
-  children?: ReactNode;
 };
 
 /** A full-width row; a button when it has onClick. Long text truncates (APP-8). */
@@ -45,7 +44,6 @@ export function Row({
   onClick,
   onPointerDown,
   className,
-  children,
 }: RowProps) {
   const content = (
     <>
@@ -55,7 +53,6 @@ export function Row({
         {caption && <span className="truncate text-caption text-fg-muted">{caption}</span>}
       </span>
       {trailing}
-      {children}
     </>
   );
   const cls = cn(

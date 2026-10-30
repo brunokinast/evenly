@@ -66,7 +66,7 @@ export function Sheet({ open, onClose, title, subtitle, focusField = true, child
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose(); // backdrop
       }}
-      className="sheet fixed inset-x-0 outline-none top-auto bottom-[var(--kb,0px)] m-0 mx-auto flex max-h-[85dvh] w-full max-w-[520px] flex-col rounded-t-sheet bg-surface p-0 text-fg shadow-float backdrop:bg-scrim"
+      className="sheet fixed inset-x-0 outline-none top-auto bottom-[var(--kb,0px)] m-0 mx-auto flex max-h-[85dvh] w-full max-w-app flex-col rounded-t-sheet bg-surface p-0 text-fg shadow-float backdrop:bg-scrim"
     >
       <div
         className="shrink-0 cursor-grab touch-none px-4 pt-2"
@@ -76,11 +76,9 @@ export function Sheet({ open, onClose, title, subtitle, focusField = true, child
         onPointerCancel={onPointerUp}
       >
         <div aria-hidden className="mx-auto mb-1 h-1 w-9 rounded bg-border" />
-        <div className="flex items-start gap-3 pt-1.5 pb-2.5">
-          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <h2 className="text-heading text-balance break-words">{title}</h2>
-            {subtitle && <p className="text-caption text-fg-muted">{subtitle}</p>}
-          </div>
+        <div className="flex min-w-0 flex-col gap-0.5 pt-1.5 pb-2.5">
+          <h2 className="text-heading text-balance break-words">{title}</h2>
+          {subtitle && <p className="text-caption text-fg-muted">{subtitle}</p>}
         </div>
       </div>
       <div className="flex min-h-0 flex-col gap-3 overflow-y-auto px-4 pb-[max(20px,env(safe-area-inset-bottom))]">

@@ -1,7 +1,7 @@
 import type { Currency } from "./types";
 
 /** Largest amount the input accepts: 10 digits of cents (99,999,999.99), under the 10¹⁰ rule limit. */
-export const MAX_DIGITS = 10;
+const MAX_DIGITS = 10;
 
 /** EXP-2: digits fill from the right in cents. "1234" → 1234 (12.34). Non-digits and leading zeros go. */
 export function digitsToCents(input: string): number {

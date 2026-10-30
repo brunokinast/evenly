@@ -59,7 +59,6 @@ export type Plan = {
   warnings: string[];
 };
 
-const MAX_NAME = 50; // TRIP-2
 const MAX_DESCRIPTION = 100; // EXP-1
 export const UNKNOWN = "Unknown";
 
@@ -248,7 +247,7 @@ export function planMigration(backup: Backup): Plan {
     plan.keep.push({
       id: tripId,
       trip: {
-        name: fit(title || "Trip", MAX_NAME, "title", warn),
+        name: fit(title || "Trip", NAME_MAX, "title", warn),
         icon,
         currency,
         ownerUid,

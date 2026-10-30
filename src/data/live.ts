@@ -10,6 +10,8 @@ type Entry = {
   idleTimer: ReturnType<typeof setTimeout> | null;
 };
 
+type Start<T> = (emit: (value: Live<T>) => void) => () => void;
+
 const LOADING: Live<never> = { status: "loading" };
 const entries = new Map<string, Entry>();
 /** Keep a listener this long after its last user leaves, so going back and forth doesn't re-listen. */
@@ -19,42 +21,36 @@ const IDLE_MS = 30_000;
  * The one live-data pattern (docs/architecture.md): one shared listener per key, however many components
  * use it, reference-counted. `start` attaches the Firebase listener and returns its stop function.
  */
-export function useLive<T>(
-  key: string | null,
-  start: (emit: (value: Live<T>) => void) => () => void,
-): Live<T> {
+export function useLive<T>(key: string | null, start: Start<T>): Live<T> {
   // `start` only matters when the key's listener is first created, so the subscription depends on the key alone.
   const sub = useCallback(
-    (onChange: () => void) => (key ? subscribe(key, start as never, onChange) : () => {}),
+    (onChange: () => void) => (key ? subscribe(key, start, onChange) : () => {}),
     [key], // eslint-disable-line react-hooks/exhaustive-deps
   );
   return useSyncExternalStore(sub, () => (key ? ((entries.get(key)?.value as Live<T>) ?? LOADING) : LOADING));
 }
 
-function subscribe(
-  key: string,
-  start: (emit: (v: Live<unknown>) => void) => () => void,
-  onChange: () => void,
-) {
+function subscribe<T>(key: string, start: Start<T>, onChange: () => void) {
   let entry = entries.get(key);
   if (!entry) {
     entry = { value: LOADING, listeners: new Set(), stop: null, idleTimer: null };
     entries.set(key, entry);
   }
   const e = entry;
+  const drop = () => {
+    if (e.idleTimer) clearTimeout(e.idleTimer);
+    e.stop?.();
+    if (entries.get(key) === e) entries.delete(key);
+  };
   if (e.idleTimer) clearTimeout(e.idleTimer);
   e.idleTimer = null;
   e.listeners.add(onChange);
   if (!e.stop) {
     e.stop = start((value) => {
-      e.value = value;
+      e.value = value as Live<unknown>;
       e.listeners.forEach((l) => l());
       // Failed while nobody was looking: drop it now, so the next visit listens anew.
-      if (value.status === "gone" && e.listeners.size === 0) {
-        if (e.idleTimer) clearTimeout(e.idleTimer);
-        e.stop?.();
-        entries.delete(key);
-      }
+      if (value.status === "gone" && e.listeners.size === 0) drop();
     });
   }
   return () => {
@@ -62,13 +58,7 @@ function subscribe(
     if (e.listeners.size > 0) return;
     // A failed listener (access lost) is dropped right away, so coming back (e.g. after rejoining) listens
     // anew; deferred so a re-subscribe in the same tick keeps it.
-    e.idleTimer = setTimeout(
-      () => {
-        e.stop?.();
-        entries.delete(key);
-      },
-      e.value.status === "gone" ? 0 : IDLE_MS,
-    );
+    e.idleTimer = setTimeout(drop, e.value.status === "gone" ? 0 : IDLE_MS);
   };
 }
 
@@ -76,8 +66,8 @@ function subscribe(
  * Keeps a key's listener running without a screen showing it (e.g. Home holding its top trips, so opening one
  * finds the data ready). Returns the release; after it the usual idle time applies.
  */
-export function holdLive<T>(key: string, start: (emit: (value: Live<T>) => void) => () => void) {
-  return subscribe(key, start as never, () => {});
+export function holdLive<T>(key: string, start: Start<T>) {
+  return subscribe(key, start, () => {});
 }
 
 /** Current value of a live key, if something is listening (used by writes that need the latest data). */

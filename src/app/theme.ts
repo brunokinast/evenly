@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { Capacitor, registerPlugin, SystemBars, SystemBarsStyle } from "@capacitor/core";
+import { changes } from "@/lib/changes";
+import { readStored, writeStored } from "@/lib/storage";
 
 // APP-2: light, dark or system (default), remembered on this device.
 export type ThemeChoice = "system" | "light" | "dark";
@@ -8,15 +10,11 @@ const KEY = "evenly.theme";
 // Native side in android/…/AppThemePlugin.java: the launch screen follows the choice from the next launch.
 const AppTheme = registerPlugin<{ set(o: { theme: ThemeChoice }): Promise<void> }>("AppTheme");
 const dark = matchMedia("(prefers-color-scheme: dark)");
-const listeners = new Set<() => void>();
+const choiceChanges = changes();
 
 function read(): ThemeChoice {
-  try {
-    const v = localStorage.getItem(KEY);
-    return v === "light" || v === "dark" ? v : "system";
-  } catch {
-    return "system";
-  }
+  const v = readStored(KEY);
+  return v === "light" || v === "dark" ? v : "system";
 }
 
 let choice = read();
@@ -37,21 +35,11 @@ dark.addEventListener("change", apply);
 
 export function setTheme(next: ThemeChoice) {
   choice = next;
-  try {
-    localStorage.setItem(KEY, next);
-  } catch {
-    // Storage blocked: the choice lasts for this visit only.
-  }
+  writeStored(KEY, next);
   apply();
-  listeners.forEach((l) => l());
+  choiceChanges.notify();
 }
 
 export function useTheme(): ThemeChoice {
-  return useSyncExternalStore(
-    (l) => {
-      listeners.add(l);
-      return () => listeners.delete(l);
-    },
-    () => choice,
-  );
+  return useSyncExternalStore(choiceChanges.subscribe, () => choice);
 }

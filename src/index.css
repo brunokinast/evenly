@@ -70,6 +70,8 @@
 }
 
 @theme inline {
+  /* Screens and sheets never grow wider than a phone (max-w-app). */
+  --container-app: 520px;
   --color-*: initial;
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -123,6 +125,15 @@
   --text-tag--line-height: 16px;
   --text-tag--font-weight: 600;
   --text-tag--letter-spacing: 0.04em;
+}
+
+/* The bar pinned under a screen's content (Home's buttons, the expense form's Save). */
+@utility bottom-bar {
+  @apply shrink-0 border-t border-border bg-surface px-4 pt-3 pb-[max(16px,env(safe-area-inset-bottom))];
+}
+/* A chosen tile or chip in a picker (icon, currency, guest). */
+@utility pressed-choice {
+  @apply aria-pressed:bg-accent-soft aria-pressed:text-accent-text aria-pressed:outline-2 aria-pressed:-outline-offset-2 aria-pressed:outline-accent;
 }
 
 @layer base {

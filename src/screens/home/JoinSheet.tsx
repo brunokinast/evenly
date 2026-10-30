@@ -125,7 +125,7 @@ function JoinForm({ myTrips }: { myTrips: Trip[] }) {
                         type="button"
                         aria-pressed={claim === g.id}
                         onClick={() => setClaim(claim === g.id ? null : g.id)}
-                        className="min-h-10 max-w-full truncate rounded-full bg-surface-2 px-3.5 text-caption font-semibold aria-pressed:bg-accent-soft aria-pressed:text-accent-text aria-pressed:outline-2 aria-pressed:-outline-offset-2 aria-pressed:outline-accent"
+                        className="min-h-10 max-w-full truncate rounded-full bg-surface-2 px-3.5 text-caption font-semibold pressed-choice"
                       >
                         {g.name}
                       </button>

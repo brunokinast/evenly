@@ -14,10 +14,7 @@ export type InstallContext = {
 };
 
 /** iPhone/iPad Safari: the browser whose Share menu has Add to Home Screen (APP-3). */
-export function isIOSSafari({
-  userAgent,
-  maxTouchPoints,
-}: Pick<InstallContext, "userAgent" | "maxTouchPoints">) {
+function isIOSSafari({ userAgent, maxTouchPoints }: Pick<InstallContext, "userAgent" | "maxTouchPoints">) {
   const ios = /iPhone|iPad|iPod/.test(userAgent) || (/Macintosh/.test(userAgent) && maxTouchPoints > 1);
   // Other iOS browsers and in-app browsers (Instagram, Facebook, LINE, Google app…) identify themselves.
   const other = /CriOS|FxiOS|EdgiOS|OPiOS|FBAN|FBAV|Instagram|Line\/|GSA\//.test(userAgent);

@@ -24,7 +24,7 @@ function NameStep() {
   const id = useId();
   const ready = checkName(form.value).ok;
   return (
-    <main className="mx-auto flex h-full max-w-[520px] flex-col items-center justify-center px-6 pt-[env(safe-area-inset-top)] pb-[max(24px,env(safe-area-inset-bottom))]">
+    <main className="mx-auto flex h-full max-w-app flex-col items-center justify-center px-6 pt-[env(safe-area-inset-top)] pb-[max(24px,env(safe-area-inset-bottom))]">
       <form
         className="flex w-full max-w-sm flex-col items-center text-center"
         onSubmit={(e) => {

@@ -5,6 +5,7 @@ import { sortMembers } from "@/domain/members";
 import type { Expense, Member, Trip } from "@/domain/types";
 import { FirebaseFirestore, firebaseReady } from "./firebase";
 import { launchTrips, saveTrips } from "./launchCopy";
+import { changes } from "@/lib/changes";
 import { mark, source } from "@/lib/perf";
 import { peekLive, useLive, holdLive, type Live } from "./live";
 
@@ -12,7 +13,12 @@ import { peekLive, useLive, holdLive, type Live } from "./live";
 
 type MemberDoc = { name: string; uid?: string; joinedAt: number };
 
-export function toTrip(id: string, d: DocumentData): Trip {
+// Live keys: one place, so a screen's hook and Home's hold share the same listener.
+const myTripsKey = (uid: string) => `myTrips/${uid}`;
+const tripKey = (tripId: string) => `trip/${tripId}`;
+const expensesKey = (tripId: string) => `expenses/${tripId}`;
+
+function toTrip(id: string, d: DocumentData): Trip {
   const members: Member[] = Object.entries(d.members as Record<string, MemberDoc>).map(([mid, m]) => ({
     id: mid,
     name: m.name,
@@ -59,12 +65,12 @@ const unconfirmed = new WeakSet<Trip>(); // Home's trips with a local write the 
 /** False while the server may not have this trip (just created here): listening to it there would be refused. */
 export const onServer = (trip: Trip) => !unconfirmed.has(trip);
 let lostVersion = 0;
-const lostListeners = new Set<() => void>();
+const lostChanges = changes();
 
 function loseTrip(tripId: string, raw: string) {
   lostTrips.set(tripId, raw);
   lostVersion++;
-  lostListeners.forEach((l) => l());
+  lostChanges.notify();
 }
 
 /** JSON with sorted keys: the native SDK's maps don't promise the same key order in both listeners. */
@@ -81,13 +87,7 @@ const withoutLost = (trips: Trip[]) => trips.filter((trip) => lostTrips.get(trip
 /** TRIP-5, KI-1, KI-2: Home's single query, newest first. */
 export function useMyTrips(uid: string): Live<Trip[]> {
   const live = useMyTripsQuery(uid);
-  const version = useSyncExternalStore(
-    (l) => {
-      lostListeners.add(l);
-      return () => lostListeners.delete(l);
-    },
-    () => lostVersion,
-  );
+  const version = useSyncExternalStore(lostChanges.subscribe, () => lostVersion);
   return useMemo(
     () => {
       if (live.status === "ready") return { status: "ready", data: withoutLost(live.data) };
@@ -103,7 +103,7 @@ export function useMyTrips(uid: string): Live<Trip[]> {
  * Welcome name of a user who already has trips, e.g. migrated), one read of the same query. Not on screen.
  */
 export async function myTripsForWrite(uid: string): Promise<Trip[]> {
-  const live = peekLive<Trip[]>(`myTrips/${uid}`);
+  const live = peekLive<Trip[]>(myTripsKey(uid));
   if (live?.status === "ready") return withoutLost(live.data);
   await firebaseReady;
   const { snapshots } = await FirebaseFirestore.getCollection(myTripsQuery(uid));
@@ -121,7 +121,7 @@ const myTripsQuery = (uid: string) => ({
 });
 
 function useMyTripsQuery(uid: string): Live<Trip[]> {
-  return useLive(`myTrips/${uid}`, (emit) =>
+  return useLive(myTripsKey(uid), (emit) =>
     listen(() =>
       FirebaseFirestore.addCollectionSnapshotListener(
         // Metadata changes too: a new trip's server confirmation flips it to onServer (F9, APP-10 copy).
@@ -149,7 +149,7 @@ function useMyTripsQuery(uid: string): Live<Trip[]> {
 }
 
 export function useTrip(tripId: string): Live<Trip> {
-  return useLive(`trip/${tripId}`, tripListener(tripId));
+  return useLive(tripKey(tripId), tripListener(tripId));
 }
 
 const tripListener = (tripId: string) => (emit: (value: Live<Trip>) => void) => {
@@ -168,15 +168,15 @@ const tripListener = (tripId: string) => (emit: (value: Live<Trip>) => void) => 
 };
 
 export function useExpenses(tripId: string): Live<Expense[]> {
-  return useLive(`expenses/${tripId}`, expensesListener(tripId));
+  return useLive(expensesKey(tripId), expensesListener(tripId));
 }
 
 /** F9 (docs/performance.md): Home keeps its top trips' listeners running, so opening one shows it at once.
  * Returns the release. */
 export function holdTrip(tripId: string) {
   const releases = [
-    holdLive(`trip/${tripId}`, tripListener(tripId)),
-    holdLive(`expenses/${tripId}`, expensesListener(tripId)),
+    holdLive(tripKey(tripId), tripListener(tripId)),
+    holdLive(expensesKey(tripId), expensesListener(tripId)),
   ];
   return () => releases.forEach((release) => release());
 }
