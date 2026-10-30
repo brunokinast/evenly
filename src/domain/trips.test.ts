@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { codeDigits, defaultCurrency, pdfFileName, randomCode } from "./trips";
+import { checkTripName, codeDigits, defaultCurrency, pdfFileName, randomCode } from "./trips";
 
 describe("trips", () => {
+  it("TRIP-2 trip names are trimmed and required", () => {
+    expect(checkTripName(" Lisbon ")).toEqual({ ok: true, name: "Lisbon" });
+    expect(checkTripName("   ")).toEqual({ ok: false, error: "empty" });
+    expect(checkTripName("x".repeat(51))).toEqual({ ok: false, error: "tooLong" });
+  });
+
   it("TRIP-3 default currency: PT-BR → BRL, else last used, else USD", () => {
     expect(defaultCurrency("pt-BR", "EUR")).toBe("BRL");
     expect(defaultCurrency("en", "EUR")).toBe("EUR");

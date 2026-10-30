@@ -22,7 +22,7 @@ import { InviteSheet } from "./InviteSheet";
 import { MembersTab } from "./MembersTab";
 import { TripMenu } from "./TripMenu";
 
-export type Tab = "expenses" | "balances" | "members";
+type Tab = "expenses" | "balances" | "members";
 const TABS: { id: Tab; icon: typeof Receipt }[] = [
   { id: "expenses", icon: Receipt },
   { id: "balances", icon: Scale },
@@ -86,7 +86,7 @@ export function TripScreen({ tripId, tab: tabParam }: { tripId: string; tab?: st
   const goTab = (next: Tab) => void switchTab(navigate, `/trip/${tripId}/${next}`);
 
   return (
-    <div className="mx-auto flex h-full max-w-[520px] flex-col">
+    <div className="mx-auto flex h-full max-w-app flex-col">
       <TopBar
         leading={
           <IconButton label={t("trip.back")} onClick={() => void goHome(navigate)}>

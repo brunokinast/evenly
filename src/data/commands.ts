@@ -9,7 +9,7 @@ import { myUid } from "./session";
 // None of them update local state: the live listeners deliver the result, as for every other member.
 
 /** Random document / member id (20 chars, like Firestore's own). */
-export function newId(): string {
+function newId(): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   return Array.from(crypto.getRandomValues(new Uint8Array(20)), (b) => chars[b % chars.length]).join("");
 }
@@ -31,8 +31,14 @@ function validInvite(trip: Trip) {
   return trip.invite && trip.invite.expiresAt > Date.now() ? trip.invite : null;
 }
 
-function myMemberId(trip: Trip) {
-  return trip.memberIdsByUid[myUid()]!;
+/** The write that keeps the trip's valid invite in step, if it has one. */
+function inviteOp(trip: Trip, op: (reference: string) => WriteBatchOperation): WriteBatchOperation[] {
+  const invite = validInvite(trip);
+  return invite ? [op(`invites/${invite.code}`)] : [];
+}
+
+function myMember(trip: Trip) {
+  return trip.members.find((m) => m.id === trip.memberIdsByUid[myUid()]);
 }
 
 // ---------- trips ----------
@@ -68,11 +74,7 @@ export async function createTrip(input: {
 
 /** TRIP-11 (owner). */
 export function renameTrip(trip: Trip, name: string) {
-  const invite = validInvite(trip);
-  return batch([
-    update(`trips/${trip.id}`, { name }),
-    ...(invite ? [update(`invites/${invite.code}`, { name })] : []),
-  ]);
+  return batch([update(`trips/${trip.id}`, { name }), ...inviteOp(trip, (ref) => update(ref, { name }))]);
 }
 
 /** TRIP-7, KI-5 (owner): expenses in chunks, then the trip last, so a retry resumes safely. Reads the
@@ -83,22 +85,24 @@ export async function deleteTrip(trip: Trip) {
   const { snapshots } = await FirebaseFirestore.getCollection({ reference: `trips/${trip.id}/expenses` });
   const ops = snapshots.map((s) => remove(`trips/${trip.id}/expenses/${s.id}`));
   while (ops.length > 450) await batch(ops.splice(0, 450));
-  const invite = validInvite(trip);
-  await batch([...ops, ...(invite ? [remove(`invites/${invite.code}`)] : []), remove(`trips/${trip.id}`)]);
+  await batch([...ops, ...inviteOp(trip, remove), remove(`trips/${trip.id}`)]);
 }
 
 /** ID-5: my name in the Auth profile is copied into each of my trips, one write per trip (so one trip
  * I lost access to can't block the others). */
 export async function renameMeInTrips(trips: Trip[], name: string) {
   await firebaseReady;
-  const writes = trips
-    .filter((t) => t.members.find((m) => m.id === t.memberIdsByUid[myUid()])?.name !== name)
-    .map((t) =>
-      FirebaseFirestore.updateDocument({
-        reference: `trips/${t.id}`,
-        data: { [`members.${myMemberId(t)}.name`]: name },
-      }),
-    );
+  const writes = trips.flatMap((t) => {
+    const me = myMember(t);
+    return me && me.name !== name
+      ? [
+          FirebaseFirestore.updateDocument({
+            reference: `trips/${t.id}`,
+            data: { [`members.${me.id}.name`]: name },
+          }),
+        ]
+      : [];
+  });
   const results = await Promise.allSettled(writes);
   if (results.some((r) => r.status === "rejected")) throw new Error("Some trips weren't updated");
 }
@@ -214,17 +218,15 @@ export function joinTrip(invite: InvitePreview, myName: string, claimId: string 
 /** MEM-1 (owner). */
 export function addGuest(trip: Trip, name: string) {
   const id = newId();
-  const invite = validInvite(trip);
   return batch([
     update(`trips/${trip.id}`, { [`members.${id}`]: { name, joinedAt: Date.now() }, editedMember: id }),
-    ...(invite ? [update(`invites/${invite.code}`, { [`guests.${id}`]: name })] : []),
+    ...inviteOp(trip, (ref) => update(ref, { [`guests.${id}`]: name })),
   ]);
 }
 
 /** MEM-5: an app user who leaves or is removed becomes a guest with the same name. The owner's write
  * names the entry it changes (`editedMember`, for the rules); a leaver's write doesn't need to. */
 function toGuest(trip: Trip, m: Member, byOwner: boolean) {
-  const invite = validInvite(trip);
   return batch([
     update(`trips/${trip.id}`, {
       memberUids: FieldValue.arrayRemove(m.uid),
@@ -232,29 +234,27 @@ function toGuest(trip: Trip, m: Member, byOwner: boolean) {
       [`members.${m.id}.uid`]: FieldValue.delete(),
       ...(byOwner ? { editedMember: m.id } : {}),
     }),
-    ...(invite ? [update(`invites/${invite.code}`, { [`guests.${m.id}`]: m.name })] : []),
+    ...inviteOp(trip, (ref) => update(ref, { [`guests.${m.id}`]: m.name })),
   ]);
 }
 
 /** MEM-5 (owner): an app user becomes a guest; a guest in no expense is deleted. */
 export function removeMember(trip: Trip, m: Member) {
   if (!isGuest(m)) return toGuest(trip, m, true);
-  const invite = validInvite(trip);
   return batch([
     update(`trips/${trip.id}`, { [`members.${m.id}`]: FieldValue.delete(), editedMember: m.id }),
-    ...(invite ? [update(`invites/${invite.code}`, { [`guests.${m.id}`]: FieldValue.delete() })] : []),
+    ...inviteOp(trip, (ref) => update(ref, { [`guests.${m.id}`]: FieldValue.delete() })),
   ]);
 }
 
 /** MEM-5, MEM-8, MEM-9: a non-owner leaves. */
 export function leaveTrip(trip: Trip) {
-  const me = trip.members.find((m) => m.id === myMemberId(trip))!;
-  return toGuest(trip, me, false);
+  return toGuest(trip, myMember(trip)!, false);
 }
 
 // ---------- expenses ----------
 
-export type ExpenseInput = {
+type ExpenseInput = {
   description: string;
   amountCents: number;
   payerId: string;

@@ -2,8 +2,8 @@
 // so pdf-lib and the fonts aren't startup code.
 import { PDFDocument, rgb, type PDFPage } from "pdf-lib";
 import { shareFile } from "@/app/share";
-import { balances, paymentsInListOrder, splitsAll, totalSpent } from "@/domain/balances";
-import { byListOrder } from "@/domain/members";
+import { settle, totalSpent } from "@/domain/balances";
+import { splitsAll } from "@/domain/split";
 import { pdfFileName } from "@/domain/trips";
 import { longDate, money, shortDate, t, tn } from "@/i18n";
 import { who } from "../labels";
@@ -159,10 +159,11 @@ export async function exportTripPdf(view: TripView) {
   y += 54;
 
   // Suggested payments, in the MEM-6 order (BAL-8).
-  const order = trip.members.map((m) => m.id);
-  const bal = balances(order, expenses);
-  const by = byListOrder(view.listed);
-  const pays = paymentsInListOrder(bal, order, view.listed);
+  const { bal, pays, rows } = settle(
+    trip.members.map((m) => m.id),
+    expenses,
+    view.listed,
+  );
   section(t("pdf.settlements"));
   if (pays.length === 0) {
     y += 16;
@@ -200,7 +201,7 @@ export async function exportTripPdf(view: TripView) {
     ]);
   section(t("pdf.people"));
   peopleHeader();
-  for (const id of [...bal.keys()].sort(by)) {
+  for (const id of rows) {
     ensure(ROW, peopleHeader);
     const p = who(view, id);
     const v = bal.get(id)!;

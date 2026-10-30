@@ -3,7 +3,7 @@
 Specs describe **what** Evenly does, in plain language. They are the source of truth: when behavior changes, the spec changes first, in the same commit as the code.
 
 - `features/`: one file per feature, with acceptance criteria (AC). Tests reference AC IDs, e.g. `TRIP-3`.
-- `open-questions.md`: decisions still needed from the product owner.
+- `open-questions.md`: product decisions taken, kept for reference (new open questions go here too).
 - `known-issues.md`: problems in the old app that the rebuild must not repeat.
 - `migration-source.md`: shape of the old app's data. Used **only** by the migration script, never as a design reference.
 

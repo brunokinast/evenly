@@ -11,10 +11,12 @@ const emulators = spawn(
   { shell: true, stdio: ["inherit", "pipe", "inherit"] },
 );
 
-await new Promise((resolve) => {
+await new Promise((resolve, reject) => {
   emulators.stdout.on("data", (chunk) => {
     if (chunk.toString().includes("All emulators ready")) resolve();
   });
+  // e.g. Java missing or a port in use: say so instead of waiting forever.
+  emulators.on("exit", (code) => reject(new Error(`The emulators stopped before starting (exit ${code}).`)));
 });
 console.log("Emulators ready.");
 spawnSync("node scripts/seed-demo.mjs", { shell: true, stdio: "inherit" });

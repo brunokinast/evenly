@@ -1,13 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  byListOrder,
-  checkGuestName,
-  checkTripName,
-  listOrder,
-  people,
-  person,
-  sortMembers,
-} from "./members";
+import { byListOrder, checkGuestName, listOrder, people, person, sortMembers } from "./members";
 import type { Member, Trip } from "./types";
 
 const trip = (members: Member[], ownerUid = "u1"): Trip => ({
@@ -76,11 +68,5 @@ describe("members", () => {
     expect(checkGuestName("tom", members)).toEqual({ ok: false, error: "taken" });
     expect(checkGuestName("ana", members)).toEqual({ ok: true, name: "ana" });
     expect(checkGuestName("x".repeat(51), members)).toEqual({ ok: false, error: "tooLong" });
-  });
-
-  it("TRIP-2 trip names are trimmed and required", () => {
-    expect(checkTripName(" Lisbon ")).toEqual({ ok: true, name: "Lisbon" });
-    expect(checkTripName("   ")).toEqual({ ok: false, error: "empty" });
-    expect(checkTripName("x".repeat(51))).toEqual({ ok: false, error: "tooLong" });
   });
 });

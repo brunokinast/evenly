@@ -1,4 +1,5 @@
 import type { Trip } from "@/domain/types";
+import { readStored, writeStored } from "@/lib/storage";
 import { nativeFirebase } from "./firebase";
 
 /**
@@ -13,21 +14,16 @@ let copy: Copy | null = nativeFirebase ? null : read();
 
 function read(): Copy | null {
   try {
-    const value = JSON.parse(localStorage.getItem(KEY) ?? "null") as Copy | null;
+    const value = JSON.parse(readStored(KEY) ?? "null") as Copy | null;
     return value?.uid && value.name && (value.trips === null || Array.isArray(value.trips)) ? value : null;
   } catch {
-    return null; // Storage blocked or unreadable: launch waits for Auth as before.
+    return null; // Unreadable: launch waits for Auth as before.
   }
 }
 
 function write(next: Copy | null) {
   copy = next;
-  try {
-    if (next) localStorage.setItem(KEY, JSON.stringify(next));
-    else localStorage.removeItem(KEY);
-  } catch {
-    // Storage blocked: no copy next time.
-  }
+  writeStored(KEY, next && JSON.stringify(next));
 }
 
 /** The identity to start as before Auth answers (web only). */
@@ -47,5 +43,5 @@ export function confirmIdentity(uid: string | null, name: string | null) {
 
 /** Home's live list, saved for the next launch. */
 export function saveTrips(uid: string, trips: Trip[]) {
-  if (!nativeFirebase && copy?.uid === uid) write({ ...copy, trips });
+  if (copy?.uid === uid) write({ ...copy, trips });
 }

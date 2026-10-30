@@ -1,18 +1,11 @@
 import { devices, expect, test, type Page } from "@playwright/test";
+import { enterName } from "./helpers";
 
 // Each test gets a fresh browser context, so a fresh anonymous identity.
 
 const nameField = (page: Page) => page.getByRole("textbox", { name: "Your name" });
 const welcomeField = (page: Page) => page.getByRole("textbox", { name: "What's your name?" });
 const welcomeHeading = (page: Page) => page.getByRole("heading", { name: "What's your name?" });
-
-async function enterName(page: Page, name: string) {
-  await page.goto("/");
-  await expect(welcomeHeading(page)).toBeVisible();
-  await welcomeField(page).fill(name);
-  await welcomeField(page).press("Enter");
-  await expect(page.getByRole("heading", { name: "Your trips" })).toBeVisible();
-}
 
 test("ID-1 ID-2 ID-8 first open asks for a name with the field focused; Enter submits", async ({
   page,

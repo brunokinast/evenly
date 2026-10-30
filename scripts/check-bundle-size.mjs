@@ -6,7 +6,8 @@ import { gzipSync } from "node:zlib";
 import { join } from "node:path";
 
 const BUDGET = 350 * 1024;
-// PDF export (pdf-lib, fontkit, the WOFF2 decoder; its fonts are separate files) loads only when "Export as PDF" is tapped.
+// PDF export (pdf-lib, fontkit, the WOFF2 decoder; its fonts are separate files) loads only when "Export as PDF" is
+// tapped, the ?perf panel only with ?perf. Keep in step with globIgnores/runtimeCaching in vite.config.ts.
 const ON_DEMAND = [/^exportPdf-/, /^PerfPanel-/];
 
 const dir = join("dist", "assets");

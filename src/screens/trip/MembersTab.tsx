@@ -184,10 +184,8 @@ function MemberSheet({
       <ConfirmSheet
         open={member !== null && confirming}
         title={t("member.removeTitle", { name: p?.name ?? "" })}
-        body={p && !p.guest ? t("member.becomesGuest", { name: p.name }) : ""}
+        body={p && !p.guest ? t("member.becomesGuest", { name: p.name }) : undefined}
         confirm={t("member.remove")}
-        cancel={t("common.cancel")}
-        errorText={t("common.error")}
         disabled={!online}
         onClose={() => setConfirming(false)}
         onConfirm={async () => {

@@ -8,7 +8,7 @@
 import { initializeTestEnvironment } from "@firebase/rules-unit-testing";
 import { doc, getDoc, setDoc, writeBatch, collection, getDocs } from "firebase/firestore";
 
-export const DEMO_CODE = "123456";
+const DEMO_CODE = "123456";
 const TRIP = "demo-lisbon";
 const FOREVER = Date.UTC(2100, 0, 1);
 
@@ -63,7 +63,8 @@ await env.withSecurityRulesDisabled(async (ctx) => {
   };
   const order = Object.keys(members);
 
-  // BAL-2: floor shares, leftover cents to the payer if in the split, else the first participant.
+  // BAL-2, a copy of equalShares (src/domain/split.ts; this script runs in plain Node): floor shares,
+  // leftover cents to the payer if in the split, else the first participant.
   const equal = (cents, ids, payer) => {
     const parts = order.filter((id) => ids.includes(id));
     const base = Math.floor(cents / parts.length);

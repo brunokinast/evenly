@@ -1,3 +1,5 @@
+import type { Expense } from "./types";
+
 /**
  * BAL-2: each participant gets floor(amount / n); the leftover cents go to the payer if they participate,
  * otherwise to the first participant. `participants` must be in member order.
@@ -45,4 +47,9 @@ export function customShares(
 /** EXP-12: a participant whose share is 0 is not a participant. */
 export function withoutZeroShares(shares: Record<string, number>): Record<string, number> {
   return Object.fromEntries(Object.entries(shares).filter(([, cents]) => cents > 0));
+}
+
+/** An equal split between every current member ("Split between all"). */
+export function splitsAll(e: Expense, memberIds: string[]): boolean {
+  return Object.keys(e.shares).length === memberIds.length && memberIds.every((id) => id in e.shares);
 }

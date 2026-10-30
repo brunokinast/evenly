@@ -7,7 +7,6 @@ dist/
 key.properties
 CLAUDE.local.md
 .playwright-mcp/
-dev-dist/
 playwright-report/
 test-results/
 *-debug.log

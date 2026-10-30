@@ -2,13 +2,13 @@ import { skipInstallFirst, useInstall } from "@/app/install";
 import { Button } from "@/components/Button";
 import { Logo } from "@/components/Logo";
 import { t } from "@/i18n";
-import { ApkDownload, IosSteps } from "../home/InstallSheets";
+import { ApkDownload, IosSteps } from "../install/InstallSheets";
 
 /** ID-10 (specs/design.md "Install first"): before the name, where the installed app is a separate identity. */
 export function InstallFirst({ method }: { method: "apk" | "ios" }) {
   const { apkUrl } = useInstall();
   return (
-    <main className="mx-auto flex h-full max-w-[520px] flex-col items-center justify-center px-6 pt-[env(safe-area-inset-top)] pb-[max(24px,env(safe-area-inset-bottom))]">
+    <main className="mx-auto flex h-full max-w-app flex-col items-center justify-center px-6 pt-[env(safe-area-inset-top)] pb-[max(24px,env(safe-area-inset-bottom))]">
       <div className="flex w-full max-w-sm flex-col items-center text-center">
         <Logo label="Evenly" className="mb-9 h-14 w-[202px]" />
         <h1 className="mb-3 text-title text-balance">{t(`installFirst.${method}.title`)}</h1>

@@ -13,7 +13,7 @@ const layer = (names, why) => ({
 });
 
 export default tseslint.config(
-  { ignores: ["dist", "dev-dist", "coverage", "playwright-report", "test-results", "android", "ios"] },
+  { ignores: ["dist", "dist-perf", "playwright-report", "test-results", "android"] },
   {
     files: ["**/*.{ts,tsx}"],
     extends: [js.configs.recommended, ...tseslint.configs.recommended, reactHooks.configs.flat.recommended],

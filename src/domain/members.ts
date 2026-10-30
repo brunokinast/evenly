@@ -1,4 +1,4 @@
-import { NAME_MAX } from "./names";
+import { charCount, NAME_MAX } from "./names";
 import { isGuest, type Member, type Trip } from "./types";
 
 /** Stored member order: join order, owner first (the owner joined first). */
@@ -64,19 +64,9 @@ export type GuestNameCheck = { ok: true; name: string } | { ok: false; error: "e
 export function checkGuestName(raw: string, members: Member[]): GuestNameCheck {
   const name = raw.trim();
   if (!name) return { ok: false, error: "empty" };
-  if ([...name].length > NAME_MAX) return { ok: false, error: "tooLong" };
+  if (charCount(name) > NAME_MAX) return { ok: false, error: "tooLong" };
   const key = name.toLocaleLowerCase();
   if (members.some((m) => isGuest(m) && m.name.toLocaleLowerCase() === key))
     return { ok: false, error: "taken" };
-  return { ok: true, name };
-}
-
-export type TripNameCheck = { ok: true; name: string } | { ok: false; error: "empty" | "tooLong" };
-
-/** TRIP-2: trimmed, required; at most 50 characters (APP-8). */
-export function checkTripName(raw: string): TripNameCheck {
-  const name = raw.trim();
-  if (!name) return { ok: false, error: "empty" };
-  if ([...name].length > NAME_MAX) return { ok: false, error: "tooLong" };
   return { ok: true, name };
 }

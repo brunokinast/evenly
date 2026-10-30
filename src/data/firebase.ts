@@ -41,15 +41,14 @@ async function connect() {
   // Single-tab cache (web): ~60–90 ms faster launches than multi-tab coordination (docs/performance.md, R2). A
   // second tab of the site falls back to a memory cache and still works, just without offline data.
   const persistence = setup(FirebaseFirestore.enablePersistence({ synchronizeTabs: false }));
-  const native = nativeFirebase;
-  await Promise.all([persistence, native ? null : webAuth()]);
+  await Promise.all([persistence, nativeFirebase ? null : webAuth()]);
   if (jsSdkOnAndroid) {
     // After webAuth(): the web plugin's constructor calls getAuth(), which must find that Auth.
     const { FirebaseAuthenticationWeb } = await import("@capacitor-firebase/authentication/dist/esm/web.js");
     FirebaseAuthentication = new FirebaseAuthenticationWeb() as unknown as typeof NativeAuthentication;
   }
   if (usesEmulators) {
-    if (native) await setup(FirebaseAuthentication.useEmulator({ host: emulatorHost(), port: 9099 }));
+    if (nativeFirebase) await setup(FirebaseAuthentication.useEmulator({ host: emulatorHost(), port: 9099 }));
     await setup(FirebaseFirestore.useEmulator({ host: emulatorHost(), port: 8080 }));
   }
 }

@@ -15,7 +15,7 @@ import { useMe } from "@/data/session";
 import { holdTrip, onServer, useMyTrips, warmTrip } from "@/data/trips";
 import { usePaintedMark } from "@/lib/perf";
 import { longDate, t } from "@/i18n";
-import { InstallSheets, startInstall, type InstallSheet } from "./InstallSheets";
+import { InstallSheets, startInstall, type InstallSheet } from "../install/InstallSheets";
 import { JoinSheet } from "./JoinSheet";
 import { NewTripSheet } from "./NewTripSheet";
 import { ProfileSheet } from "./ProfileSheet";
@@ -51,7 +51,7 @@ export function Home() {
   }, [held]);
 
   return (
-    <div className="mx-auto flex h-full max-w-[520px] flex-col">
+    <div className="mx-auto flex h-full max-w-app flex-col">
       <TopBar
         title={
           <>
@@ -96,7 +96,7 @@ export function Home() {
         )}
       </main>
 
-      <ButtonRow className="shrink-0 border-t border-border bg-surface px-4 pt-3 pb-[max(16px,env(safe-area-inset-bottom))]">
+      <ButtonRow className="bottom-bar">
         <Button variant="secondary" disabled={!online} onClick={() => setSheet("join")}>
           <Ticket aria-hidden />
           {t("home.joinTrip")}

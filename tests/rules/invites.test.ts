@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, it } from "vitest";
 import { assertFails, assertSucceeds, type RulesTestEnvironment } from "@firebase/rules-unit-testing";
 import { arrayRemove, arrayUnion, deleteField, doc, getDoc, setDoc, writeBatch } from "firebase/firestore";
-import { as, HOUR, rulesEnv, seed, tripDoc } from "./env";
+import { as, HOUR, inviteDoc, rulesEnv, seed, tripDoc } from "./env";
 
 let env: RulesTestEnvironment;
 beforeAll(async () => {
@@ -15,14 +15,7 @@ const CODE = "482913";
 async function seedInvite(expiresAt = Date.now() + HOUR) {
   await seed(env, {
     "trips/t1": { ...tripDoc(), invite: { code: CODE, expiresAt } },
-    [`invites/${CODE}`]: {
-      tripId: "t1",
-      expiresAt,
-      name: "Lisbon",
-      icon: "flight",
-      currency: "EUR",
-      guests: { mg: "Gus" },
-    },
+    [`invites/${CODE}`]: inviteDoc(expiresAt),
   });
 }
 
@@ -37,14 +30,7 @@ describe("create invite (INV-1, INV-2, INV-8, INV-10)", () => {
     const db = as(env, uid);
     const expiresAt = Date.now() + HOUR;
     const batch = writeBatch(db);
-    batch.set(doc(db, `invites/${code}`), {
-      tripId: "t1",
-      expiresAt,
-      name: "Lisbon",
-      icon: "flight",
-      currency: "EUR",
-      guests: { mg: "Gus" },
-    });
+    batch.set(doc(db, `invites/${code}`), inviteDoc(expiresAt));
     if (previous) batch.delete(doc(db, `invites/${previous}`));
     batch.update(doc(db, "trips/t1"), { invite: { code, expiresAt } });
     return batch.commit();
@@ -67,14 +53,7 @@ describe("create invite (INV-1, INV-2, INV-8, INV-10)", () => {
     const db = as(env, "alice");
     const batch = writeBatch(db);
     const expiresAt = Date.now() + HOUR;
-    batch.set(doc(db, `invites/${CODE}`), {
-      tripId: "t2",
-      expiresAt,
-      name: "Other",
-      icon: "flight",
-      currency: "EUR",
-      guests: {},
-    });
+    batch.set(doc(db, `invites/${CODE}`), inviteDoc(expiresAt, {}, "t2", "Other"));
     batch.update(doc(db, "trips/t2"), { invite: { code: CODE, expiresAt } });
     await assertFails(batch.commit());
   });
@@ -89,14 +68,7 @@ describe("create invite (INV-1, INV-2, INV-8, INV-10)", () => {
     const db = as(env, "alice");
     const batch = writeBatch(db);
     const expiresAt = Date.now() + 24 * HOUR;
-    batch.set(doc(db, `invites/${CODE}`), {
-      tripId: "t1",
-      expiresAt,
-      name: "Lisbon",
-      icon: "flight",
-      currency: "EUR",
-      guests: {},
-    });
+    batch.set(doc(db, `invites/${CODE}`), inviteDoc(expiresAt, {}));
     batch.update(doc(db, "trips/t1"), { invite: { code: CODE, expiresAt } });
     await assertFails(batch.commit());
   });
@@ -200,7 +172,7 @@ describe("join (INV-6, INV-7, MEM-7, INV-11)", () => {
     );
   });
 
-  it("a joiner can't change anything else", async () => {
+  it("INV-6 a joiner can't change anything else", async () => {
     await seedInvite();
     await seed(env, { "joinAttempts/eve": attempt() });
     await assertFails(join("eve", { ...joinNew("eve"), name: "Mine" }));
@@ -229,8 +201,8 @@ describe("join (INV-6, INV-7, MEM-7, INV-11)", () => {
   });
 });
 
-describe("invite upkeep", () => {
-  it("only the owner edits or deletes an invite's synced fields", async () => {
+describe("invite upkeep (INV-5, MEM-1, MEM-5)", () => {
+  it("INV-5 only the owner edits or deletes an invite's synced fields", async () => {
     await seedInvite();
     const alice = as(env, "alice");
     const bob = as(env, "bob");
@@ -256,7 +228,7 @@ describe("invite upkeep", () => {
     );
   });
 
-  it("a leaver can add only their own guest entry", async () => {
+  it("MEM-5 a leaver can add only their own guest entry", async () => {
     await seedInvite();
     const bob = as(env, "bob");
     const batch = writeBatch(bob);

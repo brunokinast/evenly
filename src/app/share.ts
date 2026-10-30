@@ -8,12 +8,27 @@ const native = Capacitor.isNativePlatform();
 
 /** Opens the share sheet with `text`. False when this device has none (the caller copies instead). */
 export async function shareText(text: string): Promise<boolean> {
-  if (native) {
-    // A real failure (not a cancel) falls back to copying, like a device without a share sheet.
-    if (!(await Share.share({ text }).then(() => true, isCancel))) return false;
-  } else if (navigator.share) await navigator.share({ text }).catch(() => {});
-  else return false;
-  return true;
+  if (!native) {
+    if (!navigator.share) return false;
+    await navigator.share({ text }).catch(() => {});
+    return true;
+  }
+  try {
+    await Share.share({ text });
+    return true;
+  } catch (e) {
+    return isCancel(e); // A real failure (not a cancel) falls back to copying, like a device without a share sheet.
+  }
+}
+
+/** Copies `text`; false where the clipboard isn't available or refused. */
+export function copyText(text: string): Promise<boolean> {
+  return (
+    navigator.clipboard?.writeText(text).then(
+      () => true,
+      () => false,
+    ) ?? Promise.resolve(false)
+  );
 }
 
 /** PDF-4: the share sheet (save, send…) where files can be shared, otherwise a download. */

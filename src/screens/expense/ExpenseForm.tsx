@@ -88,11 +88,12 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
   const online = useOnline();
   const [, navigate] = useLocation();
   const myId = trip.memberIdsByUid[myUid] ?? "";
-  const start = useMemo(() => initialForm(trip, myId, existing), []); // eslint-disable-line react-hooks/exhaustive-deps
+  const [start] = useState(() => initialForm(trip, myId, existing));
   const [f, setF] = useState<Form>(start);
   const [sheet, setSheet] = useState<SheetName>(null);
   const sent = useRef(false);
   const descRef = useRef<HTMLInputElement>(null);
+  const amountRef = useRef<HTMLInputElement>(null);
   const people = useMemo(() => peopleOf(trip, myUid), [trip, myUid]);
   const cur = trip.currency;
 
@@ -105,9 +106,7 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
   const remaining = split?.remaining ?? 0;
   const valid =
     (f.cents ?? 0) > 0 && f.description.trim() !== "" && parts.length > 0 && payerOk && remaining === 0;
-  const dirty =
-    JSON.stringify({ ...f, spentAt: 0 }) !== JSON.stringify({ ...start, spentAt: 0 }) ||
-    f.spentAt !== start.spentAt;
+  const dirty = JSON.stringify(f) !== JSON.stringify(start);
 
   const name = (id: string) =>
     id === myId ? t("common.you") : (people.get(id)?.name ?? t("members.former"));
@@ -116,6 +115,11 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
 
   // Expenses flow 5: Back (Android, browser) with unsaved changes asks first, like the close button.
   useEffect(() => (dirty ? guardBack(() => setSheet("discard")) : undefined), [dirty]);
+
+  // EXP-9: some mobile browsers ignore autoFocus after navigation; focus the amount once mounted.
+  useEffect(() => {
+    if (!existing && document.activeElement !== amountRef.current) amountRef.current?.focus();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // EXP-8: Firestore applies the write locally at once (the trip lists it in a few ms) and syncs it in the
   // background, so the form leaves right away; only a refusal by the server comes back, as a notice.
@@ -169,7 +173,7 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
       : t("form.equallyN", { n: parts.length });
 
   return (
-    <div className="mx-auto flex h-full max-w-[520px] flex-col">
+    <div className="mx-auto flex h-full max-w-app flex-col">
       <TopBar
         leading={
           <IconButton label={t("common.close")} onClick={() => (dirty ? setSheet("discard") : leave())}>
@@ -196,6 +200,7 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
         <label className="flex flex-col items-center gap-1 pt-5 pb-2">
           <span className="sr-only">{t("form.amount")}</span>
           <MoneyInput
+            ref={amountRef}
             // EXP-9: Add focuses the amount; Edit opens without the keyboard (nothing to guess).
             autoFocus={!existing}
             enterKeyHint="next"
@@ -278,7 +283,7 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
         )}
       </form>
 
-      <div className="shrink-0 border-t border-border bg-surface px-4 pt-3 pb-[max(16px,env(safe-area-inset-bottom))]">
+      <div className="bottom-bar">
         <Button variant="primary" className="w-full" disabled={!valid || !online} onClick={save}>
           {t("common.save")}
         </Button>
@@ -324,7 +329,6 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
         body={t("form.discardBody")}
         confirm={t("form.discard")}
         cancel={t("form.keepEditing")}
-        errorText={t("common.error")}
         onClose={() => setSheet(null)}
         onConfirm={async () => leave()}
       />
@@ -334,8 +338,6 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
           title={t("form.deleteTitle")}
           body={t("form.deleteBody")}
           confirm={t("form.delete")}
-          cancel={t("common.cancel")}
-          errorText={t("common.error")}
           disabled={!online}
           onClose={() => setSheet(null)}
           onConfirm={async () => {
@@ -346,7 +348,6 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
           }}
         />
       )}
-      {!existing && <FocusFirst />}
     </div>
   );
 }
@@ -378,13 +379,4 @@ function Setting(props: {
       <ChevronRight />
     </button>
   );
-}
-
-/** EXP-9: some mobile browsers ignore autoFocus after navigation; focus the amount once mounted. */
-function FocusFirst() {
-  useEffect(() => {
-    const el = document.querySelector<HTMLInputElement>("input[inputmode=numeric]");
-    if (el && document.activeElement !== el) el.focus();
-  }, []);
-  return null;
 }

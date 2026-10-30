@@ -2,7 +2,7 @@
 //   npx tsx scripts/relink.ts --users                  → Auth users, newest first, with names
 //   npx tsx scripts/relink.ts <oldUid>=<newUid> …      → dry run: what would change
 //   add --apply to write (one batch per trip), --emulator to use the local emulators
-import { auth, connect } from "./migration/admin";
+import { auth, BATCH_LIMIT, connect } from "./migration/admin";
 import { relinkTrip, type NewTrip } from "./migration/map";
 
 const args = process.argv.slice(2);
@@ -49,7 +49,7 @@ for (const [oldUid, newUid] of pairs) {
         newUid,
         user.displayName,
       );
-      if (expenseIds.length + 1 > 500) throw new Error("needs more than one batch");
+      if (expenseIds.length + 1 > BATCH_LIMIT) throw new Error("needs more than one batch");
       console.log(
         `  ${trip.name} [${t.id}]${update.ownerUid === newUid ? " owner," : ""} ${expenseIds.length} expenses`,
       );

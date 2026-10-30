@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { addExpense, createTrip, inviteCode, join, newUser, pickYesterday, tab } from "./helpers";
+import { addExpense, createTrip, enterName, inviteCode, join, newUser, pickYesterday, tab } from "./helpers";
 
 test("TRIP-1 TRIP-10 creating a trip stays on Home with it on top; Members shows the invite card", async ({
   browser,
@@ -574,10 +574,7 @@ test("ID-5 a name entered on Welcome reaches trips the user already has (migrate
     },
   );
   expect(res.ok).toBe(true);
-  await bia.goto("/");
-  await bia.getByRole("textbox", { name: "What's your name?" }).fill("Beatriz");
-  await bia.keyboard.press("Enter");
-  await expect(bia.getByRole("heading", { name: "Your trips" })).toBeVisible();
+  await enterName(bia, "Beatriz");
   await expect(ana.getByRole("tabpanel").getByText("Beatriz")).toBeVisible();
 });
 

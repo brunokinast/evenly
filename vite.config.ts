@@ -72,7 +72,8 @@ export default defineConfig({
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,woff2}"],
         // On-demand code (PDF export with its fonts, ~490 kB; the ?perf panel) isn't pre-downloaded with every
-        // install/update: it's cached the first time it's used (hashed names, so never stale).
+        // install/update: it's cached the first time it's used (hashed names, so never stale). Same chunks as
+        // ON_DEMAND in scripts/check-bundle-size.mjs, plus the PDF fonts.
         globIgnores: ["**/exportPdf-*", "**/noto-sans-*", "**/PerfPanel-*"],
         runtimeCaching: [
           {

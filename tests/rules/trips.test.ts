@@ -269,7 +269,7 @@ describe("expenses (EXP-1, EXP-3..6, TRIP-8, KI-6)", () => {
     await assertFails(setDoc(ref("bob"), { ...expenseDoc(), spentAt: Date.now() + 3_600_000 }));
   });
 
-  it("edits keep the creator and creation time", async () => {
+  it("EXP-4 edits keep the creator and creation time", async () => {
     await assertFails(setDoc(ref("alice", "e1"), { ...seeded, createdBy: "alice" }));
     await assertFails(setDoc(ref("alice", "e1"), { ...seeded, createdAt: 1 }));
   });

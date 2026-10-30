@@ -4,19 +4,25 @@
 // Each run: force-stop → cold start (`am start -W`: Android's own launch time) → the app's marks read over the
 // WebView's DevTools connection → open the main trip → Add expense → Save. The first run seeds data: a user
 // named "Perf Android" (or "Perf Chrome") with the same trips as scripts/perf.mjs --size big.
-import { execSync } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
-import { initializeTestEnvironment } from "@firebase/rules-unit-testing";
-import { doc, setDoc, writeBatch } from "firebase/firestore";
+import { adbCommand } from "./android-sdk.mjs";
+import {
+  clickText,
+  emulatorEnv,
+  markAt,
+  now,
+  option,
+  recorder,
+  seedTrips,
+  sleep,
+  waitMark,
+} from "./perf-lib.mjs";
 
-const args = process.argv.slice(2);
-const opt = (name, def) => (args.includes(name) ? args[args.indexOf(name) + 1] : def);
-const RUNS = Number(opt("--runs", 5));
-const LABEL = opt("--label", "");
-const SERIAL = opt("--serial", "");
+const RUNS = Number(option("--runs", 5));
+const LABEL = option("--label", "");
+const SERIAL = option("--serial", "");
 /** --chrome <url>: the website in Chrome on the same device instead (JS SDK vs the app's native plugins, R3). */
-const CHROME = opt("--chrome", "");
+const CHROME = option("--chrome", "");
 const PKG = CHROME ? "com.android.chrome" : "br.com.kinast.evenly.debug";
 const ACTIVITY = `${PKG}/br.com.kinast.evenly.MainActivity`;
 const NAME = CHROME ? "Perf Chrome" : "Perf Android";
@@ -34,16 +40,10 @@ const launch = () =>
   );
 const PORT = 9223;
 
-const sdk = process.env.ANDROID_HOME ?? `${process.env.LOCALAPPDATA}/Android/Sdk`;
-const adb = (cmd) =>
-  execSync(`"${sdk}/platform-tools/adb" ${SERIAL ? `-s ${SERIAL} ` : ""}${cmd}`, { encoding: "utf8" }).trim();
+const adb = (cmd) => adbCommand(`${SERIAL ? `-s ${SERIAL} ` : ""}${cmd}`);
 
-const env = await initializeTestEnvironment({
-  projectId: "demo-evenly",
-  firestore: { host: "127.0.0.1", port: 8080 },
-});
-const results = {};
-const record = (name, ms) => (results[name] ??= []).push(Math.round(ms));
+const env = await emulatorEnv();
+const { record, report } = recorder();
 
 await setUp();
 for (let run = 0; run < RUNS; run++) {
@@ -52,15 +52,7 @@ for (let run = 0; run < RUNS; run++) {
 }
 await env.cleanup();
 
-const median = (xs) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
-console.log(`\n${LABEL || "perf"}: Android app, median of ${RUNS} (ms)`);
-for (const [name, xs] of Object.entries(results)) {
-  console.log(`  ${name.padEnd(52)} ${String(median(xs)).padStart(6)}   [${xs.join(", ")}]`);
-}
-mkdirSync("perf-results", { recursive: true });
-const file = `perf-results/android-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
-writeFileSync(file, JSON.stringify({ label: LABEL, runs: RUNS, results }, null, 1));
-console.log(`\n→ ${file}`);
+report(`${LABEL || "perf"}: Android app, median of ${RUNS}`, "android-", { label: LABEL, runs: RUNS });
 process.exit(0);
 
 async function oneRun() {
@@ -186,7 +178,7 @@ async function setUp() {
       .filter((u) => u.displayName === NAME)
       .sort((a, b) => b.createdAt - a.createdAt)[0];
     if (!me) throw new Error("couldn't find the Perf Android account");
-    await seed(me.localId);
+    await seedTrips(env, me.localId, { myName: NAME, people: 8, expenses: 150 });
   }
   await page.waitForFunction(() => document.body.innerText.includes("Perf main trip"), undefined, {
     timeout: 60_000,
@@ -196,81 +188,4 @@ async function setUp() {
     timeout: 60_000,
   });
   await browser.close().catch(() => {});
-}
-
-function now(page) {
-  return page.evaluate(() => performance.now());
-}
-
-function waitMark(page, name) {
-  return page.waitForFunction((n) => performance.getEntriesByName(`evenly:${n}`).length > 0, name, {
-    timeout: 60_000,
-  });
-}
-
-function markAt(page, name, index = 0) {
-  return page.evaluate(
-    ([n, i]) => performance.getEntriesByName(`evenly:${n}`).at(i)?.startTime ?? NaN,
-    [name, index],
-  );
-}
-
-function clickText(page, selector, text) {
-  return page.evaluate(
-    ([s, x]) => {
-      const el = [...document.querySelectorAll(s)].filter((e) => e.textContent.includes(x)).at(-1);
-      const t = performance.now();
-      el.click();
-      return t;
-    },
-    [selector, text],
-  );
-}
-
-async function seed(uid) {
-  await env.withSecurityRulesDisabled(async (ctx) => {
-    const db = ctx.firestore();
-    const now = Date.now();
-    const ids = Array.from({ length: 8 }, (_, i) => (i === 0 ? "me" : `g${i - 1}`));
-    const trip = (id, name, people, createdAt) => {
-      const members = { me: { name: NAME, uid, joinedAt: now - 1e9 } };
-      for (let i = 0; i < people - 1; i++)
-        members[`g${i}`] = { name: `Guest ${i}`, joinedAt: now - 1e9 + i + 1 };
-      return setDoc(doc(db, `trips/${id}`), {
-        name,
-        icon: "beach",
-        currency: "BRL",
-        ownerUid: uid,
-        createdAt,
-        members,
-        memberIdsByUid: { [uid]: "me" },
-        memberUids: [uid],
-        invite: null,
-      });
-    };
-    const main = `perf-${uid}`;
-    await trip(`${main}-2`, "Perf small one", 2, now - 3e9);
-    await trip(`${main}-3`, "Perf small two", 2, now - 2e9);
-    await trip(main, "Perf main trip", 8, now - 1e9);
-    const batch = writeBatch(db);
-    for (let i = 0; i < 150; i++) {
-      const at = now - (150 - i) * 3_600_000;
-      batch.set(doc(db, `trips/${main}/expenses/e${i}`), {
-        description: `Expense ${i}`,
-        amountCents: 8000,
-        payerId: ids[i % 8],
-        shares: Object.fromEntries(ids.map((id) => [id, 1000])),
-        split: "equal",
-        spentAt: at,
-        createdBy: uid,
-        createdAt: at,
-        updatedAt: at,
-      });
-    }
-    await batch.commit();
-  });
-}
-
-function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
 }
