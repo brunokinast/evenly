@@ -50,7 +50,7 @@ Any feature, bug or change request goes through the `change-workflow` skill (`.c
 
 - After deploying Firestore rules, check the output says `released rules firestore.rules to cloud.firestore`: on 2026-10-28 the rules were uploaded but never released, and the live database kept the old app's rules for a day.
 - Call `await firebaseReady` (`src/data/firebase.ts`) before any Firebase plugin call.
-- Tailwind colors are only the design tokens (`bg-surface`, `text-fg-muted`, …); default palette is disabled. Type roles: `text-amount|code|title|total|heading|row|body|caption|tag` (also listed in `src/lib/cn.ts` for tailwind-merge); no one-off sizes. Radii: `rounded-ctl|card|sheet`.
+- Tailwind colors are only the design tokens (`bg-surface`, `text-fg-muted`, …); default palette is disabled. Type roles: `text-amount|code|title|total|heading|row|body|caption|tag` (also listed in `src/lib/cn.ts` for tailwind-merge); no one-off sizes. Radii: `rounded-ctl|card|sheet|inner|check`.
 - e2e: `playwright.config.ts` starts the emulators and dev server itself; each test is a fresh browser = a fresh anonymous user. Tests run with reduced motion so screenshots never catch a sheet mid-slide.
 - Android Back = `history.back()` (listener in `src/main.tsx`), so everything Back does is web history. A screen that must ask before leaving uses `guardBack()` from `Sheet.tsx` (see `ExpenseForm`).
 - Sheets add one history entry (Android back). Move between screens only with the helpers in `src/app/nav.ts` (`openTrip`, `goHome`, `openExpenseForm`, `backToTrip`, `switchTab`): they first drop open sheets' entry (`leaveSheets()`), then push or pop, so Back never lands on a stale screen or sheet.

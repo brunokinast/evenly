@@ -29,7 +29,7 @@ function Checkmark({ on, box }: { on: boolean; box?: boolean }) {
       aria-hidden
       className={cn(
         "grid size-6 shrink-0 place-items-center border-2 border-border",
-        box ? "rounded-[6px]" : "rounded-full",
+        box ? "rounded-check" : "rounded-full",
         on && "border-accent bg-accent text-accent-fg",
       )}
     >

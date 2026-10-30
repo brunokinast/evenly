@@ -191,8 +191,10 @@ export async function lookupInvite(code: string): Promise<InvitePreview | null> 
     if (!d || d.expiresAt <= Date.now()) return null;
     const guests = Object.entries(d.guests).map(([id, name]) => ({ id, name }));
     return { code, tripId: d.tripId, name: d.name, icon: d.icon, currency: d.currency, guests };
-  } catch {
-    return null;
+  } catch (e) {
+    // The rules hide a code that isn't valid (INV-4); anything else (e.g. no connection) stays an error.
+    if (isPermissionDenied(e)) return null;
+    throw e;
   }
 }
 

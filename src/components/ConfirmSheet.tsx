@@ -32,6 +32,12 @@ export function ConfirmSheet({
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  // Each opening starts clean: an earlier failure's message doesn't come back.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setFailed(false);
+  }
   return (
     <Sheet open={open} onClose={() => !busy && onClose()} title={title}>
       {body && <p className="text-body text-fg-muted">{body}</p>}

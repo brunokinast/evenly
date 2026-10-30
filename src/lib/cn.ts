@@ -11,7 +11,7 @@ const twMerge = extendTailwindMerge({
         ...["bg", "surface", "surface-2", "border", "fg", "fg-muted", "accent", "accent-fg", "accent-soft"],
         ...["accent-text", "positive", "negative", "scrim"],
       ],
-      radius: ["ctl", "card", "sheet"],
+      radius: ["ctl", "card", "sheet", "inner", "check"],
       shadow: ["float"],
     },
   },
