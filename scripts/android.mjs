@@ -7,6 +7,7 @@ import { spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, writeFileSync } from "node:fs";
 import { randomBytes } from "node:crypto";
 import { resolve } from "node:path";
+import { adb, sdk } from "./android-sdk.mjs";
 import { lanIp } from "./lan-ip.mjs";
 
 const mode = process.argv[2];
@@ -15,13 +16,10 @@ const run = (cmd, opts = {}) => {
   const r = spawnSync(cmd, { shell: true, stdio: "inherit", ...opts });
   if (r.status !== 0) process.exit(r.status ?? 1);
 };
-const sdk =
-  process.env.ANDROID_HOME ?? (process.env.LOCALAPPDATA && `${process.env.LOCALAPPDATA}/Android/Sdk`);
 // Gradle finds the SDK through android/local.properties (gitignored, per machine).
 if (sdk && !existsSync("android/local.properties"))
   writeFileSync("android/local.properties", `sdk.dir=${sdk.replaceAll("\\", "/")}\n`);
 const gradlew = `"${resolve("android", process.platform === "win32" ? "gradlew.bat" : "gradlew")}"`;
-const adb = sdk ? `"${sdk}/platform-tools/adb"` : "adb";
 
 if (mode === "key") {
   if (existsSync("android/key.properties")) {

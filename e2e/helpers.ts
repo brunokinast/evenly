@@ -21,11 +21,16 @@ export async function newUser(browser: Browser, name: string): Promise<Page> {
     storageState: skippedInstallFirst,
   });
   const page = await context.newPage();
+  await enterName(page, name);
+  return page;
+}
+
+/** Opens the app at the Welcome name (ID-1), enters `name` and waits for Home. */
+export async function enterName(page: Page, name: string) {
   await page.goto("/");
   await page.getByRole("textbox", { name: "What's your name?" }).fill(name);
   await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { name: "Your trips" })).toBeVisible();
-  return page;
 }
 
 /** TRIP-10: name, Enter (closes the keyboard), then Create trip (default icon and currency, or the ones given). */
@@ -82,8 +87,7 @@ export async function addExpense(page: Page, digits: string, description: string
   await page.keyboard.type(description);
   await page.keyboard.press("Enter");
   await page.getByRole("button", { name: "Save" }).click();
-  // Save waits for the server; on the emulators the first write after several quick guest additions can
-  // take ~4 s (docs/rebuild-plan.md).
+  // Save closes at once (EXP-8); the margin is for a long-running emulator, which slows down (docs/performance.md).
   await expect(page.getByRole("tab", { name: "Expenses" })).toBeVisible({ timeout: 15_000 });
 }
 

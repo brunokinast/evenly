@@ -60,9 +60,9 @@ export type Plan = {
 };
 
 const MAX_DESCRIPTION = 100; // EXP-1
-export const UNKNOWN = "Unknown";
+const UNKNOWN = "Unknown";
 
-export function toMs(v: Value | undefined): number | undefined {
+function toMs(v: Value | undefined): number | undefined {
   if (typeof v === "number" && Number.isFinite(v)) return Math.round(v);
   if (typeof v === "string" && !Number.isNaN(Date.parse(v))) return Date.parse(v);
   if (v && typeof v === "object" && !Array.isArray(v) && v.__type === "timestamp") return v.ms as number;

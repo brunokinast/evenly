@@ -53,10 +53,7 @@ A verification pass re-checks every spec against the old code, to catch anything
 - Repo pass (2026-10-28, branch `repo-pass`, a fresh-agent audit): trip delete also removes malformed expenses; sign-in "Try again" recovers from a failed start (ID-6); only a rules denial reads as "too many attempts"; owner edits in the rules are limited to adding/deleting a guest or making an app user a guest, named in `editedMember` (no renaming others, no re-linking uids); member names 2–50 in the rules (ID-3); invites can't outlive about an hour; two new type roles (`heading`, `code`) replace one-off sizes; dead keys/config/deps removed; docs synced; CI runs the e2e suite.
 - The user's end-to-end check on the phone passed (2026-10-28).
 - Phase 5 Android (2026-10-28, branch `android`, merged and pushed): Capacitor Android project, app ID `br.com.kinast.evenly` registered in Firebase (**the old app uses this same ID** with another key, so it must be uninstalled first; see the Phase 6 handoff), a new release key, debug build "Evenly Dev" against the LAN emulators, release build with the real config (ADR 0003). Done and checked on the Android emulator (API 36): native anonymous sign-in, join, live lists and live updates, offline cold start from the cache with the banner, a trip deleted while open goes Home (TRIP-7) and leaves Home (the lost-trip check now compares sorted-key JSON), Back closes sheets/screens and leaves the app on Home, Back with unsaved expense changes asks "Discard changes?" (expenses flow 5, also in browsers; e2e), PDF and invite open Android's share sheet (PDF-4), status bar icons follow the app theme, no service worker in the APK, a WebView reload recovers (native SDKs already set up), launcher icons from `icon.svg` (white coin on marigold), launch screen = the logo (coin and name) in `--fg` on `--bg` following the in-app theme (APP-2, light and dark checked).
-- Phase 5 still open:
-  1. Install `android/evenly.apk` on the user's phone and try it against the real project. Needs the new rules deployed to the real project first (Phase 6 decision: the old app still uses it).
-  2. Install: set `APK_URL` in `src/app/install.ts` once the APK is on Hosting (Phase 6 deploy).
-  3. ~~PDF fonts~~: done (PDF-6, ADR 0006).
+- Phase 5 open items, all done: the APK installed on the user's phone against the real project, `APK_URL` points at the GitHub Release (ADR 0005), PDF fonts (PDF-6, ADR 0006).
 - Phase 6 step 1 (2026-10-28, branch `migration`): `scripts/migrate.ts` and `scripts/relink.ts` (run with `npx tsx`; `firebase-admin` uses the `firebase login` credentials, no key file). Unit tests for the mapping and relink; checked on the emulators with a synthetic old-shape backup: restore, dry run, apply (one trip kept, the empty one and `users` deleted, balances read back), relink of the old owner to a new app user, and the trip showed live on Home and in the trip screen. Next: the dry run on the real project (read only), with the user's OK.
 - **Cutover done (2026-10-28, branch `cutover`)**: the migration ran on the real project (backup `backups/evenly-app-6f5f2-2026-10-28T14-09-32-583Z.json`, local only): Gramado (13 expenses) and Porto de Galinhas (43) migrated with their old UIDs, 3 empty trips and `users` deleted, balances read back. New rules, indexes and the web app deployed to https://evenly-app-6f5f2.web.app. **Correction (2026-10-29)**: that deploy uploaded the new rules but never released them; the live database kept the old app's rules (from 2026-01-21) until 2026-10-29, so creating a trip on the real project was refused (PERMISSION_DENIED) and the old app wasn't locked out. Found by the real-server timings; `firebase deploy --only firestore` released them (verified: the live ruleset equals `firestore.rules`). A scan found nothing written since the cutover except the migration's own batches: no old-format data. The old app is now locked out.
   - Firebase Hosting refuses executable files (`.apk`) on the Spark plan, so the APK is a GitHub Release asset instead (ADR 0005): release `v1.0`, and `APK_URL` points at `releases/latest/download/evenly.apk`. The install note says to uninstall the old app first (ADR 0004). `evenly.kinast.com.br` is a custom domain of the same Hosting site, so it switched with the deploy.
@@ -67,8 +64,7 @@ A verification pass re-checks every spec against the old code, to catch anything
   - APP-7 (branch `no-home-install`, user's choice): the Home install card is gone; install is suggested only before the name (ID-10) and from Profile (APP-3).
   - PDF-6 (branch `pdf-font`, option chosen by the user after a web search): pdf-lib + fontkit, bundled Noto Sans, other scripts and emoji from Google Fonts per export with only the characters used (ADR 0006).
   - Still to do: `main` on GitHub.
-- Seen on the emulators (2026-10-28, not investigated): the first write after several quick guest additions can take ~4 s in the browser (the rules evaluate in ~20 ms; later writes take ~20 ms). Check on the real project before treating it as a bug.
-- Still untested (no automated test yet): EXP-8 failure path, PDF-2 and PDF-5, APP-5 (accessibility). BAL-4 and INV-12 are absences by design.
+- Still untested (no automated test yet): EXP-8 failure path, PDF-2 and PDF-5, APP-5 (accessibility). APP-4 is checked by `scripts/check-bundle-size.mjs` in `npm run build`, not a test. BAL-4 and INV-12 are absences by design; AST-1..5 are deferred.
 
 ### 2. Design → `specs/design.md` + a mockup page
 
@@ -127,7 +123,7 @@ Scaffold first (Vite, TS, Tailwind, shadcn, Firebase, Vitest, emulator, PWA). Th
 - A script that restructures existing Firestore data into the new model. Test it against an export first.
 - Deploy to the same Hosting site.
 
-#### Phase 6 handoff (written 2026-10-28 for a fresh session)
+#### Phase 6 handoff (written 2026-10-28 for a fresh session; steps 1–3 and 5 are done, see the status above; open: 4 and 6)
 
 Decided by the user (2026-10-28):
 
@@ -147,7 +143,7 @@ Steps (each needs the user's OK before touching the real project):
    - Test first against the emulators loaded with the backup JSON: unit tests for the mapping (pure functions), then compare per-trip balances old vs new (the domain functions in `src/domain/`) and look at the trip lists in the app (`npm run android:dev` or the LAN preview).
 2. **Cutover**, with the user:
    - Backup and migration with `--apply`.
-   - Set `APK_URL` in `src/app/install.ts`, `npm run android:release`, `firebase deploy` (rules, indexes, hosting; the predeploy builds and adds `/evenly.apk`). The new rules lock the old app out.
+   - `npm run android:release`, `firebase deploy` (rules, indexes, hosting). The new rules lock the old app out. (Done; the APK became a GitHub Release asset, ADR 0005.)
 3. **Check on the user's phone**: the user's own old trips show only after their link (step 6), so check them on the emulators with the backup, and check the real site and APK with a new trip.
 4. **GitHub**: only with the user's explicit OK, make `evenly-v2` the new `main`. That's the one time `main` is touched; ask how they want it (replace or merge) and update `CLAUDE.md` "Git" after.
 5. Loose ends: an embedded PDF font for names in non-Latin scripts (Phase 5 open item 3). Update this status section and the docs.
@@ -155,14 +151,14 @@ Steps (each needs the user's OK before touching the real project):
 
 ### 6b. Performance (asked by the user, 2026-10-28, before `main` on GitHub)
 
-**Status (2026-10-28)**: steps 1–5 and 7 done on branch `perf` (tooling, baseline, F1–F4, F6–F8, R1–R4; F5 reverted; R5 deferred to the real phone); results and decisions in `docs/performance.md`. Step 6 done on the user's Galaxy S25 (R5: no). Left: merge, deploy, APK.
+**Status (2026-10-29)**: done. Merged, deployed, Android 1.3 released; real-server timings in `docs/performance.md` (all journeys inside the targets).
 
 Goal: the app opens fast (first time and every time after), data shows fast, and adding an expense feels instant. Findings, numbers and decisions go in `docs/performance.md`.
 
 Targets (mid-range phone, mobile network): returning launch → trips ≤ 1.0 s (web and Android); Home → trip with expenses ≤ 0.3 s; Add expense → can type ≤ 0.15 s; Save → back on the trip ≤ 0.1 s; tap expense / tab / sheet ≤ 0.1 s; first open → name screen ≤ 2.5 s.
 
 1. Baseline without any fix (two draft fixes parked on their own commit: Auth without Google's popup library, Firebase files preloaded).
-2. Tooling: in-app timing marks (`src/app/perf.ts`); lab harness `scripts/perf.mjs` (production build on the emulators, Lighthouse mobile CPU throttling, "slow 4G" and "good 4G", data sizes empty / typical 3 trips·6 people·40 expenses / big 8·150 / stress 20·1000, 5 runs, medians, JSON in `perf-results/`); Android runner (debug APK, `am start -W` + the marks over the WebView's DevTools); a hidden `?perf` panel showing the marks on a real phone (iPhone included) against the real project, read-only.
+2. Tooling: in-app timing marks (`src/lib/perf.ts`); lab harness `scripts/perf.mjs` (production build on the emulators, Lighthouse mobile CPU throttling, "slow 4G" and "good 4G", data sizes empty / typical 3 trips·6 people·40 expenses / big 8·150 / stress 20·1000, 5 runs, medians, JSON in `perf-results/`); Android runner (debug APK, `am start -W` + the marks over the WebView's DevTools); a hidden `?perf` panel showing the marks on a real phone (iPhone included) against the real project, read-only.
 3. Measure every journey (first open, name → Home, returning launch cold and resumed, Home → trip, tabs, Add expense, Save, edit/delete, join, create trip, PDF, a change from another member) × platform (web, Android app, iPhone spot checks) × data size. Diagnose slow ones with the download waterfall, bundle composition, Chrome traces, React Profiler and Firestore logging (cache vs server, bridge snapshot sizes, rules `get()`s).
 4. Findings table to the user (cost, cause, fix, gain, risk, behavior change?). Behavior changes (e.g. Save closing before the server confirms) need the user's OK, the spec, and an ADR if they bend a `CLAUDE.md` rule.
 5. One fix per commit with before/after numbers; drop what doesn't move them. Then a real-phone check by the user.

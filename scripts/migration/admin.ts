@@ -15,7 +15,9 @@ import {
 } from "firebase-admin/firestore";
 import type { Backup, Collection, DocNode, Value } from "./map";
 
-export const REAL_PROJECT = "evenly-app-6f5f2";
+const REAL_PROJECT = "evenly-app-6f5f2";
+/** Firestore's most writes in one batch. */
+export const BATCH_LIMIT = 500;
 const EMULATOR_PROJECT = "demo-evenly"; // the LAN preview's project
 
 export function connect(emulator: boolean): { app: App; db: Firestore; projectId: string } {

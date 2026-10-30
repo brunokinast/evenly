@@ -5,7 +5,7 @@
 //   add --emulator to use the local emulators (the LAN preview's project) instead of the real project
 //   npx tsx scripts/migrate.ts --emulator --restore <backup>  → load a backup into the emulators
 import { readFileSync } from "node:fs";
-import { connect, readAll, restore, saveBackup } from "./migration/admin";
+import { BATCH_LIMIT, connect, readAll, restore, saveBackup } from "./migration/admin";
 import { planMigration, type Backup, type Plan } from "./migration/map";
 import { balances } from "../src/domain/balances";
 
@@ -42,7 +42,8 @@ if (!flag("--apply")) {
 
 for (const k of plan.keep) {
   const ops = 1 + Object.keys(k.expenses).length + k.leftovers.length;
-  if (ops > 500) throw new Error(`trip ${k.id} needs ${ops} writes, over one batch; nothing was written.`);
+  if (ops > BATCH_LIMIT)
+    throw new Error(`trip ${k.id} needs ${ops} writes, over one batch; nothing was written.`);
 }
 for (const k of plan.keep) {
   const batch = db.batch();

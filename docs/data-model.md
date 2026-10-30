@@ -95,7 +95,7 @@ Already a member (INV-7): the client knows from its live Home list; the rules al
 
 ## Security Rules design
 
-Helpers: `signedIn()`, `trip(id)` = `get(/trips/id).data`, `isMember(t)` = `request.auth.uid in t.memberUids`, `now()` = `request.time.toMillis()`. Field allow-lists use `diff(...).affectedKeys().hasOnly([...])`. Everything not listed is denied.
+Helpers: `signedIn()`, `tripAt(id)` = `get(/trips/id).data` (`tripAfter(id)` = the same after the batch, `getAfter`), `isMember(t)` = `request.auth.uid in t.memberUids`, `now()` = `request.time.toMillis()`. Field allow-lists use `diff(...).affectedKeys().hasOnly([...])`. Everything not listed is denied.
 
 **trips/{tripId}**
 

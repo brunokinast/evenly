@@ -31,6 +31,16 @@ export function tripDoc(now = Date.now()) {
   };
 }
 
+/** The invite document for trip "t1" (its preview fields copied from tripDoc). */
+export function inviteDoc(
+  expiresAt: number,
+  guests: Record<string, string> = { mg: "Gus" },
+  tripId = "t1",
+  name = "Lisbon",
+) {
+  return { tripId, expiresAt, name, icon: "flight", currency: "EUR", guests };
+}
+
 export function expenseDoc(createdBy = "bob", now = Date.now()) {
   return {
     description: "Dinner",

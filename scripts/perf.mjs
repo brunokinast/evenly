@@ -3,34 +3,43 @@
 //   npm run emulators                    (or the LAN preview) in another terminal
 //   node scripts/perf.mjs                → builds dist-perf/, serves it, runs, prints medians,
 //                                          writes perf-results/<time>.json
-//   options: --no-build  --runs 5  --size typical|big|stress  --network slow|good  --label "after X"
+//   options: --no-build  --runs 5  --size typical|big  --network slow|good  --label "after X"
 //            --only live,create,pdf,relaunch   (optional journeys; while iterating on one fix, fewer = faster)
 // Times come from the page's own clock (performance.now) and the app's marks (src/lib/perf.ts), so they
 // include rendering, not Playwright's overhead.
 import { spawn, spawnSync } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
 import { chromium, devices } from "@playwright/test";
-import { initializeTestEnvironment } from "@firebase/rules-unit-testing";
-import { doc, setDoc, writeBatch } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
+import {
+  clickText,
+  emulatorEnv,
+  expenseDoc,
+  hasFlag,
+  markAt,
+  memberIds,
+  now,
+  option,
+  recorder,
+  seedTrips,
+  waitMark,
+} from "./perf-lib.mjs";
 
-const args = process.argv.slice(2);
-const opt = (name, def) => (args.includes(name) ? args[args.indexOf(name) + 1] : def);
-const RUNS = Number(opt("--runs", 5));
-const SIZE = opt("--size", "big");
-const NETWORK = opt("--network", "slow");
-const LABEL = opt("--label", "");
+const RUNS = Number(option("--runs", 5));
+// Typical trips are what users have (docs/performance.md); big is kept to compare with earlier results.
+const SIZE = option("--size", "typical");
+const NETWORK = option("--network", "slow");
+const LABEL = option("--label", "");
 /** --only live,create,pdf,relaunch: the optional journeys to run (default all). First open, launch, trip, tabs,
  * Add expense, Save and details always run: everything else builds on them. */
-const ONLY = opt("--only", "live,create,pdf,relaunch").split(",");
+const ONLY = option("--only", "live,create,pdf,relaunch").split(",");
 const want = (journey) => ONLY.includes(journey);
 const PORT = 4173;
-const URL = `http://localhost:${PORT}`;
+const BASE_URL = `http://localhost:${PORT}`;
 
 /** Main trip size per --size; every user also has two small trips. */
 const SIZES = {
   typical: { people: 6, expenses: 40 },
   big: { people: 8, expenses: 150 },
-  stress: { people: 20, expenses: 1000 },
 };
 /** Lighthouse's mobile "slow 4G", and a good 4G connection. */
 const NETWORKS = {
@@ -40,10 +49,9 @@ const NETWORKS = {
 const size = SIZES[SIZE];
 const network = NETWORKS[NETWORK];
 if (!size || !network) throw new Error(`unknown --size ${SIZE} or --network ${NETWORK}`);
-const NAMES = ["Ana", "Bia", "Caio", "Duda", "Edu", "Fê", "Gui", "Hana", "Ivo", "Juca"];
-const ids = Array.from({ length: size.people }, (_, i) => (i === 0 ? "me" : `g${i - 1}`));
+const ids = memberIds(size.people);
 
-if (!args.includes("--no-build")) {
+if (!hasFlag("--no-build")) {
   // Mode "perf" has no .env file, so the build talks to the emulators (src/data/firebase.ts).
   const b = spawnSync("npx vite build --mode perf --outDir dist-perf", { shell: true, stdio: "inherit" });
   if (b.status !== 0) process.exit(1);
@@ -54,14 +62,10 @@ const server = spawn(`npx vite preview --outDir dist-perf --port ${PORT} --stric
 });
 await waitForServer();
 
-const env = await initializeTestEnvironment({
-  projectId: "demo-evenly",
-  firestore: { host: "127.0.0.1", port: 8080 },
-});
+const env = await emulatorEnv();
 await checkEmulator();
 const browser = await chromium.launch();
-const results = {};
-const record = (name, ms) => (results[name] ??= []).push(Math.round(ms));
+const { record, report } = recorder();
 
 try {
   for (let run = 0; run < RUNS; run++) {
@@ -77,18 +81,12 @@ try {
   server.kill();
 }
 
-const median = (xs) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
-console.log(`\n${LABEL || "perf"}: size ${SIZE}, network ${NETWORK}, median of ${RUNS} (ms)`);
-for (const [name, xs] of Object.entries(results)) {
-  console.log(`  ${name.padEnd(52)} ${String(median(xs)).padStart(6)}   [${xs.join(", ")}]`);
-}
-mkdirSync("perf-results", { recursive: true });
-const file = `perf-results/${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
-writeFileSync(
-  file,
-  JSON.stringify({ label: LABEL, size: SIZE, network: NETWORK, runs: RUNS, results }, null, 1),
-);
-console.log(`\n→ ${file}`);
+report(`${LABEL || "perf"}: size ${SIZE}, network ${NETWORK}, median of ${RUNS}`, "", {
+  label: LABEL,
+  size: SIZE,
+  network: NETWORK,
+  runs: RUNS,
+});
 process.exit(0);
 
 async function oneRun() {
@@ -98,7 +96,7 @@ async function oneRun() {
     // Past the ID-10 install step: the timings are about the app itself.
     storageState: {
       cookies: [],
-      origins: [{ origin: URL, localStorage: [{ name: "evenly.installFirstSkipped", value: "1" }] }],
+      origins: [{ origin: BASE_URL, localStorage: [{ name: "evenly.installFirstSkipped", value: "1" }] }],
     },
   });
 
@@ -117,7 +115,7 @@ async function oneRun() {
   await page.keyboard.press("Enter");
   await waitMark(page, "painted:home");
   record("name entered → Home", (await markAt(page, "painted:home")) - t);
-  await seed(await myUid(page));
+  await seedTrips(env, await myUid(page), { myName: "Perf", ...size });
   await waitText(page, "Perf main trip", "body", 60_000);
   await page.waitForTimeout(1500); // let the service worker finish installing
   await page.close();
@@ -190,12 +188,12 @@ async function oneRun() {
 
 /** Another member's change arriving live (written straight to the emulator). */
 async function otherMember(page) {
-  const tripId = new globalThis.URL(page.url()).pathname.split("/")[2];
+  const tripId = new URL(page.url()).pathname.split("/")[2];
   const t0 = Date.now();
   await env.withSecurityRulesDisabled((ctx) =>
     setDoc(
       doc(ctx.firestore(), `trips/${tripId}/expenses/live${t0}`),
-      expense("Perf from Ana", "g0", t0 - 1000),
+      expenseDoc("Perf from Ana", "g0", t0 - 1000, ids),
     ),
   );
   await waitText(page, "Perf from Ana");
@@ -281,27 +279,8 @@ async function open(context) {
     downloadThroughput: network.down / 8,
     uploadThroughput: network.up / 8,
   });
-  await page.goto(URL);
+  await page.goto(BASE_URL);
   return page;
-}
-
-function now(page) {
-  return page.evaluate(() => performance.now());
-}
-
-/** Waits until the app's mark `evenly:<name>` exists. */
-function waitMark(page, name) {
-  return page.waitForFunction((n) => performance.getEntriesByName(`evenly:${n}`).length > 0, name, {
-    timeout: 60_000,
-  });
-}
-
-/** Page time of a mark (the first, or `index` -1 = the last). */
-function markAt(page, name, index = 0) {
-  return page.evaluate(
-    ([n, i]) => performance.getEntriesByName(`evenly:${n}`).at(i)?.startTime ?? NaN,
-    [name, index],
-  );
 }
 
 /** Where inside a journey the time went: each mark's first time after `from` (navigation start by default). */
@@ -313,19 +292,6 @@ async function breakdown(page, journey, names, from = 0) {
     );
     if (at !== undefined) record(`  ${journey}: ${name}`, at - from);
   }
-}
-
-/** Clicks the last element matching `selector` whose text includes `text`; returns the page time. */
-function clickText(page, selector, text) {
-  return page.evaluate(
-    ([s, x]) => {
-      const el = [...document.querySelectorAll(s)].filter((e) => e.textContent.includes(x)).at(-1);
-      const t = performance.now();
-      el.click();
-      return t;
-    },
-    [selector, text],
-  );
 }
 
 /** Tap (by selector, or by visible text) → the next frame painted, once `until` exists if given. */
@@ -382,60 +348,9 @@ function myUid(page) {
   );
 }
 
-function expense(description, payerId, at) {
-  return {
-    description,
-    amountCents: 1000 * size.people,
-    payerId,
-    shares: Object.fromEntries(ids.map((id) => [id, 1000])),
-    split: "equal",
-    spentAt: at,
-    createdBy: "seed",
-    createdAt: at,
-    updatedAt: at,
-  };
-}
-
-/** The user's trips: the main one at --size, and two small ones. */
-async function seed(uid) {
-  await env.withSecurityRulesDisabled(async (ctx) => {
-    const db = ctx.firestore();
-    const now = Date.now();
-    const trip = (id, name, people, createdAt) => {
-      const members = { me: { name: "Perf", uid, joinedAt: now - 1e9 } };
-      for (let i = 0; i < people - 1; i++) {
-        members[`g${i}`] = { name: `${NAMES[i % NAMES.length]} ${i}`, joinedAt: now - 1e9 + i + 1 };
-      }
-      return setDoc(doc(db, `trips/${id}`), {
-        name,
-        icon: "beach",
-        currency: "BRL",
-        ownerUid: uid,
-        createdAt,
-        members,
-        memberIdsByUid: { [uid]: "me" },
-        memberUids: [uid],
-        invite: null,
-      });
-    };
-    const main = `perf-${uid}`;
-    await trip(`${main}-2`, "Perf small one", 2, now - 3e9);
-    await trip(`${main}-3`, "Perf small two", 2, now - 2e9);
-    await trip(main, "Perf main trip", size.people, now - 1e9);
-    for (let start = 0; start < size.expenses; start += 400) {
-      const batch = writeBatch(db);
-      for (let i = start; i < Math.min(size.expenses, start + 400); i++) {
-        const at = now - (size.expenses - i) * 3_600_000;
-        batch.set(doc(db, `trips/${main}/expenses/e${i}`), expense(`Expense ${i}`, ids[i % size.people], at));
-      }
-      await batch.commit();
-    }
-  });
-}
-
 async function waitForServer() {
   for (let i = 0; i < 60; i++) {
-    const up = await fetch(URL).then(
+    const up = await fetch(BASE_URL).then(
       (r) => r.ok,
       () => false,
     );

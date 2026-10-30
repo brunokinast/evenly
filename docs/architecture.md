@@ -19,16 +19,17 @@ screens ──► components
 
 ```
 src/
-  app/          entry, routes, providers (session gate, theme, i18n, offline banner, toasts)
-  screens/      one folder per screen: welcome, home, trip (tabs), expense (add/edit form and its sheets), NotFound
-  components/   shared app pieces (Button/ButtonRow, Sheet, TextField, SubmitField, MoneyInput, CodeInput, Avatar, Calendar, Wheel…)
-  lib/          small helpers with no app knowledge (cn: class merging that knows the design tokens)
-  domain/       pure TypeScript, no React, no Firebase: money, split, balances, settlements, member names, validation
+  app/          App and the session gate, nav.ts (the only way to move between screens), device state (theme, install, online, toasts), share, the ?perf panel
+  screens/      one folder per screen: welcome, home, trip (tabs; pdf/ = the lazy PDF export), expense (add/edit form and its sheets), install (install steps shared by Welcome and Home), NotFound, ConnectError
+  components/   shared app pieces (Button/ButtonRow, Sheet, ConfirmSheet, Notice, TextField, SubmitField, MoneyInput, CodeInput, Avatar, Calendar, Wheel…)
+  lib/          small helpers with no app knowledge: cn (class merging that knows the design tokens), storage (device settings), changes (store notifications), perf (timing marks)
+  domain/       pure TypeScript, no React, no Firebase: money, split, balances, members, names, trips, dates, install
   data/         Firebase setup, auth, live hooks, write commands
   i18n/         en.ts, pt-BR.ts, t(), number/date formatting
 firestore.rules
 tests/rules/    Security Rules tests (emulator)
 e2e/            Playwright screenshot checks
+scripts/        dev, Android, perf, migration and build-check scripts (CLAUDE.md "Commands")
 ```
 
 Unit tests sit next to the file they test (`split.test.ts`).
@@ -59,7 +60,7 @@ Through the Capacitor Firebase plugins on every platform: `@capacitor-firebase/a
 - **Writes** are plain async functions in `src/data/` (`createTrip`, `joinTrip`, `saveExpense`…). They don't update local state: the listener delivers the change, just as it does for other members. Screens show a busy state only for writes that wait (below), and errors.
 - **Local-first writes** (EXP-8, APP-9): Firestore applies a write to its local cache at once (listeners show it in a few ms) and syncs it in the background; the returned promise settles only when the server answers. So screens don't await writes that only change existing documents: they go on at once and `.catch` a refusal into a notice ("Couldn't save…"). Writes that need the server first still wait: creating a trip (it can't be opened before the server has it), joining, invite codes, deleting a trip (reads the expenses on the server first).
 - **Web launch copy** (APP-10, ADR 0007): `launchCopy.ts` keeps my uid, name and Home's list in localStorage on the web; the session and Home start from it while Auth re-checks the login, and Auth's answer confirms or discards it.
-- **Warm listeners**: `warmLive` starts a key's shared listener before a screen uses it (Home starts a trip's listeners on touch-down, F6); unused, it ends after the usual idle time.
+- **Held and warm listeners**: `holdLive` keeps a key's shared listener running without a screen. Home holds its top 3 trips (`holdTrip`, F9) and starts any other trip's listeners on touch-down (`warmTrip`, F6); released, a listener ends after the usual idle time.
 
 ## Domain logic (`src/domain/`)
 
