@@ -50,7 +50,7 @@ export function SubmitField({
         aria-label={submitLabel}
         disabled={submitDisabled}
         className={cn(
-          "absolute top-1/2 right-1 grid -translate-y-1/2 place-items-center rounded-[7px] transition-colors [&_svg]:size-5",
+          "absolute top-1/2 right-1 grid -translate-y-1/2 place-items-center rounded-inner transition-colors [&_svg]:size-5",
           tall ? "right-1.5 size-11" : "size-10",
           ready && !submitDisabled
             ? "bg-accent text-accent-fg active:brightness-95"

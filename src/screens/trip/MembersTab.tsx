@@ -147,6 +147,8 @@ function MemberSheet({
 }) {
   const online = useOnline();
   const [confirming, setConfirming] = useState(false);
+  // The member left or was removed meanwhile: the next member opened starts at their details, not at "Remove?".
+  if (!member && confirming) setConfirming(false);
   const p = member ? view.people.get(member.id)! : null;
   const uses = member
     ? view.expenses.filter((e) => e.payerId === member.id || member.id in e.shares).length

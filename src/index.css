@@ -93,6 +93,9 @@
   --radius-ctl: 10px;
   --radius-card: 16px;
   --radius-sheet: 24px;
+  /* Small inner shapes (specs/design.md): segments and buttons inside a field follow its curve; checkboxes. */
+  --radius-inner: 7px;
+  --radius-check: 6px;
 
   --shadow-float: var(--shadow);
   --color-scrim: var(--scrim);
