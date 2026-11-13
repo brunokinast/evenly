@@ -41,6 +41,28 @@ function preloadFirebase(): Plugin {
   };
 }
 
+/**
+ * Real project only: open the connections to Google's servers while the page loads. On the web, Auth checks the
+ * saved login with the server before Firestore reads even its offline cache, and a cold secure connection over
+ * mobile data costs ~0.3–0.5 s per host (docs/performance.md, "Opening after a while").
+ */
+function preconnectFirebase(): Plugin {
+  let real = false;
+  return {
+    name: "preconnect-firebase",
+    apply: "build",
+    configResolved: (config) => void (real = !!config.env.VITE_FIREBASE_API_KEY),
+    transformIndexHtml: () =>
+      real
+        ? ["identitytoolkit", "securetoken", "firestore"].map((host) => ({
+            tag: "link",
+            attrs: { rel: "preconnect", href: `https://${host}.googleapis.com`, crossorigin: "" },
+            injectTo: "head" as const,
+          }))
+        : [],
+  };
+}
+
 export default defineConfig({
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
   // Lazily imported libraries (PDF export, firebase/auth in src/data/firebase.ts): pre-bundle them at dev-server start, or discovering them
@@ -50,6 +72,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     preloadFirebase(),
+    preconnectFirebase(),
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: false, // src/main.tsx registers it on the web only
@@ -85,6 +108,9 @@ export default defineConfig({
         navigateFallback: "/index.html",
         // Control the first session too, so on-demand code used then is cached already.
         clientsClaim: true,
+        // A downloaded update takes over at once, in the background. Waiting until every tab is closed made the
+        // next launch switch versions first: ~0.9 s before anything showed (docs/performance.md, F12).
+        skipWaiting: true,
       },
     }),
   ],

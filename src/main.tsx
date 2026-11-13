@@ -21,7 +21,9 @@ if (Capacitor.isNativePlatform()) {
   );
 } else {
   // The Android app ships its code in the APK; a service worker there could keep serving an old version.
-  registerSW({ immediate: true });
+  // An update takes over in the background (vite.config.ts); the open page isn't reloaded under the user, the
+  // next launch runs the new version.
+  registerSW({ immediate: true, onNeedReload() {} });
 }
 
 createRoot(document.getElementById("root")!).render(
