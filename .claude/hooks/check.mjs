@@ -1,4 +1,4 @@
-// Stop hook: blocks "done" until typecheck, lint, unit and rules tests pass (rebuild plan, Phase 3b).
+// Stop hook: blocks "done" until typecheck, lint, unit and rules tests pass.
 // Skips when nothing but docs, specs or mock-ups changed. Exit 2 = block and show stderr to Claude.
 import { execSync, spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";

@@ -1,4 +1,4 @@
-// Android builds (Phase 5). The APK carries the web build from dist/.
+// Android builds. The APK carries the web build from dist/.
 //   node scripts/android.mjs dev      emulator-mode web build pointed at this PC's LAN IP, debug APK
 //                                     ("Evenly Dev"), installed on a connected device/emulator if any
 //   node scripts/android.mjs release  production web build, signed release APK in android/evenly.apk

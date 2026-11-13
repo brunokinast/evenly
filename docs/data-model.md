@@ -4,10 +4,9 @@ Firestore schema and Security Rules design. Designed from `specs/` only. Written
 
 ## Principles
 
-- **Small trips, few documents.** A trip is one document holding its members. Expenses are a subcollection. A trip screen = 2 live listeners; Home = 1 live query (KI-1, KI-2).
+- **Small trips, few documents.** A trip is one document holding its members. Expenses are a subcollection. A trip screen = 2 live listeners; Home = 1 live query.
 - **Rules are the backend.** No Cloud Functions. Every write is a single document write or one atomic batched write, and the rules validate it. No transactions (the Capacitor Firestore plugin doesn't offer them, see ADR 0002).
 - **Plain JSON types.** Times are **integer milliseconds since epoch** (UTC), money is **integer cents**, IDs are strings. No Firestore `Timestamp`, no references. Easy to read and write from TypeScript, Kotlin and the rules.
-- **Clean structure over old-app compatibility** (user preference). The old app's documents don't match these shapes, so the rules lock the old app out and the queries never return its data. Migrating old data is optional (see the end).
 
 ## Collections
 
@@ -83,7 +82,7 @@ Each is one write or one batch, in `src/data/`. "Batch" = Firestore batched writ
 | Set name (ID-1..3, ID-5)                 | Auth `updateProfile`; then one write per trip updating `members[myId].name` (each is its own single-document write)                                                                                                            |
 | Create trip (TRIP-1)                     | set `trips/{new}` with me as the owner and only member                                                                                                                                                                         |
 | Rename trip (TRIP-11)                    | batch: trip `name` + valid invite `name`                                                                                                                                                                                       |
-| Delete trip (TRIP-7, KI-5)               | batch: delete all expenses, the invite (only if still valid; an expired code may already belong to another trip), the trip. Over 499 docs: delete expenses in chunks and the trip in the last batch, so a retry resumes safely |
+| Delete trip (TRIP-7)                     | batch: delete all expenses, the invite (only if still valid; an expired code may already belong to another trip), the trip. Over 499 docs: delete expenses in chunks and the trip in the last batch, so a retry resumes safely |
 | Create invite (INV-1, 2, 8, 10)          | batch: set `invites/{random code}`, delete the previous `invites/{old}` (only if still valid), set trip `invite`. If the code is taken (write denied), retry with a new code (max 3)                                           |
 | Look up code (INV-3, 4)                  | set `joinAttempts/{me}`, then get `invites/{code}`; missing or expired → INV-4                                                                                                                                                 |
 | Join (INV-6, 7, MEM-7)                   | batch: update trip (add my uid to `memberUids` and `memberIdsByUid`; add a new member entry, or put my uid and name on the claimed guest); if claiming, remove the guest from `invites/{code}.guests`                          |
@@ -143,14 +142,6 @@ Rules can't loop over a map, so these are client-side only. The UI, domain tests
 
 Home: 1 query listener (my trips). Trip: trip doc + expenses listener. Rule `get()` calls count as reads once per request. With ~10-person groups, a month's use stays far under the Spark free limits (50k reads / 20k writes per day).
 
-## Migration (Phase 6)
+## Relinking
 
-Lower priority than a clean, fast model: the model is never bent to fit old data. A local Admin SDK script (`scripts/migrate.ts`, run with `npx tsx`; pure mapping in `scripts/migration/map.ts` with unit tests; see the Phase 6 handoff in `docs/rebuild-plan.md`) rewrites the old shape (`specs/migration-source.md`) in place, after saving a JSON backup of everything to disk, and then deletes the old leftovers (`trips/*/members`, `users`).
-
-- Only trips with at least one expense are migrated (user's choice, 2026-10-28); the others are deleted with the leftovers and kept only in the backup.
-- Old trip → `trips/{same tripId}` (whole document replaced): `title` → `name`, `iconName` → `icon` (default `luggage`), `currency`, `ownerUid`, `createdAt` → ms. `invite: null` (old codes aren't carried over).
-- Old member docs → `members` entries with the **same memberIds**. `uid` → the same `uid` + name from `users/{uid}.displayName` (linked to the user's new identity later by `scripts/relink.ts`, which also takes the name from their new Auth profile; see the Phase 6 handoff); `manualName` → guest; neither → guest named "Unknown". `joinedAt` from `createdAt`.
-- Old expense → same id: `amount_cents` → `amountCents`, `payer_member_id` → `payerId`, `participant_member_ids` → equal `shares` per BAL-2 (in member order), `split: "equal"`, `spentAt`/`createdAt`/`updatedAt` from `createdAt`, `createdByUid` → `createdBy`.
-- Repairs (each printed as a warning in the dry run): an icon that isn't a TRIP-4 id → `luggage`; a member id used by an expense but with no member document → guest "Unknown" (the rules want payer and participants to be members); an owner with no member document → added as a member; an expense with no valid amount, payer or participants → not migrated (kept in the backup); names and descriptions cut to their maximum length.
-- Trips already in the new shape (`memberUids` present) are left alone, so a re-run is safe.
-- Check: per-trip balances, old (exact `amount / participants`) vs new (whole cents), must match within the rounding cents; after `--apply` the script reads everything back and compares again.
+Moving a person's trips from an old identity to a new one is a local Admin SDK script (`scripts/relink.ts`, so the rules don't apply): `docs/relink.md`.

@@ -32,7 +32,7 @@ export type Person = {
 };
 
 /**
- * KI-11, MEM-4: every member's display name, computed in one place. Duplicate names are told apart by
+ * MEM-4: every member's display name, computed in one place. Duplicate names are told apart by
  * "You" for the current user, the Guest tag for guests, and otherwise a number suffix in join order.
  */
 export function people(trip: Trip, myUid: string): Map<string, Person> {

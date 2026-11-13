@@ -1,6 +1,6 @@
 # 0005: The APK ships as a GitHub Release
 
-Status: accepted (2026-10-28, Phase 6). Supersedes the "serves it at `/evenly.apk`" part of ADR 0003 decision 3.
+Status: accepted (2026-10-28). Supersedes the "serves it at `/evenly.apk`" part of ADR 0003 decision 3.
 
 ## Context
 

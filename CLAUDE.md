@@ -7,11 +7,7 @@ Trip expense splitting app, maintained entirely by Claude. The user doesn't writ
 - `specs/`: source of truth for behavior (acceptance criteria like `TRIP-3`) and `specs/design.md` for visuals.
 - `docs/architecture.md`: folders, layers, the live-data pattern. `docs/data-model.md`: Firestore schema and rules design.
 - `docs/decisions/`: ADRs (append-only; a changed decision gets a new ADR). Read `0001` before proposing any technology.
-- `docs/rebuild-plan.md`: phases and current status.
-
-## Clean room
-
-This is a clean-room rebuild. Never read, search or reference the old app (`../evenly` or any copy of it), even if asked to "check how it worked". Everything needed is in `specs/`. If a spec is unclear, ask the user; don't guess from memory of the old app. `specs/migration-source.md` is for the migration script only.
+- `docs/performance.md`: how speed is measured, targets and findings. `docs/relink.md`: moving a person's trips to a new identity.
 
 ## Rules
 
@@ -26,7 +22,7 @@ This is a clean-room rebuild. Never read, search or reference the old app (`../e
 
 ## Git
 
-- Remote `origin` = github.com/brunokinast/evenly. Base branch **`main`**: branch from it, merge back into it, push it. The old app's last `main` is kept as tag `old-app-main` (never needed; don't build on it).
+- Remote `origin` = github.com/brunokinast/evenly. Base branch **`main`**: branch from it, merge back into it, push it.
 
 ## Workflow
 
@@ -42,12 +38,12 @@ Any feature, bug or change request goes through the `change-workflow` skill (`.c
 - `npm run android:dev`: debug APK "Evenly Dev" against the emulators on this PC's LAN IP, installed on a connected device/AVD (`emulator -avd Medium_Phone_API_36.1`). Needs the emulators running (`preview:lan`). Drive its WebView from Playwright with `adb forward tcp:9222 localabstract:webview_devtools_remote_<pid>` + `chromium.connectOverCDP`; Playwright's `click()` can hang there, so click through `page.evaluate`.
 - `npm run android:release`: signed release APK → `android/evenly.apk` (talks to the real project: don't install it for testing). It ships as a GitHub Release asset (ADR 0005): raise `versionCode`/`versionName` in `android/app/build.gradle`, then `gh release create vX.Y android/evenly.apk --repo brunokinast/evenly --target main` (gh is at `C:\Program Files\GitHub CLI\gh.exe`). Signing key: `android/release.jks` + `android/key.properties`, gitignored, never regenerate (ADR 0003).
 
-- `node scripts/perf.mjs` / `node scripts/perf-android.mjs` (Phase 6b): timings on a production build (web) or the debug APK (Android) against the emulators; marks in `src/lib/perf.ts`; `?perf` shows them on a real phone. How to read them and the findings: `docs/performance.md`. A long-running emulator slows to 0.4–2 s per write: clearing its data usually fixes it (`scripts/perf.mjs` does that, re-seeding the demo trip); if not, restart the emulators.
-- `npx tsx scripts/migrate.ts` / `scripts/relink.ts` (Phase 6): dry run by default, `--apply` writes, `--emulator` uses the local emulators. Without `--emulator` they talk to the **real project** with the `firebase login` credentials: only with the user's OK. Backups go to `backups/` (gitignored).
+- `node scripts/perf.mjs` / `node scripts/perf-android.mjs` timings on a production build (web) or the debug APK (Android) against the emulators; marks in `src/lib/perf.ts`; `?perf` shows them on a real phone. How to read them and the findings: `docs/performance.md`. A long-running emulator slows to 0.4–2 s per write: clearing its data usually fixes it (`scripts/perf.mjs` does that, re-seeding the demo trip); if not, restart the emulators.
+- `npx tsx scripts/relink.ts`: moves a person's trips to their new identity (`docs/relink.md`). Dry run by default, `--apply` writes, `--emulator` uses the local emulators. Without `--emulator` it talks to the **real project** with the `firebase login` credentials: only with the user's OK.
 
 ## Gotchas
 
-- After deploying Firestore rules, check the output says `released rules firestore.rules to cloud.firestore`: on 2026-10-28 the rules were uploaded but never released, and the live database kept the old app's rules for a day.
+- After deploying Firestore rules, check the output says `released rules firestore.rules to cloud.firestore`: on 2026-10-28 the rules were uploaded but never released, and the live database kept the previous rules for a day.
 - Call `await firebaseReady` (`src/data/firebase.ts`) before any Firebase plugin call.
 - Tailwind colors are only the design tokens (`bg-surface`, `text-fg-muted`, …); default palette is disabled. Type roles: `text-amount|code|title|total|heading|row|body|caption|tag` (also listed in `src/lib/cn.ts` for tailwind-merge); no one-off sizes. Radii: `rounded-ctl|card|sheet|inner|check`.
 - e2e: `playwright.config.ts` starts the emulators and dev server itself; each test is a fresh browser = a fresh anonymous user. Tests run with reduced motion so screenshots never catch a sheet mid-slide.

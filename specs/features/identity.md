@@ -29,4 +29,4 @@ Users don't create accounts. On first open, the app silently gives the device an
 ## Notes
 
 - Identity is tied to the device/browser. There is no sign-in; losing the device's app data means losing access to your trips. This is an accepted trade-off for zero friction.
-- Safari and its Home Screen web app (iPhone/iPad), and an Android browser and the Android app, keep separate data, so each is its own identity (ID-10). An old trip can be moved to a new identity only by hand (`scripts/relink.ts`).
+- Safari and its Home Screen web app (iPhone/iPad), and an Android browser and the Android app, keep separate data, so each is its own identity (ID-10). Trips can be moved from one identity to another only by hand (`docs/relink.md`).

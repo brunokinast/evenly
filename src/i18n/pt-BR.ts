@@ -55,7 +55,7 @@ export const ptBR: Record<MessageKey, string> = {
     "O app da Tela de Início começa do zero: as viagens que você tem aqui no Safari não aparecem nele.",
   "install.apk.title": "Baixar o app Android",
   "install.apk.body":
-    "Abra o arquivo baixado para instalar. Se o Android pedir, permita que o navegador instale apps. Se você tem o app Evenly antigo, desinstale-o antes.",
+    "Abra o arquivo baixado para instalar. Se o Android pedir, permita que o navegador instale apps.",
   "install.apk.download": "Baixar",
   "install.apk.note": "O app começa do zero: as viagens que você tem aqui no navegador não aparecem nele.",
 

@@ -1,4 +1,4 @@
-// Phase 6b (docs/performance.md): repeatable timings of what users feel, on a production build against the
+// docs/performance.md: repeatable timings of what users feel, on a production build against the
 // local emulators, with a mid-range phone's CPU (4× slower) and a mobile network.
 //   npm run emulators                    (or the LAN preview) in another terminal
 //   node scripts/perf.mjs                → builds dist-perf/, serves it, runs, prints medians,

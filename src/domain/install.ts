@@ -9,7 +9,7 @@ export type InstallContext = {
   installed: boolean;
   /** The browser offered an install prompt (beforeinstallprompt). */
   canPrompt: boolean;
-  /** Where the APK is served, once it exists (Phase 5). */
+  /** Where the APK is served, once it exists. */
   apkUrl: string | null;
 };
 

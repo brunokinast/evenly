@@ -1,6 +1,6 @@
 # 0008: Gemini adds expenses through a calendar, reviewed in the app
 
-Status: accepted (2026-11-13). Replaces the Phase 7 plan of a Kotlin AppFunctions service (docs/rebuild-plan.md).
+Status: accepted (2026-11-13).
 
 ## Context
 

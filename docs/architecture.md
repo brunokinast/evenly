@@ -29,7 +29,7 @@ src/
 firestore.rules
 tests/rules/    Security Rules tests (emulator)
 e2e/            Playwright screenshot checks
-scripts/        dev, Android, perf, migration and build-check scripts (CLAUDE.md "Commands")
+scripts/        dev, Android, perf, relink and build-check scripts (CLAUDE.md "Commands")
 ```
 
 Unit tests sit next to the file they test (`split.test.ts`).
@@ -51,11 +51,11 @@ Through the Capacitor Firebase plugins on every platform: `@capacitor-firebase/a
 
 - Every piece of server data on screen comes from a **live listener**, exposed as a hook in `src/data/`: `useSession()`, `useMyTrips()`, `useTrip(tripId)`, `useExpenses(tripId)`.
 - A hook returns `{ status: "loading" | "ready" | "gone", data }`. `gone` = the document doesn't exist or access was lost (deleted trip, removed member). Screens react to it (TRIP-7, TRIP-9, MEM-9).
-- Listeners are shared and reference-counted by key (`src/data/live.ts`); an unused listener is kept 30 s so going back and forth doesn't re-listen, and a failed one ("gone") is dropped at once (one listener per path, however many components use it), built on `useSyncExternalStore`. That's the only cache: no manual caches, no one-off reads for on-screen data, no "refresh" (KI-1..3).
+- Listeners are shared and reference-counted by key (`src/data/live.ts`); an unused listener is kept 30 s so going back and forth doesn't re-listen, and a failed one ("gone") is dropped at once (one listener per path, however many components use it), built on `useSyncExternalStore`. That's the only cache: no manual caches, no one-off reads for on-screen data, no "refresh".
 - Derived values (balances, settlements, display names, "split between all") are computed from hook data with `src/domain/` functions during render (memoized when needed), never stored.
 - **One exception**: the Auth profile (display name) has no change listener, so `setDisplayName` re-reads the current user after `updateProfile` and publishes it to `useSession()`.
 - **Cache gotcha**: when a trip listener loses access (trip deleted, member removed), Firestore's offline cache can keep the old trip and Home's query may keep showing it. `useMyTrips` hides a trip whose listener reported "gone" while the query still returns that same version (`src/data/trips.ts`).
-- **Rename in all trips** (ID-5): `setDisplayName` takes Home's live list, or one read of the same query when Home never loaded (a name entered on Welcome by a user who already has trips, e.g. migrated). The read feeds a write, never the screen.
+- **Rename in all trips** (ID-5): `setDisplayName` takes Home's live list, or one read of the same query when Home never loaded (a name entered on Welcome by a user who already has trips, e.g. after a relink). The read feeds a write, never the screen.
 - **Join preview**: looking up a code (`lookupInvite`) is a one-off read by design: the attempt must be counted first (INV-9), and the preview is only shown in the Join sheet.
 - **Writes** are plain async functions in `src/data/` (`createTrip`, `joinTrip`, `saveExpense`…). They don't update local state: the listener delivers the change, just as it does for other members. Screens show a busy state only for writes that wait (below), and errors.
 - **Local-first writes** (EXP-8, APP-9): Firestore applies a write to its local cache at once (listeners show it in a few ms) and syncs it in the background; the returned promise settles only when the server answers. So screens don't await writes that only change existing documents: they go on at once and `.catch` a refusal into a notice ("Couldn't save…"). Writes that need the server first still wait: creating a trip (it can't be opened before the server has it), joining, invite codes, deleting a trip (reads the expenses on the server first).
@@ -69,7 +69,7 @@ Pure functions with unit tests named after the acceptance criteria:
 - money: cents parsing for the fill-from-the-right input (EXP-2).
 - split: equal shares with the leftover-cents rule (BAL-2), custom split fill (EXP-12).
 - balances and settlements (BAL-1, BAL-3, BAL-7).
-- member display names and disambiguation (MEM-4, KI-11).
+- member display names and disambiguation (MEM-4).
 - validation shared by forms (ID-3, TRIP-2, EXP-1, MEM-2).
 - draft: the expense being edited (`ExpenseDraft`), its checks and what Save writes, shared by the expense form and the Gemini review (EXP-1, EXP-10, EXP-13, AST-8).
 - intake: Gemini's calendar events → review lines, with forgiving amount parsing and name matching (AST-4, AST-5).
@@ -89,7 +89,7 @@ Pure functions with unit tests named after the acceptance criteria:
 ## i18n and formatting
 
 - `en.ts` is the source dictionary; `pt-BR.ts` must have the same keys (a TypeScript type checks it). `t(key, vars)`; `tn()` picks `.one` for exactly 1 and `.other` otherwise (both languages' needs; Intl's Portuguese rules would call 0 singular). No i18n library.
-- Language: device language, fallback English (APP-1). Amounts: `Intl.NumberFormat` in the user's language with the trip currency's symbol (EXP-2, KI-8). Dates and times: `Intl.DateTimeFormat`.
+- Language: device language, fallback English (APP-1). Amounts: `Intl.NumberFormat` in the user's language with the trip currency's symbol (EXP-2). Dates and times: `Intl.DateTimeFormat`.
 
 ## Theme and design
 
@@ -101,7 +101,7 @@ Tokens from `specs/design.md` as CSS variables, mapped into Tailwind. Theme ligh
 - Budget: JavaScript loaded at startup ≤ 350 kB gzipped, checked by `scripts/check-bundle-size.mjs` after `vite build`. It counts every chunk, since the Firebase plugins import their SDKs dynamically right at startup. (Raised from 250 kB in the identity slice: Firestore with its offline cache is ~153 kB and Auth ~29 kB on their own; 350 kB still downloads in well under a second on 4G and repeat opens come from the service worker.) Heavy, rarely used code (PDF export) is loaded only when used and listed in the script's `ON_DEMAND`.
 - First paint shows skeletons in the real layout; never a full-screen spinner after it.
 
-## Android (Phase 5)
+## Android
 
 Capacitor wraps the same build (`capacitor.config.ts`, `android/`) and uses the native Firebase SDKs (ADR 0002). App ID, signing, build types, Back and sharing: ADR 0003.
 

@@ -5,7 +5,7 @@
 - **APP-1** Languages: English and Portuguese (Brazil). The app follows the device language and falls back to English.
 - **APP-2** Theme: light, dark or system (default). The choice is remembered on the device. In the Android app the launch screen follows it too, from the next launch (Android 12 and later).
 - **APP-3** Install from the Profile sheet. The "Install app" row shows only when the app isn't already running installed, and depends on the device:
-  - Android: "Get the Android app" downloads the APK, with a short note on allowing the install and on uninstalling the old Evenly app first (same app ID, another key; ADR 0004), and that the app starts fresh: trips in the browser won't be in it (ID-10). The APK is the latest GitHub Release's asset (ADR 0005).
+  - Android: "Get the Android app" downloads the APK, with a short note on allowing the install, and that the app starts fresh: trips in the browser won't be in it (ID-10). The APK is the latest GitHub Release's asset (ADR 0005).
   - iPhone/iPad Safari: opens the 3 steps (Share → Add to Home Screen → Add), with a note that the Home Screen app starts fresh: trips in Safari won't be in it (ID-10).
   - Other browsers that offer an install prompt: "Install app" triggers it. Where none of these apply, the row is hidden.
 - **APP-7** Home never shows an install card or prompt. Installing is suggested once, before the name (ID-10), and stays available from Profile (APP-3). (Replaces the Home install card, removed 2026-10-28 by the user's choice.)

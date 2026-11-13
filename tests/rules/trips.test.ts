@@ -49,7 +49,7 @@ describe("trips: read (TRIP-8, TRIP-5)", () => {
     await assertFails(getDoc(doc(as(env, null), "trips/t1")));
   });
 
-  it("TRIP-5 Home's query returns only my trips; listing all trips is denied (KI-1, KI-4)", async () => {
+  it("TRIP-5 Home's query returns only my trips; listing all trips is denied", async () => {
     const db = as(env, "bob");
     await assertSucceeds(
       getDocs(query(collection(db, "trips"), where("memberUids", "array-contains", "bob"))),
@@ -230,7 +230,7 @@ describe("trips: activity (TRIP-12)", () => {
   });
 });
 
-describe("trips: delete (TRIP-7, KI-5)", () => {
+describe("trips: delete (TRIP-7)", () => {
   it("TRIP-7 only the owner deletes the trip, in a batch with its expenses", async () => {
     await assertFails(deleteDoc(doc(as(env, "bob"), "trips/t1")));
     const db = as(env, "alice");
@@ -241,7 +241,7 @@ describe("trips: delete (TRIP-7, KI-5)", () => {
   });
 });
 
-describe("expenses (EXP-1, EXP-3..6, TRIP-8, KI-6)", () => {
+describe("expenses (EXP-1, EXP-3..6, TRIP-8)", () => {
   const ref = (uid: string, id = "e2") => doc(as(env, uid), `trips/t1/expenses/${id}`);
 
   it("TRIP-8 only members read expenses", async () => {
@@ -277,7 +277,7 @@ describe("expenses (EXP-1, EXP-3..6, TRIP-8, KI-6)", () => {
     await assertFails(setDoc(ref("bob"), { ...expenseDoc(), shares: { mb: 4500, zz: 4500 } }));
   });
 
-  it("EXP-1 validates description, amount, shares, split and fields (KI-6)", async () => {
+  it("EXP-1 validates description, amount, shares, split and fields", async () => {
     const bad = [
       { description: "" },
       { description: "x".repeat(101) },
