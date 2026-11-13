@@ -87,6 +87,11 @@ The user noticed the first open after a while felt slow ("trips load slowly"). M
 - **F12 done: first launch after a deploy took ~1 s more, even on the S25.** With `injectRegister: false`, vite-plugin-pwa didn't add `skipWaiting`, so a downloaded update waited until every tab closed and the next launch activated it before serving anything (navigation `workerStart` ~900 ms). Now `skipWaiting: true` (the update takes over in the background) and `onNeedReload` is a no-op (no reload under the user; the next launch runs it). Lab: 1345 → 451 ms.
 - **Cold connections to Google**: on the web, Auth checks the saved login with the server (`accounts:lookup`, plus `securetoken` when the token is over an hour old) before Firestore reads even its offline cache. Home still shows at once (APP-10 copy), but a trip tapped in the first ~2 s waited: live site, tap 1 s after Home → trip 641 ms. **F13 done**: production `index.html` preconnects to identitytoolkit, securetoken and firestore: 641 → 70 ms with the login fresh. With the login expired it stays ~1 s (three requests in a row: refresh, lookup, then Firestore's channel); the Android app doesn't have this wait (native Auth answers from its own store).
 
+## Simplified (2026-11-13, user's call: simplicity over one-time gains)
+
+- F11's "Welcome before the Auth SDK" probe removed: it saved ~0.8 s only on a person's very first open and was the trickiest code in `session.ts`. F11's other half (Firebase preloaded only when the files are local) stays.
+- The R5 `--js-sdk` comparison build removed (R5 was decided: native plugins).
+
 ## Findings
 
 | #   | Where                                        | Cost (big, slow)                                    | Cause (evidence)                                                                                                                                                                                                                                        | Proposed fix                                                                                                                                                                           | Behavior change?                                                            |

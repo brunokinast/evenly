@@ -2,7 +2,8 @@ import { FieldValue, type WriteBatchOperation } from "@capacitor-firebase/firest
 import { INVITE_TTL_MS, randomCode } from "@/domain/trips";
 import type { Currency, Expense, Member, Split, Trip, TripIcon } from "@/domain/types";
 import { isGuest } from "@/domain/types";
-import { FirebaseFirestore, firebaseReady } from "./firebase";
+import { FirebaseFirestore } from "@capacitor-firebase/firestore";
+import { firebaseReady } from "./firebase";
 import { myUid } from "./session";
 
 // Writes (docs/data-model.md "Operations"). Each is one document write or one batch, validated by the rules.
