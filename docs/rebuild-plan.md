@@ -14,7 +14,7 @@ Old app (≈9k lines of Dart) features: anonymous auth, trips with a currency, 6
 - **PWA** (`vite-plugin-pwa`): installs on iPhone.
 - **Capacitor**: native Android APK. Sign-in goes through the native Firebase SDK (`@capacitor-firebase/authentication`) so Kotlin can act as the user later.
 - **Vitest + Firebase Emulator**: tests for logic and Security Rules. Playwright (already connected) for screenshot checks.
-- Deferred: Gemini via a Kotlin AppFunctions service.
+- Gemini: through an "Evenly" calendar the Android app reads (Phase 7, ADR 0008).
 
 ## Phases (each ends with your approval)
 
@@ -27,7 +27,7 @@ Old app (≈9k lines of Dart) features: anonymous auth, trips with a currency, 6
 
 Read the old repo for behavior only. Write:
 
-- `features/*.md`: one per feature (identity, trips, invites/joining, expenses, balances & settlements, PDF export, localization, voice/Gemini as a future spec). Each has a plain-language description, user flows and testable acceptance criteria (Given/When/Then). No technical terms from the old app.
+- `features/*.md`: one per feature (identity, trips, invites/joining, expenses, balances & settlements, PDF export, localization, Gemini assistant). Each has a plain-language description, user flows and testable acceptance criteria (Given/When/Then). No technical terms from the old app.
 - `open-questions.md`: ambiguous or accidental-looking behavior, for you to decide.
 - `known-issues.md`: bugs found, so the rebuild deliberately avoids them.
 - `migration-source.md`: the old Firestore shape, used **only** by the migration script.
@@ -64,7 +64,7 @@ A verification pass re-checks every spec against the old code, to catch anything
   - APP-7 (branch `no-home-install`, user's choice): the Home install card is gone; install is suggested only before the name (ID-10) and from Profile (APP-3).
   - PDF-6 (branch `pdf-font`, option chosen by the user after a web search): pdf-lib + fontkit, bundled Noto Sans, other scripts and emoji from Google Fonts per export with only the characters used (ADR 0006).
   - `main` on GitHub: done 2026-11-13 (`evenly-v2` replaced it; old app kept as tag `old-app-main`).
-- Still untested (no automated test yet): PDF-2 (the PDF's text uses the same `t()`/`money()` as the screens, covered in Portuguese by the APP-1 test; reading a PDF's text back would need a PDF parser). APP-5 (accessibility) not pursued: the user's priorities are performance, simplicity and maintainability. APP-4 is checked by `scripts/check-bundle-size.mjs` in `npm run build`. BAL-4 and INV-12 are absences by design; AST-1..5 are deferred.
+- Still untested (no automated test yet): PDF-2 (the PDF's text uses the same `t()`/`money()` as the screens, covered in Portuguese by the APP-1 test; reading a PDF's text back would need a PDF parser). APP-5 (accessibility) not pursued: the user's priorities are performance, simplicity and maintainability. APP-4 is checked by `scripts/check-bundle-size.mjs` in `npm run build`. BAL-4 and INV-12 are absences by design; AST-2 (what Gemini writes) and AST-3 (the native calendar read) are checked on the real phone, not in e2e, which uses a stand-in calendar.
 
 ### 2. Design → `specs/design.md` + a mockup page
 
@@ -178,7 +178,7 @@ Done (2026-11-13), by another route than planned: Gemini calls only allowlisted 
 
   I'll check whether you still have the Android signing key. I'll also propose optional account linking (e.g. Google) so identity survives a device change.
 
-- **Voice commands.** The old Google Assistant voice commands no longer work: Assistant was removed from Android in Sept 2026. Gemini replaces them in Phase 7.
+- **Voice commands.** The old Google Assistant voice commands no longer work: Assistant was removed from Android in Sept 2026. Gemini replaces them (Phase 7, done).
 - **Old and new apps writing at the same time.** If the data model changes, an old APK still in use would write data in the old format. The cutover has to be a single switch: migrate the data, deploy the web app, and publish the APK update together. The old app should also be blocked from writing, e.g. through a Security Rules version gate.
 
 ## Verification

@@ -103,7 +103,7 @@ Tokens from `specs/design.md` as CSS variables, mapped into Tailwind. Theme ligh
 
 ## Android (Phase 5)
 
-Capacitor wraps the same build (`capacitor.config.ts`, `android/`) and uses the native Firebase SDKs, so later Kotlin code (Gemini) acts as the same signed-in user. App ID, signing, build types, Back and sharing: ADR 0003.
+Capacitor wraps the same build (`capacitor.config.ts`, `android/`) and uses the native Firebase SDKs (ADR 0002). App ID, signing, build types, Back and sharing: ADR 0003.
 
 - `npm run android:dev`: debug APK ("Evenly Dev") against the emulators on this PC, installed on a connected phone or Android emulator. `npm run android:release`: signed release APK in `android/evenly.apk`, published as a GitHub Release asset (ADR 0005).
 - The WebView page is `https://localhost`, so `location.hostname` can't find the emulators: the debug build bakes in `VITE_EMULATOR_HOST` (this PC's LAN IP).

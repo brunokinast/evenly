@@ -214,6 +214,14 @@ describe("trips: activity (TRIP-12)", () => {
     await assertFails(updateDoc(doc(as(env, "eve"), "trips/t1"), { activeAt: now }));
   });
 
+  it("TRIP-12 deleting an expense marks the trip active in the same batch", async () => {
+    const db = as(env, "alice");
+    const batch = writeBatch(db);
+    batch.delete(doc(db, "trips/t1/expenses/e1"));
+    batch.update(doc(db, "trips/t1"), { activeAt: Date.now() });
+    await assertSucceeds(batch.commit());
+  });
+
   it("TRIP-12 the activity time must be about now, and nothing else may change with it", async () => {
     const ref = doc(as(env, "bob"), "trips/t1");
     await assertFails(updateDoc(ref, { activeAt: Date.now() + 3_600_000 }));

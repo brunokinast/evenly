@@ -4,6 +4,12 @@ Goal (user): say to Gemini on the phone "Add to trip X that I spent 40 dollars s
 
 Nothing built yet. Status of each route as of this date; re-check before building.
 
+## Outcome
+
+Built and shipped (Android 1.5, 2026-11-13) as the Calendar bridge with a Gemini skill and an in-app review: ADR 0008, specs/features/assistant.md. Tested end to end on the user's phone: "Evenly, jantar 60 dividido com a Rita" → event `60 | jantar | Rita | |` → reviewed and added in Evenly → event deleted from the calendar.
+
+The Connected Apps waitlist form (Play Console, Round 3) is kept filled in but not sent, by the user's choice: if access opens up, a direct Android MCP integration could replace the calendar step and reuse the same review and draft code.
+
 ## Routes
 
 | Route                                                       | What it is                                                                                                                                                                                           | Status for a small app like Evenly                                                                                                                                                                                                                                             |
@@ -79,13 +85,13 @@ An in-app "type or say it" quick add (e.g. Firebase AI Logic calling a Gemini mo
 
 Idea: Gemini writes somewhere it already supports (and shows its own card); the Evenly Android app (sideloaded, so restricted permissions are fine) reads it on the phone and turns it into an expense. No server, no Google approval.
 
-| Bridge | Gemini side | Evenly side | Verdict |
-| --- | --- | --- | --- |
-| **Calendar** | Creates events, now also on **secondary calendars** of the same Google account ("add … to my Evenly calendar"). Can't set description or invitees; the title carries the text. Shows an event card. | Reads the synced event from Android's calendar store (`READ_CALENDAR`); a JobScheduler content-URI trigger can react in the background; deletes it after (`WRITE_CALENDAR`). | **Best candidate.** Unknowns: sync delay to the phone, whether Gemini rewrites the title. |
-| SMS to yourself | Sends messages via Google Messages (Samsung Messages retired 2026-07) and WhatsApp, with a confirmation card. | `RECEIVE_SMS` broadcast. | Risky: messages between RCS users aren't SMS and third-party apps can't read them; WhatsApp to self is unreadable. |
-| Google Tasks | Creates tasks/reminders. | Only via the Tasks REST API: Google sign-in + OAuth in Evenly. | Possible, heavier. |
-| Google Keep / Samsung Notes / alarms / bookmarks | Supported by Gemini. | No API another app can read. | No. |
-| Accessibility service | User says "Evenly: 40 dollars …" to Gemini. | Reads Gemini's screen text and acts; can show its own overlay card. | Works with anything but fragile and reads every screen; sideloaded apps need "allow restricted settings". Last resort. |
+| Bridge                                           | Gemini side                                                                                                                                                                                         | Evenly side                                                                                                                                                                  | Verdict                                                                                                                |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Calendar**                                     | Creates events, now also on **secondary calendars** of the same Google account ("add … to my Evenly calendar"). Can't set description or invitees; the title carries the text. Shows an event card. | Reads the synced event from Android's calendar store (`READ_CALENDAR`); a JobScheduler content-URI trigger can react in the background; deletes it after (`WRITE_CALENDAR`). | **Best candidate.** Unknowns: sync delay to the phone, whether Gemini rewrites the title.                              |
+| SMS to yourself                                  | Sends messages via Google Messages (Samsung Messages retired 2026-07) and WhatsApp, with a confirmation card.                                                                                       | `RECEIVE_SMS` broadcast.                                                                                                                                                     | Risky: messages between RCS users aren't SMS and third-party apps can't read them; WhatsApp to self is unreadable.     |
+| Google Tasks                                     | Creates tasks/reminders.                                                                                                                                                                            | Only via the Tasks REST API: Google sign-in + OAuth in Evenly.                                                                                                               | Possible, heavier.                                                                                                     |
+| Google Keep / Samsung Notes / alarms / bookmarks | Supported by Gemini.                                                                                                                                                                                | No API another app can read.                                                                                                                                                 | No.                                                                                                                    |
+| Accessibility service                            | User says "Evenly: 40 dollars …" to Gemini.                                                                                                                                                         | Reads Gemini's screen text and acts; can show its own overlay card.                                                                                                          | Works with anything but fragile and reads every screen; sideloaded apps need "allow restricted settings". Last resort. |
 
 Parsing the text ("40 dollars dinner split with Ana and Bia", optional trip name; defaults: last used trip, I paid, everyone): simple rules on known trip/member names, or the on-device model (ML Kit GenAI Prompt API / Gemini Nano on the S25), no key or server.
 
@@ -113,6 +119,7 @@ Driven over adb: `am start -n com.google.android.apps.bard/.shellapp.BardEntryPo
 - Both probes uninstalled.
 
 **Conclusion:** without root, Gemini will only call apps on Google's server-side list, matched by identity (package + signature). Ways that work today: the Calendar bridge (tested, Round 5); Google Tasks via its REST API (needs Google sign-in in Evenly); reading Gemini's screen via an accessibility service (fragile).
+
 - **Retry after a full phone reboot** (user's suggestion), with two fakes: `com.samsung.android.app.notes` ("Samsung Notes") and `com.miui.notes` (Xiaomi Notes, also on Gemini's list). After reboot: Connected apps still only showed Keep; "create a note in Samsung Notes" still went to Keep; no log line mentioned either package. Uninstalled.
 
 ## Round 7: a Gemini skill makes the Calendar bridge natural (2026-11-13)
