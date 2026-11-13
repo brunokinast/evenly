@@ -64,7 +64,7 @@ A verification pass re-checks every spec against the old code, to catch anything
   - APP-7 (branch `no-home-install`, user's choice): the Home install card is gone; install is suggested only before the name (ID-10) and from Profile (APP-3).
   - PDF-6 (branch `pdf-font`, option chosen by the user after a web search): pdf-lib + fontkit, bundled Noto Sans, other scripts and emoji from Google Fonts per export with only the characters used (ADR 0006).
   - `main` on GitHub: done 2026-11-13 (`evenly-v2` replaced it; old app kept as tag `old-app-main`).
-- Still untested (no automated test yet): EXP-8 failure path, PDF-2 and PDF-5, APP-5 (accessibility). APP-4 is checked by `scripts/check-bundle-size.mjs` in `npm run build`, not a test. BAL-4 and INV-12 are absences by design; AST-1..5 are deferred.
+- Still untested (no automated test yet): PDF-2 (the PDF's text uses the same `t()`/`money()` as the screens, covered in Portuguese by the APP-1 test; reading a PDF's text back would need a PDF parser). APP-5 (accessibility) not pursued: the user's priorities are performance, simplicity and maintainability. APP-4 is checked by `scripts/check-bundle-size.mjs` in `npm run build`. BAL-4 and INV-12 are absences by design; AST-1..5 are deferred.
 
 ### 2. Design → `specs/design.md` + a mockup page
 
