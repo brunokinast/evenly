@@ -141,6 +141,13 @@ service cloud.firestore {
               : near(entry.joinedAt));
     }
 
+    // Case 5 (TRIP-12): any member marks the trip as active, in the batch that writes an expense.
+    function touch(before, after) {
+      return isMember(before)
+        && after.diff(before).affectedKeys().hasOnly(['activeAt'])
+        && near(after.activeAt);
+    }
+
     match /trips/{tripId} {
       allow read: if signedIn() && me() in resource.data.memberUids;
       allow create: if signedIn() && validTripCreate(request.resource.data);
@@ -150,6 +157,7 @@ service cloud.firestore {
         || renameSelf(resource.data, request.resource.data)
         || leave(resource.data, request.resource.data)
         || join(resource.data, request.resource.data)
+        || touch(resource.data, request.resource.data)
       );
 
       // ---------- expenses ----------

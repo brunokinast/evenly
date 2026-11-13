@@ -166,10 +166,9 @@ Targets (mid-range phone, mobile network): returning launch → trips ≤ 1.0 s 
 7. Later (asked by the user): research how to use Firebase efficiently for this app: Firestore offline/local-first patterns, listener and query design, reads and costs on the Spark plan, the Capacitor plugins vs the web SDK on Android, bundle size options. Findings in `docs/performance.md`, proposals to the user.
 8. Docs (`architecture.md`, this plan, CLAUDE.md commands), merge, deploy, APK.
 
-### 7. Gemini (later)
+### 7. Gemini
 
-- A Kotlin AppFunctions service, e.g. `addExpense`, writing through the native Firestore SDK.
-- A confirmation notification after each action.
+Done (2026-11-13), by another route than planned: Gemini calls only allowlisted apps, so it writes expenses into an "Evenly" Google calendar and the Android app reviews and adds them (ADR 0008, specs/features/assistant.md). Came with it: Home ordered by activity (TRIP-12) and the expense form's fields defined once for the form and the review (`src/screens/expense/fields.tsx`).
 
 ## Migration risks to resolve in Phase 1/3
 

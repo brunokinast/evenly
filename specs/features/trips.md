@@ -6,7 +6,7 @@ A trip groups members and expenses. It has a name, an icon and a currency. The p
 
 ## Flows
 
-1. **Home** lists every trip the user belongs to (owned or joined), newest first. Each item shows the icon, name, currency and creation date.
+1. **Home** lists every trip the user belongs to (owned or joined), the most recently active first (TRIP-12). Each item shows the icon, name, currency and creation date.
 2. **Empty state**: with no trips, Home explains what to do and offers "New trip" and "Join trip".
 3. **Create trip**: name (required), icon (one of a fixed set, default luggage) and currency (BRL, USD, EUR, GBP). After creating it, the user stays on Home: the sheet closes, the new trip is at the top of the list, and a short notice confirms it ("Lisbon created").
 4. **Trip screen**: shows the trip name, an **Invite** button for the owner (always visible, not inside a menu), and Expenses, Balances and Members sections.
@@ -24,4 +24,5 @@ A trip groups members and expenses. It has a name, an icon and a currency. The p
 - **TRIP-6** Only the owner sees and can use owner actions; non-owners can't perform them even by bypassing the UI.
 - **TRIP-7** Given the owner deletes a trip (after confirming "This cannot be undone"), then the trip, its members and its expenses are removed, and it disappears live from every member's Home. A member currently viewing it is taken back to Home with a short notice.
 - **TRIP-8** Only members can see a trip's details, members and expenses.
+- **TRIP-12** Home is ordered by latest activity, most recent first: the last time any member added, edited or deleted an expense in the trip, or its creation if that never happened. A trip moves up live when someone adds an expense. Old, finished trips sink to the bottom on their own.
 - **TRIP-9** Opening a trip that doesn't exist or that the user can't access shows "Trip not found" with a way back to Home.

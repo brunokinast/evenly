@@ -28,12 +28,13 @@ There is no user profile collection. The display name lives in the Firebase Auth
 | `icon`           | one of the 16 TRIP-4 ids                                          | fixed after creation (no spec to change it)                                                             |
 | `currency`       | `"BRL" \| "USD" \| "EUR" \| "GBP"`                                | immutable (TRIP-3)                                                                                      |
 | `ownerUid`       | string                                                            | immutable                                                                                               |
-| `createdAt`      | int ms                                                            | immutable; Home sorts by it, newest first                                                               |
+| `createdAt`      | int ms                                                            | immutable; Home's order for a trip that was never active (TRIP-12)                                      |
 | `members`        | map memberId → `{ name: string, uid?: string, joinedAt: int ms }` | `uid` present = app user, absent = guest                                                                |
 | `memberIdsByUid` | map uid → memberId                                                | which member entry belongs to which user                                                                |
 | `memberUids`     | array of uid                                                      | same uids as `memberIdsByUid` keys; exists for the Home query (`array-contains`) and cheap rule checks  |
 | `invite`         | `{ code: string, expiresAt: int ms }` or `null`                   | the current code (INV-2); written by the owner only                                                     |
 | `editedMember`   | memberId (optional)                                               | the one member entry the owner's last write changed; only for the rules (they can't loop over map keys) |
+| `activeAt`       | int ms (optional)                                                 | TRIP-12: last expense add, edit or delete; Home sorts by it (else `createdAt`), most recent first       |
 
 - **memberId** is an opaque random ID. Expenses reference members by memberId, never by uid. So claiming a guest (MEM-7) is just "attach a uid to the guest's entry", and leaving (MEM-5) is "detach the uid": the entry becomes a guest with the same name. No expense ever changes.
 - `members[m].name` is the guest's name, or for app users a **copy** of their Auth display name. Renaming updates every copy with one write per trip, so one trip the user lost access to can't block the others (ID-5).
@@ -89,7 +90,8 @@ Each is one write or one batch, in `src/data/`. "Batch" = Firestore batched writ
 | Add guest (MEM-1)                        | batch: add member entry without uid + add to invite `guests`                                                                                                                                                                   |
 | Leave / remove an app user (MEM-5, 8, 9) | batch: remove the uid from `memberUids` and `memberIdsByUid` and delete `uid` from the member entry, which is now a guest; add it to the valid invite's `guests`                                                               |
 | Remove a guest (MEM-5)                   | batch: delete the member entry (only if in no expense) + remove from invite `guests`                                                                                                                                           |
-| Add / edit / delete expense (EXP-3, 4)   | one expense document write                                                                                                                                                                                                     |
+| Add / edit / delete expense (EXP-3, 4)   | batch: the expense document + trip `activeAt` (TRIP-12)                                                                                                                                                                        |
+| Add from Gemini (AST-10)                 | batch: every new expense (one or more trips) + each of those trips' `activeAt`                                                                                                                                                 |
 
 Already a member (INV-7): the client knows from its live Home list; the rules also reject a join from a current member.
 
@@ -107,6 +109,7 @@ Helpers: `signedIn()`, `tripAt(id)` = `get(/trips/id).data` (`tripAfter(id)` = t
   2. **Rename self**: a member changes only `members[memberIdsByUid[me]].name`.
   3. **Leave**: a non-owner member removes exactly their own uid from `memberUids` / `memberIdsByUid` and the `uid` field from their own member entry (name and `joinedAt` stay); nothing else.
   4. **Join**: a non-member; `get(joinAttempts/me).code == invite.code` and `invite.expiresAt > now()`; adds exactly `me` to `memberUids` and `memberIdsByUid`; the target member entry is either new (`{name, uid: me, joinedAt}`) or an existing guest (no `uid`) that only gains `uid: me` and a `name`; nothing else changes.
+  5. **Activity** (TRIP-12): a member changes only `activeAt`, to about now (`near()`). Sent in the same batch as an expense write.
 
 **trips/{tripId}/expenses/{expenseId}**
 

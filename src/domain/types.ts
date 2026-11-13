@@ -43,6 +43,8 @@ export type Trip = {
   members: Member[];
   memberIdsByUid: Record<string, string>;
   invite: { code: string; expiresAt: number } | null;
+  /** TRIP-12: the last time an expense was added, edited or deleted; absent until that first happens. */
+  activeAt?: number;
 };
 
 export type Split = "equal" | "custom";
@@ -60,5 +62,11 @@ export type Expense = {
   createdAt: number;
   updatedAt: number;
 };
+
+/** What a save writes about an expense; the data layer adds who and when (docs/data-model.md). */
+export type ExpenseInput = Pick<
+  Expense,
+  "description" | "amountCents" | "payerId" | "shares" | "split" | "spentAt"
+>;
 
 export const isGuest = (m: Member) => m.uid === undefined;

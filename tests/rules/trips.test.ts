@@ -203,6 +203,25 @@ describe("trips: members' own changes (ID-5, MEM-5, MEM-8)", () => {
   });
 });
 
+describe("trips: activity (TRIP-12)", () => {
+  it("TRIP-12 a member saves an expense and marks the trip active in one batch; a non-member can't", async () => {
+    const now = Date.now();
+    const db = as(env, "bob");
+    const batch = writeBatch(db);
+    batch.set(doc(db, "trips/t1/expenses/e9"), expenseDoc("bob", now));
+    batch.update(doc(db, "trips/t1"), { activeAt: now });
+    await assertSucceeds(batch.commit());
+    await assertFails(updateDoc(doc(as(env, "eve"), "trips/t1"), { activeAt: now }));
+  });
+
+  it("TRIP-12 the activity time must be about now, and nothing else may change with it", async () => {
+    const ref = doc(as(env, "bob"), "trips/t1");
+    await assertFails(updateDoc(ref, { activeAt: Date.now() + 3_600_000 }));
+    await assertFails(updateDoc(ref, { activeAt: "now" }));
+    await assertFails(updateDoc(ref, { activeAt: Date.now(), name: "Mine now" }));
+  });
+});
+
 describe("trips: delete (TRIP-7, KI-5)", () => {
   it("TRIP-7 only the owner deletes the trip, in a batch with its expenses", async () => {
     await assertFails(deleteDoc(doc(as(env, "bob"), "trips/t1")));

@@ -72,6 +72,8 @@ type SplitProps = Common & {
   custom: boolean;
   typed: Record<string, number>;
   onChange: (next: { parts?: string[]; custom?: boolean; typed?: Record<string, number> }) => void;
+  /** Done (defaults to onClose). */
+  onDone?: () => void;
   onClose: () => void;
 };
 
@@ -155,7 +157,7 @@ export function SplitSheet(p: SplitProps) {
       >
         {status}
       </p>
-      <Button variant="primary" className="w-full" onClick={p.onClose}>
+      <Button variant="primary" className="w-full" onClick={p.onDone ?? p.onClose}>
         {t("common.done")}
       </Button>
     </Sheet>

@@ -19,11 +19,11 @@ screens ──► components
 
 ```
 src/
-  app/          App and the session gate, nav.ts (the only way to move between screens), device state (theme, install, online, toasts), share, the ?perf panel
-  screens/      one folder per screen: welcome, home, trip (tabs; pdf/ = the lazy PDF export), expense (add/edit form and its sheets), install (install steps shared by Welcome and Home), NotFound, ConnectError
+  app/          App and the session gate, nav.ts (the only way to move between screens), device state (theme, install, online, toasts, the Gemini calendar), share, the ?perf panel
+  screens/      one folder per screen: welcome, home, trip (tabs; pdf/ = the lazy PDF export), expense (add/edit form, its sheets, and fields.tsx shared with the Gemini review), gemini (review sheet and setup guide), install (install steps shared by Welcome and Home), NotFound, ConnectError
   components/   shared app pieces (Button/ButtonRow, Sheet, ConfirmSheet, Notice, TextField, SubmitField, MoneyInput, CodeInput, Avatar, Calendar, Wheel…)
   lib/          small helpers with no app knowledge: cn (class merging that knows the design tokens), storage (device settings), changes (store notifications), perf (timing marks)
-  domain/       pure TypeScript, no React, no Firebase: money, split, balances, members, names, trips, dates, install
+  domain/       pure TypeScript, no React, no Firebase: money, split, balances, members, names, trips, dates, install, draft (an expense being edited), intake (reading Gemini's events)
   data/         Firebase setup, auth, live hooks, write commands
   i18n/         en.ts, pt-BR.ts, t(), number/date formatting
 firestore.rules
@@ -71,6 +71,13 @@ Pure functions with unit tests named after the acceptance criteria:
 - balances and settlements (BAL-1, BAL-3, BAL-7).
 - member display names and disambiguation (MEM-4, KI-11).
 - validation shared by forms (ID-3, TRIP-2, EXP-1, MEM-2).
+- draft: the expense being edited (`ExpenseDraft`), its checks and what Save writes, shared by the expense form and the Gemini review (EXP-1, EXP-10, EXP-13, AST-8).
+- intake: Gemini's calendar events → review lines, with forgiving amount parsing and name matching (AST-4, AST-5).
+- trips: Home's activity order (TRIP-12).
+
+## One field list for the expense form and the Gemini review
+
+`src/screens/expense/fields.tsx` defines the fields set with a picker (Paid by, Split, When) once: icon, label, value text, "changed" state and picker. The form shows them as labeled rows, the review as chips. Both edit the same `ExpenseDraft`. A new field is added there; its `Record<DraftField, …>` types make the code fail to compile until the value text and the picker exist, so the two screens can't drift.
 
 ## Screens and navigation
 
@@ -101,6 +108,7 @@ Capacitor wraps the same build (`capacitor.config.ts`, `android/`) and uses the 
 - `npm run android:dev`: debug APK ("Evenly Dev") against the emulators on this PC, installed on a connected phone or Android emulator. `npm run android:release`: signed release APK in `android/evenly.apk`, published as a GitHub Release asset (ADR 0005).
 - The WebView page is `https://localhost`, so `location.hostname` can't find the emulators: the debug build bakes in `VITE_EMULATOR_HOST` (this PC's LAN IP).
 - Edge to edge: Capacitor's SystemBars keeps `env(safe-area-inset-*)` correct; `src/app/theme.ts` sets the bar icons' style from the app theme and hands the choice to `AppThemePlugin.java` (our one native plugin, registered in `MainActivity`), which sets the app's night mode so the next launch screen matches (Android 12+). The keyboard resizes the WebView like Chrome does, so `--kb` stays 0 there.
+- **Gemini calendar** (ADR 0008): `EvenlyCalendarPlugin.java` reads, syncs and deletes events of the phone's "Evenly" calendar (READ/WRITE_CALENDAR), and reports changes. `src/app/calendarInbox.ts` keeps them as device state (like the theme), read once Home's list shows and again on each return to the app. On the dev server a stand-in (`src/app/devCalendar.ts`, localStorage) lets e2e show the review; production web has no calendar, so the feature is hidden.
 - Launcher icons (white coin on marigold) and the launch-screen logo (`drawable[-night]-xxxhdpi/splash_icon.png`, in `--fg`) come from `public/icon.svg` and `public/logo.svg` (`scripts/make-icons.mjs`).
 
 ## Testing

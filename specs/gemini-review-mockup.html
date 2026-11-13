@@ -1,0 +1,966 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Gemini review: options</title>
+    <link rel="icon" href="data:," />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f6f7f9;
+        --surface: #fff;
+        --surface-2: #eef0f4;
+        --border: #dde1e8;
+        --fg: #171a21;
+        --fg-muted: #5d6472;
+        --accent: #f2b233;
+        --accent-fg: #1a1405;
+        --accent-soft: #fdf1d6;
+        --accent-text: #8a5a00;
+        --positive: #18794e;
+        --negative: #c33b2c;
+        --scrim: rgb(10 12 16 / 0.45);
+        --av1: #dbeafe;
+        --av1i: #1e40af;
+        --av2: #dcfce7;
+        --av2i: #166534;
+        --av3: #fce7f3;
+        --av3i: #9d174d;
+        --av4: #ede9fe;
+        --av4i: #5b21b6;
+        --av5: #ffedd5;
+        --av5i: #9a3412;
+        --av6: #e0f2fe;
+        --av6i: #075985;
+      }
+      :root[data-theme="dark"] {
+        --bg: #0f1115;
+        --surface: #171a20;
+        --surface-2: #20242c;
+        --border: #2c313b;
+        --fg: #eceef2;
+        --fg-muted: #9aa2b1;
+        --accent: #f5be4b;
+        --accent-soft: #3a2f17;
+        --accent-text: #f5be4b;
+        --positive: #4cc38a;
+        --negative: #f07a6a;
+        --av1: #1e3a5f;
+        --av1i: #bfdbfe;
+        --av2: #14412a;
+        --av2i: #bbf7d0;
+        --av3: #4a1d33;
+        --av3i: #fbcfe8;
+        --av4: #33235c;
+        --av4i: #ddd6fe;
+        --av5: #4a2a12;
+        --av5i: #fed7aa;
+        --av6: #0f3a52;
+        --av6i: #bae6fd;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+      body {
+        font:
+          16px/24px "Hanken Grotesk",
+          system-ui,
+          sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+        font-variant-numeric: tabular-nums;
+      }
+      button {
+        font: inherit;
+        color: inherit;
+        background: none;
+        border: 0;
+        cursor: pointer;
+      }
+      .switcher {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        align-items: center;
+        padding: 8px 12px;
+        background: var(--fg);
+        color: var(--bg);
+        font-size: 13px;
+      }
+      .switcher button {
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid currentColor;
+        color: var(--bg);
+        font-size: 13px;
+      }
+      .switcher button[aria-pressed="true"] {
+        background: var(--accent);
+        color: var(--accent-fg);
+        border-color: var(--accent);
+      }
+      .switcher .sep {
+        width: 100%;
+        height: 0;
+      }
+      .switcher button {
+        min-width: 32px;
+        padding: 4px 8px;
+      }
+      .switcher b {
+        font-size: 12px;
+        width: 44px;
+        opacity: 0.7;
+      }
+      .switcher button {
+        flex: none;
+      }
+      .app {
+        max-width: 520px;
+        margin: 0 auto;
+        height: var(--apph, 700px);
+        position: relative;
+        overflow: hidden;
+      }
+      /* Home */
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+      }
+      .logo {
+        font-weight: 800;
+        font-size: 24px;
+        letter-spacing: -0.02em;
+      }
+      .card {
+        background: var(--surface);
+        border-radius: 16px;
+        margin: 0 16px;
+        overflow: hidden;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        min-height: 64px;
+        position: relative;
+      }
+      .row + .row::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 72px;
+        right: 0;
+        border-top: 1px solid var(--border);
+      }
+      .tile {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: var(--accent-soft);
+        color: var(--accent-text);
+        display: grid;
+        place-items: center;
+        flex: none;
+        font-size: 20px;
+      }
+      .grow {
+        flex: 1;
+        min-width: 0;
+      }
+      .title {
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 22px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .cap {
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--fg-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .tag {
+        font-size: 12px;
+        line-height: 16px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .dot {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--accent);
+        vertical-align: 1px;
+        margin-right: 6px;
+      }
+      .bottombar {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        gap: 8px;
+        padding: 12px 16px 16px;
+        background: var(--surface);
+      }
+      .btn {
+        flex: 1;
+        height: 48px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 16px;
+        padding: 0 12px;
+        white-space: nowrap;
+      }
+      .btn.primary {
+        background: var(--accent);
+        color: var(--accent-fg);
+      }
+      .btn.secondary {
+        background: var(--surface-2);
+      }
+      .btn:disabled {
+        background: var(--surface-2);
+        color: var(--fg-muted);
+      }
+      /* Sheet */
+      .scrim {
+        position: absolute;
+        inset: 0;
+        background: var(--scrim);
+      }
+      .sheet {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        max-height: 85%;
+        display: flex;
+        flex-direction: column;
+        background: var(--surface);
+        border-radius: 24px 24px 0 0;
+        box-shadow: 0 -8px 24px rgb(0 0 0 / 0.18);
+      }
+      .handle {
+        width: 36px;
+        height: 4px;
+        border-radius: 2px;
+        background: var(--border);
+        margin: 8px auto 4px;
+        flex: none;
+      }
+      .sheet-head {
+        padding: 8px 16px 12px;
+        flex: none;
+      }
+      .sheet-title {
+        font-weight: 700;
+        font-size: 18px;
+        line-height: 24px;
+      }
+      .list {
+        overflow-y: auto;
+        padding: 0 16px;
+        flex: 1;
+      }
+      .group {
+        font-size: 12px;
+        line-height: 16px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--fg-muted);
+        padding: 12px 4px 6px;
+        display: flex;
+        gap: 6px;
+        min-width: 0;
+      }
+      .group span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .g {
+        background: var(--surface-2);
+        border-radius: 16px;
+        overflow: hidden;
+      }
+      :root[data-theme="dark"] .g {
+        background: var(--bg);
+      }
+      .item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 4px 10px 12px;
+        min-height: 64px;
+        position: relative;
+      }
+      .item + .item::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 12px;
+        right: 0;
+        border-top: 1px solid var(--border);
+      }
+      .item .amt {
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 22px;
+        white-space: nowrap;
+      }
+      .item.fix .amt {
+        color: var(--negative);
+      }
+      .x {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        color: var(--fg-muted);
+        flex: none;
+      }
+      .x:active {
+        background: var(--surface-2);
+      }
+      .guess {
+        color: var(--accent-text);
+        font-weight: 600;
+        text-decoration: underline dotted;
+        text-underline-offset: 3px;
+      }
+      .heard {
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--fg-muted);
+        font-style: italic;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .fixmsg {
+        color: var(--negative);
+      }
+      .av {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-size: 11px;
+        font-weight: 700;
+        flex: none;
+        border: 2px solid var(--surface-2);
+      }
+      :root[data-theme="dark"] .av {
+        border-color: var(--bg);
+      }
+      .av.lg {
+        width: 36px;
+        height: 36px;
+        font-size: 13px;
+        border: 0;
+      }
+      .stack {
+        display: flex;
+      }
+      .stack .av + .av {
+        margin-left: -8px;
+      }
+      .av.ring {
+        border-color: var(--accent);
+      }
+      .check {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        border: 2px solid var(--border);
+        display: grid;
+        place-items: center;
+        flex: none;
+      }
+      .check.on {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--accent-fg);
+      }
+      .item.off {
+        opacity: 0.45;
+      }
+      .foot {
+        display: flex;
+        gap: 8px;
+        padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+        flex: none;
+        border-top: 1px solid var(--border);
+      }
+      .foot.stack2 {
+        flex-direction: column-reverse;
+      }
+      .note {
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--fg-muted);
+        padding: 8px 4px 4px;
+      }
+      .toast {
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        bottom: 92px;
+        background: var(--fg);
+        color: var(--bg);
+        border-radius: 10px;
+        padding: 10px 14px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 14px;
+        z-index: 5;
+      }
+      .toast button {
+        color: var(--accent);
+        font-weight: 700;
+      }
+      .explain {
+        max-width: 520px;
+        margin: 0 auto;
+        padding: 12px 16px 32px;
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--fg-muted);
+      }
+      .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+      .chip { height: 32px; padding: 0 10px; border-radius: 999px; background: var(--surface); font-size: 14px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+      :root[data-theme="dark"] .chip { background: var(--surface-2); }
+      .chip.amtc { font-weight: 700; }
+      .chip.warn { background: var(--accent-soft); color: var(--accent-text); font-weight: 600; box-shadow: inset 0 0 0 1.5px var(--accent); }
+      .chip.bad { color: var(--negative); box-shadow: inset 0 0 0 1.5px var(--negative); font-weight: 600; }
+      .chip.offp { text-decoration: line-through; opacity: 0.5; }
+      .item.d { display: block; padding: 12px 12px; }
+      .item.d .toprow { display: flex; align-items: center; gap: 8px; }
+      .item.d .x { width: 36px; height: 36px; margin: -6px -6px -6px 0; }
+      .full { position: absolute; inset: 0; background: var(--bg); display: flex; flex-direction: column; }
+      .full .bar { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 4px; background: var(--surface); flex: none; }
+      .full .list { padding-top: 4px; }
+      .full .g { background: var(--surface); }
+      .full .foot { background: var(--surface); }
+      .line { display: flex; align-items: center; gap: 8px; padding: 0 12px; min-height: 52px; position: relative; cursor: pointer; }
+      .line + .line::before, .exp + .line::before { content: ""; position: absolute; top: 0; left: 12px; right: 0; border-top: 1px solid var(--border); }
+      .line .what { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; min-width: 0; }
+      .line .who { color: var(--fg-muted); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1 1 0; min-width: 0; }
+      .line .flag { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; }
+      .line .flag.bad { background: var(--negative); }
+      .line.open, .exp { background: var(--surface); }
+      :root[data-theme="dark"] .line.open, :root[data-theme="dark"] .exp { background: var(--surface-2); }
+      .exp { padding: 0 12px 12px; }
+      .exp .acts { display: flex; gap: 8px; margin-top: 10px; }
+      .exp .acts .btn { height: 40px; font-size: 14px; }
+      .btn.danger { background: var(--surface-2); color: var(--negative); }
+      :root[data-theme="dark"] .exp .btn.secondary, :root[data-theme="dark"] .exp .btn.danger { background: var(--bg); }
+      .chip i, .chip svg { width: 14px; height: 14px; flex: none; }
+      .item.g2 { display: block; padding: 12px; }
+      .item.g2 .toprow { display: flex; align-items: center; gap: 8px; }
+      .item.g2 .x { width: 36px; height: 36px; margin: -6px -6px -6px 0; }
+      .desc { font-weight: 600; font-size: 16px; line-height: 22px; text-align: left; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0; }
+      
+      .exp .chips { margin-top: 0; }
+      .exp .chip { background: var(--surface-2); }
+      :root[data-theme="dark"] .exp .chip { background: var(--bg); }
+      .picker { position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface); border-radius: 24px 24px 0 0; box-shadow: 0 -8px 24px rgb(0 0 0 / 0.25); z-index: 8; padding-bottom: 16px; max-height: 70%; display: flex; flex-direction: column; }
+      .picker .opts { overflow-y: auto; padding: 0 16px; }
+      .opt { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; text-align: left; padding: 0 4px; border-bottom: 1px solid var(--border); }
+      .opt .grow { font-weight: 600; }
+      .opt .tick { color: var(--accent-text); }
+      .scrim2 { position: absolute; inset: 0; background: var(--scrim); z-index: 7; }
+      .title-in { width: 100%; height: 44px; border: 0; border-radius: 10px; background: var(--surface-2); color: var(--fg); font: inherit; font-weight: 600; padding: 0 12px; outline: none; }
+      .title-in:focus { box-shadow: inset 0 0 0 2px var(--accent); }
+      :root[data-theme="dark"] .exp .title-in { background: var(--bg); }
+      .rmq { color: var(--negative); font-weight: 600; font-size: 14px; display: inline-flex; gap: 4px; align-items: center; height: 40px; padding: 0 4px; }
+      .rmq svg { width: 16px; height: 16px; }
+      .exp .foot2 { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+    </style>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+</head>
+  <body>
+    <div class="switcher" id="sw"></div>
+    <div class="app" id="app"></div>
+    <p class="explain" id="explain"></p>
+
+    <script>
+      const ICON = {
+        x: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+        check:
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+        spark:
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.6 4.8 2.7 7.4 8 8-5.3.6-7.4 3.2-8 8-.6-4.8-2.7-7.4-8-8 5.3-.6 7.4-3.2 8-8z"/></svg>',
+      };
+      const people = {
+        me: ["You", 1],
+        ana: ["Ana", 2],
+        bia: ["Bia", 3],
+        carol: ["Carol", 4],
+        duda: ["Duda", 5],
+      };
+      const trips = [
+        {
+          id: "lis",
+          name: "Lisbon",
+          icon: "plane",
+          cur: "EUR",
+          active: "Active today",
+          created: "Created Oct 2",
+          members: ["me", "ana", "bia"],
+        },
+        {
+          id: "rio",
+          name: "Rio with the girls",
+          icon: "tree-palm",
+          cur: "BRL",
+          active: "Active 3 days ago",
+          created: "Created Sep 12",
+          members: ["me", "carol", "duda"],
+        },
+        {
+          id: "ny",
+          name: "New York 2025",
+          icon: "building-2",
+          cur: "USD",
+          active: "Last expense Mar 2025",
+          created: "Created Feb 20, 2025",
+          members: ["me", "ana"],
+        },
+      ];
+      const money = (c, cur) =>
+        new Intl.NumberFormat("en", { style: "currency", currency: cur }).format(c / 100);
+      const initialItems = () => [
+        {
+          id: 1,
+          trip: "lis",
+          amount: 3200,
+          what: "uber",
+          split: ["me", "ana"],
+          payer: "me",
+          heard: "uber 32 reais dividido com a Ana",
+          when: "Today, 9:40 PM",
+        },
+        {
+          id: 2,
+          trip: "lis",
+          amount: 6000,
+          what: "dinner",
+          split: "all",
+          payer: "me",
+          heard: "dinner 60 dollars split with everyone",
+          when: "Today, 8:15 PM",
+        },
+        {
+          id: 3,
+          trip: "lis",
+          amount: 2500,
+          what: "taxi",
+          split: ["me", "bia"],
+          guess: "bia",
+          payer: "me",
+          heard: "taxi 25 with bea",
+          when: "Today, 6:02 PM",
+        },
+        {
+          id: 4,
+          trip: "lis",
+          amount: null,
+          what: "museum tickets",
+          split: "all",
+          payer: "me",
+          heard: "museum tickets for all of us",
+          when: "Today, 11:30 AM",
+          fix: "No amount",
+        },
+        {
+          id: 5,
+          trip: "rio",
+          amount: 1850,
+          what: "açaí",
+          split: "all",
+          payer: "carol",
+          heard: "açaí 18,50 rio paid by Carla",
+          payerGuess: true,
+          when: "Yesterday, 4:20 PM",
+          tripGuess: true,
+        },
+      ];
+      let state = { opt: "I", home: "H2", open: null, theme: "light", items: initialItems(), toast: null };
+
+      const OPTIONS = {
+        A: "A · Grouped by trip, two-line rows, ✕ to remove. What you said appears only on rows that need a look.",
+        B: "B · Like the expense list: payer avatar on the left, small avatars for who shares it. Most compact.",
+        C: "C · Checklist: every row starts ticked; untick to leave it out. What you said is always shown, one line.",
+        D: "D · Fix right in the list: amount and people are chips. Tap the amount to type it, tap a person to drop them, + to add someone. Guesses are marigold chips. No extra screen for small fixes.",
+        E: "E · A full screen instead of a sheet: more room, what you said always visible, ✕ closes (= Later). Better for long batches.",
+        G: "G · Every expense always shows all its fields: amount (top right), then chips for trip, who paid (wallet), who shares it (people). Tap any chip to change it (the pickers work); tap the amount to type it. Tap the description for the full Add expense screen (rename, date, custom split). Flat list, since each row shows its trip.",
+        H: "H · F's one line per expense; tapping a line opens it in place with G's chips (amount, trip, who paid, who shares it), what you said, More (full Add expense screen) and Remove. Compact when all is fine, full control when not.",
+        I: "I · H, refined. Opened line: the description is a text field you edit right there; chips for amount, trip, who paid, who shares it and when (date and time). No More button. Marigold/red = guessed or missing: it turns normal as soon as you tap it and confirm, even keeping the same value, and the line's dot goes away once nothing is left to check.",
+        F: "F · One line per expense, the smallest. A dot marks lines that need a look. Tap a line to expand it: what you said, Edit and Remove.",
+      };
+      const HOMES = {
+        H1: "H1 · Home sorted by last activity; caption says how recent (“Active today”).",
+        H2: "H2 · Same order; only the trip Gemini adds to by default gets a small marigold dot.",
+      };
+
+      function avatar(p, extra = "") {
+        const [name, n] = people[p];
+        const ini = name === "You" ? "Y" : name[0];
+        return `<span class="av ${extra}" style="background:var(--av${n});color:var(--av${n}i)" title="${name}">${ini}</span>`;
+      }
+      const tripOf = (id) => trips.find((t) => t.id === id);
+      function splitText(it) {
+        if (it.split === "all") return "All";
+        return it.split
+          .map((p) => (p === it.guess ? `<span class="guess">${people[p][0]}</span>` : people[p][0]))
+          .join(", ");
+      }
+      function needsLook(it) {
+        return it.fix || it.guess || it.tripGuess || it.payerGuess;
+      }
+      function grouped() {
+        const out = [];
+        for (const t of trips) {
+          const its = state.items.filter((i) => i.trip === t.id);
+          if (its.length) out.push([t, its]);
+        }
+        return out;
+      }
+
+      function homeHtml() {
+        const rows = trips
+          .map((t, i) => {
+            const cap = state.home === "H1" ? `${t.cur} · ${t.active}` : `${t.cur} · ${t.created}`;
+            const dot = state.home === "H2" && i === 0 ? '<span class="dot"></span>' : "";
+            return `<div class="row"><div class="tile"><i data-lucide="${t.icon}"></i></div><div class="grow"><div class="title">${dot}${t.name}</div><div class="cap">${cap}</div></div></div>`;
+          })
+          .join("");
+        return `<div class="topbar"><span class="logo">Evenly</span>${avatar("me", "lg")}</div>
+    <div class="card">${rows}</div>
+    <div class="bottombar"><button class="btn secondary">Join trip</button><button class="btn primary">New trip</button></div>`;
+      }
+
+      function rowA(it, t) {
+        const amt = it.amount == null ? "—" : money(it.amount, t.cur);
+        const meta = [splitText(it)];
+        if (it.payer !== "me") meta.push(`paid by ${people[it.payer][0]}`);
+        const second = it.fix
+          ? `<div class="cap fixmsg">${it.fix} · tap to fix</div>`
+          : `<div class="cap">${meta.join(" · ")}</div>`;
+        const heard = needsLook(it) ? `<div class="heard">“${it.heard}”</div>` : "";
+        return `<div class="item ${it.fix ? "fix" : ""}" data-edit="${it.id}"><div class="grow"><div class="title">${it.what}</div>${second}${heard}</div><span class="amt">${amt}</span><button class="x" data-rm="${it.id}" aria-label="Remove">${ICON.x}</button></div>`;
+      }
+      function rowB(it, t) {
+        const amt = it.amount == null ? "—" : money(it.amount, t.cur);
+        const who = it.split === "all" ? t.members : it.split;
+        const stack = `<span class="stack">${who.map((p) => avatar(p, p === it.guess ? "ring" : "")).join("")}</span>`;
+        const second = it.fix
+          ? `<div class="cap fixmsg">${it.fix} · tap to fix</div>`
+          : `<div class="cap" style="display:flex;align-items:center;gap:6px">${stack}${it.guess ? `<span class="guess">${people[it.guess][0]}?</span>` : it.split === "all" ? "All" : ""}</div>`;
+        return `<div class="item ${it.fix ? "fix" : ""}" data-edit="${it.id}">${avatar(it.payer, "lg")}<div class="grow"><div class="title">${it.what}</div>${second}</div><span class="amt">${amt}</span><button class="x" data-rm="${it.id}" aria-label="Remove">${ICON.x}</button></div>`;
+      }
+      function rowC(it, t) {
+        const amt = it.amount == null ? "—" : money(it.amount, t.cur);
+        const on = !it.off && !it.fix;
+        const meta = it.fix
+          ? `<span class="fixmsg">${it.fix} · tap to fix</span>`
+          : splitText(it) + (it.payer !== "me" ? ` · paid by ${people[it.payer][0]}` : "");
+        return `<div class="item ${it.fix ? "fix" : ""} ${it.off ? "off" : ""}"><button class="check ${on ? "on" : ""}" data-tog="${it.id}" aria-label="Include" ${it.fix ? "disabled" : ""}>${on ? ICON.check : ""}</button><div class="grow" data-edit="${it.id}"><div class="title">${it.what} <span class="cap" style="display:inline">· ${meta}</span></div><div class="heard">“${it.heard}”</div></div><span class="amt" data-edit="${it.id}" style="padding-right:12px">${amt}</span></div>`;
+      }
+
+      function rowE(it, t) {
+        const amt = it.amount == null ? "—" : money(it.amount, t.cur);
+        const meta = [splitText(it)];
+        if (it.payer !== "me") meta.push(`paid by ${people[it.payer][0]}`);
+        const second = it.fix ? `<div class="cap fixmsg">${it.fix} · tap to fix</div>` : `<div class="cap">${meta.join(" · ")}</div>`;
+        return `<div class="item ${it.fix ? "fix" : ""}" data-edit="${it.id}"><div class="grow"><div class="title">${it.what}</div>${second}<div class="heard">“${it.heard}”</div></div><span class="amt">${amt}</span><button class="x" data-rm="${it.id}" aria-label="Remove">${ICON.x}</button></div>`;
+      }
+      function rowD(it, t) {
+        const amt = it.amount == null ? `<button class="chip bad amtc" data-amt="${it.id}">Amount?</button>` : `<button class="chip amtc" data-amt="${it.id}">${money(it.amount, t.cur)}</button>`;
+        const dropped = it.dropped || [];
+        const who = it.split === "all" ? [] : t.members.filter((p) => it.split.includes(p) || dropped.includes(p));
+        const ppl = it.split === "all"
+          ? `<button class="chip" data-who="${it.id}">Everyone</button>`
+          : who.map((p) => `<button class="chip ${p === it.guess ? "warn" : ""} ${dropped.includes(p) ? "offp" : ""}" data-person="${it.id}:${p}">${people[p][0]}${p === it.guess ? "?" : ""}</button>`).join("") + `<button class="chip" data-add="${it.id}">+</button>`;
+        const payer = it.payer !== "me" ? `<button class="chip" data-who="${it.id}">paid by ${people[it.payer][0]}</button>` : "";
+        const heard = needsLook(it) ? `<div class="heard" style="margin-top:6px">“${it.heard}”</div>` : "";
+        return `<div class="item d"><div class="toprow"><div class="grow title" data-edit="${it.id}">${it.what}</div><button class="x" data-rm="${it.id}" aria-label="Remove">${ICON.x}</button></div><div class="chips">${amt}${ppl}${payer}</div>${heard}</div>`;
+      }
+      function rowF(it, t) {
+        const amt = it.amount == null ? '<span class="amt" style="color:var(--negative)">—</span>' : `<span class="amt">${money(it.amount, t.cur)}</span>`;
+        const flag = it.fix ? '<span class="flag bad"></span>' : needsLook(it) ? '<span class="flag"></span>' : "";
+        const who = it.split === "all" ? "All" : it.split.map((p) => people[p][0]).join(", ");
+        const open = state.open === it.id;
+        const line = `<div class="line ${open ? "open" : ""}" data-open="${it.id}">${flag}<span class="what">${it.what}</span><span class="who">${who}</span>${amt}</div>`;
+        if (!open) return line;
+        const meta = [it.fix ? `<span class="fixmsg">${it.fix}</span>` : `Split: ${splitText(it)}`];
+        if (it.payer !== "me") meta.push(`paid by ${people[it.payer][0]}`);
+        return line + `<div class="exp"><div class="cap" style="white-space:normal">${meta.join(" · ")}</div><div class="heard" style="white-space:normal">“${it.heard}”</div><div class="acts"><button class="btn secondary" data-edit="${it.id}">Edit</button><button class="btn danger" data-rm="${it.id}">Remove</button></div></div>`;
+      }
+
+      const tripIcon = (t) => `<i data-lucide="${t.icon}"></i>`;
+      function chipsG(it) {
+        const t = tripOf(it.trip);
+        const amt = it.amount == null
+          ? `<button class="chip bad amtc" data-amt="${it.id}">Amount?</button>`
+          : `<button class="chip amtc" data-amt="${it.id}">${money(it.amount, t.cur)}</button>`;
+        const trip = `<button class="chip ${it.tripGuess ? "warn" : ""}" data-pick="${it.id}:trip">${tripIcon(t)}<span style="overflow:hidden;text-overflow:ellipsis">${t.name}</span></button>`;
+        const payer = `<button class="chip" data-pick="${it.id}:payer" title="Paid by"><i data-lucide="wallet"></i>${it.payer === "me" ? "You" : people[it.payer][0]}</button>`;
+        const who = it.split === "all" ? "Everyone" : it.split.map((p) => people[p][0] + (p === it.guess ? "?" : "")).join(", ");
+        const split = `<button class="chip ${it.guess ? "warn" : ""}" data-pick="${it.id}:split"><i data-lucide="users"></i><span style="overflow:hidden;text-overflow:ellipsis">${who}</span></button>`;
+        const more = `<button class="chip" data-edit="${it.id}" aria-label="More">⋯</button>`;
+        return [amt, `<div class="chips">${trip}${payer}${split}</div>`];
+      }
+      function rowG(it) {
+        const heard = needsLook(it) ? `<div class="heard" style="margin-top:6px">“${it.heard}”</div>` : "";
+        const [amt, chips] = chipsG(it);
+        return `<div class="item g2"><div class="toprow"><button class="desc" data-edit="${it.id}">${it.what}</button>${amt}<button class="x" data-rm="${it.id}" aria-label="Remove">${ICON.x}</button></div>${chips}${heard}</div>`;
+      }
+      function rowH(it, t) {
+        const amt = it.amount == null ? '<span class="amt" style="color:var(--negative)">—</span>' : `<span class="amt">${money(it.amount, t.cur)}</span>`;
+        const flag = it.fix ? '<span class="flag bad"></span>' : needsLook(it) ? '<span class="flag"></span>' : "";
+        const who = it.split === "all" ? "All" : it.split.map((p) => people[p][0]).join(", ");
+        const open = state.open === it.id;
+        const line = `<div class="line ${open ? "open" : ""}" data-open="${it.id}">${flag}<span class="what">${it.what}</span><span class="who">${who}</span>${amt}</div>`;
+        if (!open) return line;
+        return line + `<div class="exp"><div class="chips" style="margin-top:0">${chipsG(it)[0]}${chipsG(it)[1].replace('<div class="chips">','').replace(/<\/div>$/,'')}</div><div class="heard" style="white-space:normal;margin-top:8px">“${it.heard}”</div><div class="acts"><button class="btn secondary" data-edit="${it.id}">More</button><button class="btn danger" data-rm="${it.id}">Remove</button></div></div>`;
+      }
+      function rowI(it, t) {
+        const amt = it.amount == null ? '<span class="amt" style="color:var(--negative)">—</span>' : `<span class="amt">${money(it.amount, t.cur)}</span>`;
+        const flag = it.fix ? '<span class="flag bad"></span>' : needsLook(it) ? '<span class="flag"></span>' : "";
+        const whoTxt = it.split === "all" ? "All" : it.split.map((p) => people[p][0]).join(", ");
+        const open = state.open === it.id;
+        const line = `<div class="line ${open ? "open" : ""}" data-open="${it.id}">${flag}<span class="what">${it.what}</span><span class="who">${whoTxt}</span>${amt}</div>`;
+        if (!open) return line;
+        const amtC = it.amount == null
+          ? `<button class="chip bad amtc" data-amt="${it.id}">Amount?</button>`
+          : `<button class="chip amtc" data-amt="${it.id}">${money(it.amount, t.cur)}</button>`;
+        const trip = `<button class="chip ${it.tripGuess ? "warn" : ""}" data-pick="${it.id}:trip">${tripIcon(t)}<span style="overflow:hidden;text-overflow:ellipsis">${t.name}</span></button>`;
+        const payer = `<button class="chip ${it.payerGuess ? "warn" : ""}" data-pick="${it.id}:payer"><i data-lucide="wallet"></i>${it.payer === "me" ? "You" : people[it.payer][0]}${it.payerGuess ? "?" : ""}</button>`;
+        const who = it.split === "all" ? "Everyone" : it.split.map((p) => people[p][0] + (p === it.guess ? "?" : "")).join(", ");
+        const split = `<button class="chip ${it.guess ? "warn" : ""}" data-pick="${it.id}:split"><i data-lucide="users"></i><span style="overflow:hidden;text-overflow:ellipsis">${who}</span></button>`;
+        const when = `<button class="chip" data-when="${it.id}"><i data-lucide="clock"></i>${it.when}</button>`;
+        return line + `<div class="exp"><input class="title-in" data-title="${it.id}" value="${it.what}" aria-label="Description" /><div class="chips" style="margin-top:8px">${amtC}${trip}${payer}${split}${when}</div><div class="foot2"><div class="heard grow">“${it.heard}”</div><button class="rmq" data-rm="${it.id}"><i data-lucide="trash-2"></i>Remove</button></div></div>`;
+      }
+      function pickerHtml() {
+        if (!state.pick) return "";
+        const it = state.items.find((x) => x.id == state.pick.id);
+        if (!it) return "";
+        const t = tripOf(it.trip);
+        const tick = (on) => (on ? `<span class="tick">${ICON.check}</span>` : "");
+        let title, opts, done = "";
+        if (state.pick.kind === "trip") {
+          title = "Trip";
+          opts = trips.map((x) => `<button class="opt" data-set="trip:${x.id}"><span class="tile" style="width:36px;height:36px">${tripIcon(x)}</span><span class="grow">${x.name}</span>${tick(x.id === it.trip)}</button>`).join("");
+        } else if (state.pick.kind === "payer") {
+          title = "Paid by";
+          opts = t.members.map((p) => `<button class="opt" data-set="payer:${p}">${avatar(p, "lg")}<span class="grow">${people[p][0]}</span>${tick(p === it.payer)}</button>`).join("");
+        } else {
+          title = "Split between";
+          const sel = it.split === "all" ? t.members : it.split;
+          opts = t.members.map((p) => `<button class="opt" data-set="split:${p}">${avatar(p, "lg")}<span class="grow">${people[p][0]}</span><span class="check ${sel.includes(p) ? "on" : ""}">${sel.includes(p) ? ICON.check : ""}</span></button>`).join("");
+          done = `<div style="padding:12px 16px 0"><button class="btn primary" style="width:100%" data-pickdone>Done</button></div>`;
+        }
+        return `<div class="scrim2" data-pickdone></div><div class="picker"><div class="handle"></div><div class="sheet-head"><div class="sheet-title">${title}</div><div class="cap">${it.what}</div></div><div class="opts">${opts}</div>${done}</div>`;
+      }
+
+      function sheetHtml() {
+        const ready = state.items.filter((i) => !i.fix && !i.off).length;
+        const fixes = state.items.filter((i) => i.fix).length;
+        const row = { A: rowA, B: rowB, C: rowC, D: rowD, E: rowE, F: rowF, G: rowG, H: rowH, I: rowI }[state.opt];
+        const groups = grouped()
+          .map(
+            ([t, its]) =>
+              `<div class="group"><i data-lucide="${t.icon}" style="width:14px;height:14px"></i><span>${t.name}</span>${its.some((i) => i.tripGuess) ? '<span class="guess" style="text-transform:none;letter-spacing:0">· guessed</span>' : ""}</div><div class="g">${its.map((i) => row(i, t)).join("")}</div>`,
+          )
+          .join("");
+        const flat = state.opt === "G" && state.items.length
+          ? `<div class="g" style="margin-top:4px">${state.items.map((i) => rowG(i)).join("")}</div>`
+          : null;
+        const label =
+          ready === 0 ? "Nothing to add" : ready === 1 ? "Add 1 expense" : `Add ${ready} expenses`;
+        const note = fixes
+          ? `<p class="note">${fixes === 1 ? "1 needs a fix before it can be added." : `${fixes} need a fix before they can be added.`}</p>`
+          : "";
+        if (state.opt === "E")
+          return `<div class="full"><div class="bar"><button class="x" data-later aria-label="Close" style="color:var(--fg)">${ICON.x}</button><div class="grow"><div class="sheet-title">From Gemini · ${state.items.length}</div><div class="cap">Check them, then add. Nothing is saved yet.</div></div></div>
+    <div class="list">${groups || '<p class="note">All done.</p>'}${note}</div>
+    <div class="foot"><button class="btn primary" ${ready ? "" : "disabled"}>${label}</button></div></div>`;
+        return `<div class="scrim" data-close></div><div class="sheet" role="dialog" aria-label="From Gemini">
+    <div class="handle"></div>
+    <div class="sheet-head"><div class="sheet-title" style="display:flex;align-items:center;gap:6px"><span style="color:var(--accent-text)">${ICON.spark}</span>From Gemini · ${state.items.length}</div><div class="cap">Check them, then add. Nothing is saved yet.</div></div>
+    <div class="list">${flat || groups || '<p class="note">All done.</p>'}${note}</div>
+    <div class="foot"><button class="btn secondary" style="flex:0 0 auto;padding:0 20px" data-later>Later</button><button class="btn primary" ${ready ? "" : "disabled"}>${label}</button></div>
+  </div>`;
+      }
+
+      function render() {
+        document.documentElement.dataset.theme = state.theme;
+        const sw = document.getElementById("sw");
+        const b = (k, v, l) => `<button data-${k}="${v}" aria-pressed="${state[k] === v}">${l}</button>`;
+        sw.innerHTML =
+          "<b>Review</b>" +
+          ["A", "B", "C", "D", "E", "F", "G", "H", "I"].map((o) => b("opt", o, o)).join("") +
+          '<span class="sep"></span><b>Home</b>' +
+          b("home", "H1", "H1") +
+          b("home", "H2", "H2") +
+          '<span class="sep"></span><b>Theme</b>' +
+          b("theme", "light", "Light") +
+          b("theme", "dark", "Dark") +
+          "<button data-reset>Reset</button>";
+        document.getElementById("explain").textContent = OPTIONS[state.opt] + "  " + HOMES[state.home];
+        const toast = state.toast
+          ? `<div class="toast"><span>${state.toast.text}</span><button data-undo>Undo</button></div>`
+          : "";
+        const oldList = document.querySelector(".sheet .list, .full .list");
+        const keep = oldList ? oldList.scrollTop : 0;
+        document.getElementById("app").innerHTML =
+          homeHtml() + (state.sheet === false ? "" : sheetHtml() + pickerHtml()) + toast;
+        document.documentElement.style.setProperty("--apph", innerHeight - sw.offsetHeight + "px");
+        const newList = document.querySelector(".sheet .list, .full .list");
+        if (newList) newList.scrollTop = keep;
+        if (state.scroll) {
+          state.scroll = false;
+          const ex = document.querySelector(".exp");
+          if (ex) ex.scrollIntoView({ block: "nearest" });
+        }
+        if (window.lucide) lucide.createIcons({ attrs: { width: 22, height: 22, "stroke-width": 2 } });
+      }
+
+      document.addEventListener("click", (e) => {
+        const el = e.target.closest("button,[data-edit],[data-close],[data-open],[data-pickdone]");
+        if (!el) return;
+        const d = el.dataset;
+        if (d.opt) state.opt = d.opt;
+        else if (d.home) state.home = d.home;
+        else if (d.theme) state.theme = d.theme;
+        else if ("reset" in d) state = { ...state, items: initialItems(), toast: null, sheet: true, open: null, pick: null };
+        else if (d.rm) {
+          const i = state.items.findIndex((x) => x.id == d.rm);
+          const [gone] = state.items.splice(i, 1);
+          state.pick = null;
+          state.toast = { text: `Removed “${gone.what}”`, item: gone, at: i };
+          clearTimeout(state.t);
+          state.t = setTimeout(() => {
+            state.toast = null;
+            render();
+          }, 3000);
+        } else if ("undo" in d && state.toast) {
+          state.items.splice(state.toast.at, 0, state.toast.item);
+          state.toast = null;
+        } else if (d.pick) {
+          const [id, kind] = d.pick.split(":");
+          state.pick = { id: +id, kind };
+        } else if ("pickdone" in d) {
+          if (state.pick && state.pick.kind === "split") {
+            const it = state.items.find((x) => x.id == state.pick.id);
+            if (it) delete it.guess;
+          }
+          state.pick = null;
+        } else if (d.set) {
+          const it = state.items.find((x) => x.id == state.pick.id);
+          const [k, v] = d.set.split(":");
+          if (k === "trip") {
+            if (v !== it.trip) {
+              const nt = tripOf(v);
+              it.trip = v;
+              if (!nt.members.includes(it.payer)) it.payer = "me";
+              if (it.split !== "all") it.split = it.split.filter((p) => nt.members.includes(p));
+              if (it.split !== "all" && it.split.length < 2) it.split = "all";
+              delete it.guess;
+            }
+            delete it.tripGuess;
+            state.pick = null;
+          } else if (k === "payer") {
+            it.payer = v;
+            delete it.payerGuess;
+            state.pick = null;
+          } else {
+            const t = tripOf(it.trip);
+            let sel = it.split === "all" ? [...t.members] : [...it.split];
+            sel = sel.includes(v) ? sel.filter((p) => p !== v) : [...sel, v];
+            if (sel.length === 0) return;
+            it.split = sel.length === t.members.length ? "all" : t.members.filter((p) => sel.includes(p));
+            if (it.guess && !sel.includes(it.guess)) delete it.guess;
+          }
+        } else if (d.desc) {
+          const it = state.items.find((x) => x.id == d.desc);
+          const v = prompt("Description (in the real app the text edits in place)", it.what);
+          if (v && v.trim()) it.what = v.trim();
+          else return;
+        } else if (d.when) {
+          alert("Opens the Date and time sheet (same as When in Add expense).");
+          return;
+        } else if (d.open) {
+          state.open = state.open == d.open ? null : +d.open;
+          state.scroll = true;
+        } else if (d.amt) {
+          const it = state.items.find((x) => x.id == d.amt);
+          const v = prompt("Amount (in the real app the money keypad opens in place)", it.amount ? it.amount / 100 : "");
+          if (v === null) return;
+          const n = Math.round(parseFloat(v.replace(",", ".")) * 100);
+          if (n > 0) {
+            it.amount = n;
+            delete it.fix;
+          }
+        } else if (d.person) {
+          const [id, p] = d.person.split(":");
+          const it = state.items.find((x) => x.id == id);
+          it.dropped = it.dropped || [];
+          if (it.dropped.includes(p)) {
+            it.dropped = it.dropped.filter((q) => q !== p);
+            it.split.push(p);
+          } else {
+            it.dropped.push(p);
+            it.split = it.split.filter((q) => q !== p);
+          }
+        } else if (d.add || d.who) {
+          alert("Opens the people picker (the same one as Split / Paid by in Add expense).");
+          return;
+        } else if (d.tog) {
+          const it = state.items.find((x) => x.id == d.tog);
+          it.off = !it.off;
+        } else if (d.edit) {
+          alert(
+            "Opens the Add expense screen pre-filled. Save returns here with this row updated (nothing is added yet).",
+          );
+          return;
+        } else if ("later" in d || "close" in d) state.sheet = false;
+        else return;
+        render();
+      });
+      document.addEventListener("input", (e) => {
+        const id = e.target.dataset && e.target.dataset.title;
+        if (!id) return;
+        const it = state.items.find((x) => x.id == id);
+        it.what = e.target.value;
+        const w = e.target.closest(".exp").previousElementSibling.querySelector(".what");
+        if (w) w.textContent = it.what || "—";
+      });
+      addEventListener("resize", render);
+      render();
+    </script>
+  </body>
+</html>
