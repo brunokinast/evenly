@@ -176,7 +176,7 @@ async function face(doc: PDFDocument, woff2: Uint8Array): Promise<Face> {
 }
 
 /**
- * fontkit 2 for pdf-lib, which was written for fontkit 1: the same create(), layout and subset API, except
+ * fontkit 3 for pdf-lib, which was written for fontkit 1: the same create(), layout and subset API, except
  * that a subset now encodes to bytes at once instead of to a stream.
  */
 const kit = {
