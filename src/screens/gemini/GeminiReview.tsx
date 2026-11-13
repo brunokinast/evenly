@@ -15,14 +15,7 @@ import { people as peopleOf, type Person } from "@/domain/members";
 import type { Trip } from "@/domain/types";
 import { money, t, tn } from "@/i18n";
 import { cn } from "@/lib/cn";
-import {
-  DRAFT_FIELDS,
-  DraftSheets,
-  fieldViews,
-  isDraftField,
-  nameIn,
-  type DraftField,
-} from "../expense/fields";
+import { DRAFT_FIELDS, DraftSheets, fieldViews, isDraftField, type DraftField } from "../expense/fields";
 import { AmountSheet, TripSheet } from "./ReviewSheets";
 
 /** What the user changed on a line (AST-6); dropped by "Later" (AST-10). */
@@ -249,7 +242,7 @@ function ReviewLine(p: {
   const ctx = { trip, people: line.people, myId: line.myId };
   const views = fieldViews(ctx, draft, draft.spentAt);
   const c = checkDraft(trip, draft);
-  const who = c.allIn ? t("gemini.all") : c.parts.map((id) => nameIn(ctx, id)).join(", ");
+  const who = c.allIn ? t("gemini.all") : views.split.short;
   const amount = draft.cents ? money(draft.cents, trip.currency) : "—";
   const TripIcon = TRIP_ICON[trip.icon];
   return (

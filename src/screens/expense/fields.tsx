@@ -1,7 +1,7 @@
 import { Fragment, type ReactNode } from "react";
 import { CalendarDays, Users, Wallet } from "lucide-react";
 import { checkDraft, type ExpenseDraft } from "@/domain/draft";
-import type { Person } from "@/domain/members";
+import { listOrder, type Person } from "@/domain/members";
 import type { Trip } from "@/domain/types";
 import { t, timeLabel, whenLabel } from "@/i18n";
 import { PayerSheet, SplitSheet, WhenSheet } from "./FormSheets";
@@ -57,7 +57,9 @@ export function fieldViews(ctx: Ctx, d: ExpenseDraft, defaultSpentAt: number): R
         ? t("form.custom")
         : c.allIn
           ? t("form.everyone")
-          : c.parts.map((id) => nameIn(ctx, id)).join(", "),
+          : listOrder(c.parts, ctx.myId) // MEM-6: me first
+              .map((id) => nameIn(ctx, id))
+              .join(", "),
       changed: !c.allIn,
     },
     when: {
