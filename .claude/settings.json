@@ -26,7 +26,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/format.mjs"
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/format.mjs\""
           }
         ]
       }
@@ -36,7 +36,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/check.mjs",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/check.mjs\"",
             "timeout": 600
           }
         ]
