@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Route } from "@playwright/test";
 import { addExpense, createTrip, enterName, inviteCode, join, newUser, pickYesterday, tab } from "./helpers";
 
 test("TRIP-1 TRIP-10 creating a trip stays on Home with it on top; Members shows the invite card", async ({
@@ -331,6 +331,31 @@ test("EXP-8 Save and Delete take effect at once, before the server confirms", as
   await expect(ana.getByText("Expense deleted")).toBeVisible();
 });
 
+test("EXP-8 a save the server refuses shows a notice", async ({ browser }) => {
+  const ana = await newUser(browser, "Ana");
+  const bia = await newUser(browser, "Bia");
+  await createTrip(ana, "Refused");
+  await join(bia, await inviteCode(ana), "Refused");
+  await tab(bia, "Expenses");
+  // Bia's writes are held back while she still sees the trip, and reach the server only after she was removed.
+  const held: Route[] = [];
+  await bia.route(/Write\/channel/, (route) => void held.push(route));
+  await addExpense(bia, "1500", "Taxi");
+  await tab(ana, "Members");
+  await ana.getByRole("button", { name: /Bia/ }).click();
+  await ana.getByRole("button", { name: "Remove from trip" }).click();
+  await ana
+    .getByRole("dialog", { name: /Remove Bia/ })
+    .getByRole("button", { name: "Remove from trip" })
+    .click();
+  await expect(bia.getByRole("button", { name: "New trip" })).toBeVisible(); // MEM-9: back on Home
+  await bia.unroute(/Write\/channel/);
+  for (const route of held) await route.continue().catch(() => {}); // some were cancelled by the page meanwhile
+  await expect(
+    bia.getByText("Couldn't save “Taxi”: you may no longer have access to this trip."),
+  ).toBeVisible();
+});
+
 test("APP-9 remove, rename and leave take effect before the server confirms; delete waits", async ({
   browser,
 }) => {
@@ -469,6 +494,21 @@ test("PDF-1 PDF-3 export downloads the trip summary", async ({ browser }, info) 
   await ana.getByRole("button", { name: "Export as PDF" }).click();
   expect((await download).suggestedFilename()).toBe("Lisbon_2026_summary.pdf");
   await (await download).saveAs(info.outputPath("latin.pdf"));
+});
+
+test("PDF-5 export shows progress and reports a failure", async ({ browser }) => {
+  const ana = await newUser(browser, "Ana");
+  await createTrip(ana, "Lisbon");
+  await tab(ana, "Balances");
+  // The PDF code never arrives, then fails (e.g. the connection dropped).
+  let hold!: Route;
+  await ana.route(/pdf\/exportPdf/, (route) => void (hold = route));
+  await ana.getByRole("button", { name: "Export as PDF" }).click();
+  await expect(ana.locator("button[aria-busy=true]")).toBeVisible();
+  await expect.poll(() => hold).toBeTruthy();
+  await hold.abort();
+  await expect(ana.getByText("Couldn't export the PDF. Try again.")).toBeVisible();
+  await expect(ana.getByRole("button", { name: "Export as PDF" })).toBeEnabled();
 });
 
 test("PDF-6 names in any script: only the fonts and characters the trip needs are fetched", async ({
