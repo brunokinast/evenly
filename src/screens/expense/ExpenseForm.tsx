@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { backToTrip } from "@/app/nav";
 import { useLocation } from "wouter";
-import { CalendarDays, ChevronRight, Trash2, Users, Wallet, X } from "lucide-react";
+import { ChevronRight, Trash2, X } from "lucide-react";
 import { useOnline } from "@/app/online";
 import { showToast } from "@/app/toast";
 import { Button } from "@/components/Button";
@@ -15,13 +15,22 @@ import { deleteExpense, saveExpense } from "@/data/commands";
 import { useMe } from "@/data/session";
 import { useExpenses, useTrip } from "@/data/trips";
 import { people as peopleOf } from "@/domain/members";
-import { customShares, equalShares, withoutZeroShares } from "@/domain/split";
+import { equalShares } from "@/domain/split";
+import { checkDraft, draftInput, draftOf, newDraft, withCents, type ExpenseDraft } from "@/domain/draft";
 import type { Expense, Trip } from "@/domain/types";
-import { money, t, whenLabel } from "@/i18n";
+import { money, t } from "@/i18n";
 import { cn } from "@/lib/cn";
 import { mark, usePaintedMark } from "@/lib/perf";
 import { NotFound } from "../NotFound";
-import { PayerSheet, SplitSheet, WhenSheet } from "./FormSheets";
+import {
+  DRAFT_FIELDS,
+  DraftSheets,
+  fieldViews,
+  isDraftField,
+  nameIn,
+  type DraftField,
+  type FieldView,
+} from "./fields";
 
 /** Add (expenseId undefined) or Edit expense: one full screen (EXP flow 3–6). */
 export function ExpenseFormScreen({ tripId, expenseId }: { tripId: string; expenseId?: string }) {
@@ -44,52 +53,16 @@ export function ExpenseFormScreen({ tripId, expenseId }: { tripId: string; expen
   return <ExpenseForm key={expenseId ?? "new"} trip={trip.data} existing={existing} myUid={me.uid} />;
 }
 
-type Form = {
-  cents: number | null;
-  description: string;
-  payerId: string;
-  /** Participants (member ids). */
-  parts: string[];
-  custom: boolean;
-  /** Custom split: amounts typed per person (EXP-12). */
-  typed: Record<string, number>;
-  spentAt: number;
-};
-
-function initialForm(trip: Trip, myId: string, e?: Expense): Form {
-  const ids = trip.members.map((m) => m.id);
-  if (!e) {
-    // EXP-10: paid by me, split equally between all, dated now.
-    return {
-      cents: null,
-      description: "",
-      payerId: myId,
-      parts: ids,
-      custom: false,
-      typed: {},
-      spentAt: Date.now(),
-    };
-  }
-  const parts = ids.filter((id) => id in e.shares); // EXP-6: only current members
-  return {
-    cents: e.amountCents,
-    description: e.description,
-    payerId: ids.includes(e.payerId) ? e.payerId : myId,
-    parts,
-    custom: e.split === "custom",
-    typed: e.split === "custom" ? Object.fromEntries(parts.map((id) => [id, e.shares[id]!])) : {},
-    spentAt: e.spentAt,
-  };
-}
-
-type SheetName = "payer" | "split" | "when" | "discard" | "delete" | null;
+type SheetName = DraftField | "discard" | "delete" | null;
 
 function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense; myUid: string }) {
   const online = useOnline();
   const [, navigate] = useLocation();
   const myId = trip.memberIdsByUid[myUid] ?? "";
-  const [start] = useState(() => initialForm(trip, myId, existing));
-  const [f, setF] = useState<Form>(start);
+  const [start] = useState(() =>
+    existing ? draftOf(trip, myId, existing) : newDraft(trip, myId, Date.now()),
+  );
+  const [f, setF] = useState<ExpenseDraft>(start);
   const [sheet, setSheet] = useState<SheetName>(null);
   const sent = useRef(false);
   const descRef = useRef<HTMLInputElement>(null);
@@ -97,19 +70,10 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
   const people = useMemo(() => peopleOf(trip, myUid), [trip, myUid]);
   const cur = trip.currency;
 
-  const order = trip.members.map((m) => m.id);
-  // Participants in member order; members removed meanwhile drop out (EXP-6).
-  const parts = order.filter((id) => f.parts.includes(id));
-  const payerOk = order.includes(f.payerId);
-  const isCustom = f.custom && Object.keys(f.typed).length > 0;
-  const split = isCustom ? customShares(f.cents ?? 0, parts, f.typed, f.payerId) : null;
-  const remaining = split?.remaining ?? 0;
-  const valid =
-    (f.cents ?? 0) > 0 && f.description.trim() !== "" && parts.length > 0 && payerOk && remaining === 0;
+  const { parts, isCustom, remaining, valid } = checkDraft(trip, f);
   const dirty = JSON.stringify(f) !== JSON.stringify(start);
-
-  const name = (id: string) =>
-    id === myId ? t("common.you") : (people.get(id)?.name ?? t("members.former"));
+  const ctx = { trip, people, myId };
+  const views = fieldViews(ctx, f, start.spentAt);
 
   const leave = () => void backToTrip(navigate, trip.id);
 
@@ -125,23 +89,12 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
   // background, so the form leaves right away; only a refusal by the server comes back, as a notice.
   function save() {
     if (!valid || sent.current || !online) return;
+    const input = draftInput(trip, f);
+    if (!input) return;
     sent.current = true;
-    const cents = f.cents!;
-    const shares = isCustom ? withoutZeroShares(split!.shares) : equalShares(cents, parts, f.payerId);
-    const description = f.description.trim().slice(0, 100);
+    const { description } = input;
     mark("save:tap");
-    saveExpense(
-      trip.id,
-      {
-        description,
-        amountCents: cents,
-        payerId: f.payerId,
-        shares,
-        split: isCustom ? "custom" : "equal",
-        spentAt: f.spentAt,
-      },
-      existing,
-    ).then(
+    saveExpense(trip.id, input, existing).then(
       () => mark("save:confirmed"),
       () => showToast(t("form.notSaved", { description })),
     );
@@ -160,17 +113,10 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
       ? t("form.eachPaysExtra", {
           amount: money(base, cur),
           extra: money(shares[to]! - base, cur),
-          name: name(to),
+          name: nameIn(ctx, to),
         })
       : t("form.eachPays", { amount: money(base, cur) });
   }
-
-  const allIn = parts.length === order.length;
-  const splitValue = isCustom
-    ? t("form.custom")
-    : allIn
-      ? t("form.equallyAll")
-      : t("form.equallyN", { n: parts.length });
 
   return (
     <div className="mx-auto flex h-full max-w-app flex-col">
@@ -208,13 +154,9 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
             format={(c) => money(c, cur)}
             zero
             onCents={(cents) => {
-              // EXP-13: a new total resets a custom split to equal.
-              if (isCustom && cents !== f.cents) showToast(t("form.splitReset"));
-              setF((x) => ({
-                ...x,
-                cents,
-                ...(isCustom && cents !== x.cents ? { custom: false, typed: {} } : {}),
-              }));
+              const next = withCents(f, cents);
+              if (next.splitReset) showToast(t("form.splitReset")); // EXP-13
+              setF(next.draft);
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
@@ -250,27 +192,9 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
         />
 
         <ListGroup>
-          <Setting
-            icon={<Wallet />}
-            k={t("form.paidBy")}
-            v={payerOk ? name(f.payerId) : "—"}
-            changed={f.payerId !== myId}
-            onClick={() => setSheet("payer")}
-          />
-          <Setting
-            icon={<Users />}
-            k={t("form.split")}
-            v={splitValue}
-            changed={!allIn || isCustom}
-            onClick={() => setSheet("split")}
-          />
-          <Setting
-            icon={<CalendarDays />}
-            k={t("form.when")}
-            v={whenLabel(f.spentAt)}
-            changed={f.spentAt !== start.spentAt}
-            onClick={() => setSheet("when")}
-          />
+          {DRAFT_FIELDS.map((field) => (
+            <Setting key={field} view={views[field]} onClick={() => setSheet(field)} />
+          ))}
         </ListGroup>
 
         {parts.length === 0 && <p className="text-caption text-negative">{t("form.needPeople")}</p>}
@@ -289,38 +213,11 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
         </Button>
       </div>
 
-      <PayerSheet
-        open={sheet === "payer"}
-        trip={trip}
-        people={people}
-        myId={myId}
-        value={f.payerId}
-        onPick={(payerId) => {
-          setF((x) => ({ ...x, payerId }));
-          setSheet(null);
-        }}
-        onClose={() => setSheet(null)}
-      />
-      <SplitSheet
-        open={sheet === "split"}
-        trip={trip}
-        people={people}
-        myId={myId}
-        cents={f.cents ?? 0}
-        payerId={f.payerId}
-        parts={parts}
-        custom={f.custom}
-        typed={f.typed}
-        onChange={(next) => setF((x) => ({ ...x, ...next }))}
-        onClose={() => setSheet(null)}
-      />
-      <WhenSheet
-        open={sheet === "when"}
-        value={f.spentAt}
-        onPick={(spentAt) => {
-          setF((x) => ({ ...x, spentAt }));
-          setSheet(null);
-        }}
+      <DraftSheets
+        {...ctx}
+        open={isDraftField(sheet) ? sheet : null}
+        draft={f}
+        onChange={(patch) => setF((x) => ({ ...x, ...patch }))}
         onClose={() => setSheet(null)}
       />
       <ConfirmSheet
@@ -353,28 +250,19 @@ function ExpenseForm({ trip, existing, myUid }: { trip: Trip; existing?: Expense
 }
 
 /** One row of the settings list: icon, label, value (accent when not the default), chevron. */
-function Setting(props: {
-  icon: React.ReactNode;
-  k: string;
-  v: string;
-  changed: boolean;
-  onClick: () => void;
-}) {
+function Setting({ view, onClick }: { view: FieldView; onClick: () => void }) {
   return (
     <button
       type="button"
-      onClick={props.onClick}
+      onClick={onClick}
       className="flex min-h-12 w-full items-center gap-2.5 pr-3 pl-3.5 text-left active:bg-surface-2 [&>svg]:size-5 [&>svg]:shrink-0 [&>svg]:text-fg-muted"
     >
-      {props.icon}
-      <span className="shrink-0 text-fg-muted">{props.k}</span>
+      {view.icon}
+      <span className="shrink-0 text-fg-muted">{view.label}</span>
       <span
-        className={cn(
-          "min-w-0 flex-1 truncate text-right font-semibold",
-          props.changed && "text-accent-text",
-        )}
+        className={cn("min-w-0 flex-1 truncate text-right font-semibold", view.changed && "text-accent-text")}
       >
-        {props.v}
+        {view.value}
       </span>
       <ChevronRight />
     </button>

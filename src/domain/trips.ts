@@ -1,5 +1,5 @@
 import { charCount, NAME_MAX } from "./names";
-import { CURRENCIES, type Currency } from "./types";
+import { CURRENCIES, type Currency, type Trip } from "./types";
 
 export type TripNameCheck = { ok: true; name: string } | { ok: false; error: "empty" | "tooLong" };
 
@@ -39,3 +39,9 @@ export function pdfFileName(tripName: string): string {
     .replace(/\s+/g, "_");
   return `${base || "trip"}_summary.pdf`;
 }
+
+/** TRIP-12: when the trip was last active (an expense added, edited or deleted), else its creation. */
+export const lastActive = (trip: Trip) => trip.activeAt ?? trip.createdAt;
+
+/** TRIP-12: Home's order, most recently active first. */
+export const byActivity = (a: Trip, b: Trip) => lastActive(b) - lastActive(a);

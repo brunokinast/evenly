@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { checkTripName, codeDigits, defaultCurrency, pdfFileName, randomCode } from "./trips";
+import { byActivity, checkTripName, codeDigits, defaultCurrency, pdfFileName, randomCode } from "./trips";
+import type { Trip } from "./types";
 
 describe("trips", () => {
   it("TRIP-2 trip names are trimmed and required", () => {
@@ -25,6 +26,13 @@ describe("trips", () => {
     expect(randomCode(() => 0)).toBe("000000");
     expect(randomCode(() => 0.999_999_9)).toBe("999999");
     expect(randomCode()).toMatch(/^\d{6}$/);
+  });
+
+  it("TRIP-12 most recently active first; a trip never active counts from its creation", () => {
+    const t = (id: string, createdAt: number, activeAt?: number) =>
+      ({ id, createdAt, ...(activeAt !== undefined && { activeAt }) }) as Trip;
+    const sorted = [t("old", 1, 2), t("new", 5), t("busy", 3, 9)].sort(byActivity).map((x) => x.id);
+    expect(sorted).toEqual(["busy", "new", "old"]);
   });
 
   it("PDF-3 file name: symbols removed, spaces as _, plus _summary.pdf", () => {

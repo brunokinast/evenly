@@ -8,6 +8,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(AppThemePlugin.class);
+        registerPlugin(EvenlyCalendarPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

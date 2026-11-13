@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ChevronRight, RotateCcw, Smartphone } from "lucide-react";
+import { ChevronRight, RotateCcw, Smartphone, Sparkles } from "lucide-react";
+import { useCalendarInbox } from "@/app/calendarInbox";
 import { useInstall } from "@/app/install";
 import { setTheme, useTheme, type ThemeChoice } from "@/app/theme";
 import { Button } from "@/components/Button";
@@ -11,10 +12,16 @@ import { canResetForTesting, resetForTesting } from "@/data/session";
 import { t } from "@/i18n";
 import { useNameForm } from "../useNameForm";
 
-type Props = { open: boolean; name: string; onClose: () => void; onInstall: () => void };
+type Props = {
+  open: boolean;
+  name: string;
+  onClose: () => void;
+  onInstall: () => void;
+  onGemini: () => void;
+};
 
-/** ID-9 name (Done/Enter saves, other closes discard), APP-2 theme, APP-3 install row. */
-export function ProfileSheet({ open, name, onClose, onInstall }: Props) {
+/** ID-9 name (Done/Enter saves, other closes discard), APP-2 theme, APP-3 install row, AST-1 Gemini row. */
+export function ProfileSheet({ open, name, onClose, onInstall, onGemini }: Props) {
   // While a name is saving, only Done's own completion closes the sheet (a "discard" can't race the save).
   const [saving, setSaving] = useState(false);
   return (
@@ -25,7 +32,15 @@ export function ProfileSheet({ open, name, onClose, onInstall }: Props) {
       focusField={false} // ID-9: no keyboard on open
     >
       {/* Remounted on each open, so a discarded edit doesn't come back. */}
-      {open && <ProfileForm name={name} onClose={onClose} onInstall={onInstall} onSaving={setSaving} />}
+      {open && (
+        <ProfileForm
+          name={name}
+          onClose={onClose}
+          onInstall={onInstall}
+          onGemini={onGemini}
+          onSaving={setSaving}
+        />
+      )}
     </Sheet>
   );
 }
@@ -34,12 +49,14 @@ function ProfileForm({
   name,
   onClose,
   onInstall,
+  onGemini,
   onSaving,
 }: Omit<Props, "open"> & { onSaving: (saving: boolean) => void }) {
   const form = useNameForm(name, onClose);
   useEffect(() => onSaving(form.busy), [form.busy, onSaving]);
   const theme = useTheme();
   const { method } = useInstall();
+  const gemini = useCalendarInbox().available;
   return (
     <form
       className="flex flex-col gap-3"
@@ -68,15 +85,26 @@ function ProfileForm({
           { value: "dark", label: t("theme.dark") },
         ]}
       />
-      {method && (
+      {(method || gemini) && (
         <ListGroup>
-          <Row
-            compact
-            leading={<Smartphone className="size-5 shrink-0" aria-hidden />}
-            title={t("install.row")}
-            trailing={<ChevronRight className="size-5 shrink-0 text-fg-muted" aria-hidden />}
-            onClick={onInstall}
-          />
+          {method && (
+            <Row
+              compact
+              leading={<Smartphone className="size-5 shrink-0" aria-hidden />}
+              title={t("install.row")}
+              trailing={<ChevronRight className="size-5 shrink-0 text-fg-muted" aria-hidden />}
+              onClick={onInstall}
+            />
+          )}
+          {gemini && (
+            <Row
+              compact
+              leading={<Sparkles className="size-5 shrink-0" aria-hidden />}
+              title={t("gemini.row")}
+              trailing={<ChevronRight className="size-5 shrink-0 text-fg-muted" aria-hidden />}
+              onClick={onGemini}
+            />
+          )}
         </ListGroup>
       )}
       <Button type="submit" variant="primary" busy={form.busy} className="w-full">

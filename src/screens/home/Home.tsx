@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { openTrip } from "@/app/nav";
 import { ChevronRight, Luggage, Plus, Ticket } from "lucide-react";
+import { startInbox, useCalendarInbox } from "@/app/calendarInbox";
 import { useInstall } from "@/app/install";
 import { useOnline } from "@/app/online";
 import { Avatar } from "@/components/Avatar";
@@ -15,12 +16,14 @@ import { useMe } from "@/data/session";
 import { holdTrip, onServer, useMyTrips, warmTrip } from "@/data/trips";
 import { usePaintedMark } from "@/lib/perf";
 import { longDate, t } from "@/i18n";
+import { GeminiReview } from "../gemini/GeminiReview";
+import { GeminiSetupSheet } from "../gemini/GeminiSetupSheet";
 import { InstallSheets, startInstall, type InstallSheet } from "../install/InstallSheets";
 import { JoinSheet } from "./JoinSheet";
 import { NewTripSheet } from "./NewTripSheet";
 import { ProfileSheet } from "./ProfileSheet";
 
-type SheetName = "profile" | "newTrip" | "join" | null;
+type SheetName = "profile" | "newTrip" | "join" | "gemini" | null;
 const HELD_TRIPS = 3;
 
 export function Home() {
@@ -29,6 +32,7 @@ export function Home() {
   usePaintedMark("painted:home", trips.status === "ready");
   const online = useOnline();
   const install = useInstall();
+  const inbox = useCalendarInbox();
   const [, navigate] = useLocation();
   const [sheet, setSheet] = useState<SheetName>(null);
   const [installSheet, setInstallSheet] = useState<InstallSheet>(null);
@@ -49,6 +53,12 @@ export function Home() {
     const releases = held ? held.split(" ").map(holdTrip) : [];
     return () => releases.forEach((release) => release());
   }, [held]);
+
+  // AST-3: the Gemini calendar is read only once the list shows, so starting up is never slower.
+  const listShown = trips.status === "ready";
+  useEffect(() => {
+    if (listShown) startInbox();
+  }, [listShown]);
 
   return (
     <div className="mx-auto flex h-full max-w-app flex-col">
@@ -72,11 +82,25 @@ export function Home() {
           <SkeletonRows />
         ) : list.length > 0 ? (
           <ListGroup>
-            {list.map((trip) => (
+            {list.map((trip, i) => (
               <Row
                 key={trip.id}
                 leading={<TripTile icon={trip.icon} />}
-                title={trip.name}
+                title={
+                  i === 0 && inbox.access === "granted" ? (
+                    <>
+                      {/* AST-12: where Gemini adds by default (TRIP-12: the most recently active trip). */}
+                      <span
+                        role="img"
+                        aria-label={t("gemini.defaultTrip")}
+                        className="mr-1.5 inline-block size-2 rounded-full bg-accent align-middle"
+                      />
+                      {trip.name}
+                    </>
+                  ) : (
+                    trip.name
+                  )
+                }
                 caption={`${trip.currency} · ${longDate(trip.createdAt)}`}
                 trailing={<ChevronRight className="size-5 shrink-0 text-fg-muted" aria-hidden />}
                 onPointerDown={() => warmTrip(trip.id)}
@@ -112,7 +136,10 @@ export function Home() {
         name={me.name}
         onClose={() => setSheet(null)}
         onInstall={runInstall}
+        onGemini={() => setSheet("gemini")}
       />
+      <GeminiSetupSheet open={sheet === "gemini"} onClose={() => setSheet(null)} />
+      {trips.status === "ready" && <GeminiReview trips={list} myUid={me.uid} />}
       <NewTripSheet open={sheet === "newTrip"} onClose={() => setSheet(null)} />
       <JoinSheet open={sheet === "join"} onClose={() => setSheet(null)} myTrips={list} />
       <InstallSheets open={installSheet} onClose={() => setInstallSheet(null)} />

@@ -1,6 +1,6 @@
 import { FieldValue, type WriteBatchOperation } from "@capacitor-firebase/firestore";
 import { INVITE_TTL_MS, randomCode } from "@/domain/trips";
-import type { Currency, Expense, Member, Split, Trip, TripIcon } from "@/domain/types";
+import type { Currency, Expense, ExpenseInput, Member, Trip, TripIcon } from "@/domain/types";
 import { isGuest } from "@/domain/types";
 import { FirebaseFirestore } from "@capacitor-firebase/firestore";
 import { firebaseReady } from "./firebase";
@@ -257,22 +257,18 @@ export function leaveTrip(trip: Trip) {
 
 // ---------- expenses ----------
 
-type ExpenseInput = {
-  description: string;
-  amountCents: number;
-  payerId: string;
-  shares: Record<string, number>;
-  split: Split;
-  spentAt: number;
-};
+/** TRIP-12: an expense write also marks its trip as active, in the same batch. */
+const touchTrip = (tripId: string, now: number) => update(`trips/${tripId}`, { activeAt: now });
 
-/** EXP-3, EXP-4: one document write. `existing` = edit. */
-export async function saveExpense(tripId: string, input: ExpenseInput, existing?: Expense) {
-  await firebaseReady;
-  const now = Date.now();
-  const id = existing?.id ?? newId();
-  await FirebaseFirestore.setDocument({
-    reference: `trips/${tripId}/expenses/${id}`,
+function expenseOp(
+  tripId: string,
+  input: ExpenseInput,
+  now: number,
+  existing?: Expense,
+): WriteBatchOperation {
+  return {
+    type: "set",
+    reference: `trips/${tripId}/expenses/${existing?.id ?? newId()}`,
     data: {
       ...input,
       spentAt: Math.min(input.spentAt, now), // EXP-11: never in the future
@@ -280,10 +276,25 @@ export async function saveExpense(tripId: string, input: ExpenseInput, existing?
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     },
-  });
+  };
+}
+
+/** EXP-3, EXP-4: the expense and its trip's activity (TRIP-12). `existing` = edit. */
+export async function saveExpense(tripId: string, input: ExpenseInput, existing?: Expense) {
+  const now = Date.now();
+  await batch([expenseOp(tripId, input, now, existing), touchTrip(tripId, now)]);
+}
+
+/** AST-10: new expenses, possibly in several trips, in one batch. */
+export async function addExpenses(items: { tripId: string; input: ExpenseInput }[]) {
+  const now = Date.now();
+  const tripIds = new Set(items.map((i) => i.tripId));
+  await batch([
+    ...items.map((i) => expenseOp(i.tripId, i.input, now)),
+    ...[...tripIds].map((id) => touchTrip(id, now)),
+  ]);
 }
 
 export async function deleteExpense(tripId: string, expenseId: string) {
-  await firebaseReady;
-  await FirebaseFirestore.deleteDocument({ reference: `trips/${tripId}/expenses/${expenseId}` });
+  await batch([remove(`trips/${tripId}/expenses/${expenseId}`), touchTrip(tripId, Date.now())]);
 }

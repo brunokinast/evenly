@@ -2,6 +2,7 @@ import { useMemo, useSyncExternalStore } from "react";
 import type { DocumentData } from "@capacitor-firebase/firestore";
 import { isWellFormed } from "@/domain/balances";
 import { sortMembers } from "@/domain/members";
+import { byActivity } from "@/domain/trips";
 import type { Expense, Member, Trip } from "@/domain/types";
 import { FirebaseFirestore } from "@capacitor-firebase/firestore";
 import { firebaseReady } from "./firebase";
@@ -36,6 +37,7 @@ function toTrip(id: string, d: DocumentData): Trip {
     members: sortMembers(members),
     memberIdsByUid: d.memberIdsByUid,
     invite: d.invite ?? null,
+    ...(typeof d.activeAt === "number" && { activeAt: d.activeAt }),
   };
 }
 
@@ -85,7 +87,7 @@ function rawJson(value: unknown): string {
 
 const withoutLost = (trips: Trip[]) => trips.filter((trip) => lostTrips.get(trip.id) !== rawOf.get(trip));
 
-/** TRIP-5, KI-1, KI-2: Home's single query, newest first. */
+/** TRIP-5, KI-1, KI-2: Home's single query, most recently active first (TRIP-12). */
 export function useMyTrips(uid: string): Live<Trip[]> {
   const live = useMyTripsQuery(uid);
   const version = useSyncExternalStore(lostChanges.subscribe, () => lostVersion);
@@ -138,7 +140,7 @@ function useMyTripsQuery(uid: string): Live<Trip[]> {
               if (s.metadata?.hasPendingWrites) unconfirmed.add(trip);
               return trip;
             });
-          trips.sort((a, b) => b.createdAt - a.createdAt);
+          trips.sort(byActivity);
           // APP-10: the next launch on the website shows this at once. Only trips the server has: a held listener
           // on one it doesn't (created just before closing) would be refused and the trip would look lost.
           saveTrips(uid, withoutLost(trips).filter(onServer));
