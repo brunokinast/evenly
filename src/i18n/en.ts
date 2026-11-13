@@ -52,7 +52,7 @@ export const en = {
   "install.ios.note": "The Home Screen app starts fresh: trips you have here in Safari won't be in it.",
   "install.apk.title": "Get the Android app",
   "install.apk.body":
-    "Open the downloaded file to install it. If Android asks, allow your browser to install apps. If you have the old Evenly app, uninstall it first.",
+    "Open the downloaded file to install it. If Android asks, allow your browser to install apps.",
   "install.apk.download": "Download",
   "install.apk.note": "The app starts fresh: trips you have here in the browser won't be in it.",
 

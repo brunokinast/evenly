@@ -1,9 +1,10 @@
-// Phase 6 last step (docs/rebuild-plan.md): moves an old app user's trips to their new identity.
+// Moves a person's trips from an old identity (uid) to their new one, e.g. after a reinstall or a new
+// browser. How to use it: docs/relink.md.
 //   npx tsx scripts/relink.ts --users                  → Auth users, newest first, with names
 //   npx tsx scripts/relink.ts <oldUid>=<newUid> …      → dry run: what would change
 //   add --apply to write (one batch per trip), --emulator to use the local emulators
-import { auth, BATCH_LIMIT, connect } from "./migration/admin";
-import { relinkTrip, type NewTrip } from "./migration/map";
+import { auth, BATCH_LIMIT, connect } from "./relink/admin";
+import { relinkTrip, type TripDoc } from "./relink/trip";
 
 const args = process.argv.slice(2);
 const { app, db, projectId } = connect(args.includes("--emulator"));
@@ -39,7 +40,7 @@ for (const [oldUid, newUid] of pairs) {
   const trips = await db.collection("trips").where("memberUids", "array-contains", oldUid).get();
   console.log(`\n${oldUid} → ${newUid} (${user.displayName ?? "no name"}): ${trips.size} trips`);
   for (const t of trips.docs) {
-    const trip = t.data() as NewTrip;
+    const trip = t.data() as TripDoc;
     const expenses = await t.ref.collection("expenses").get();
     try {
       const { update, expenseIds } = relinkTrip(

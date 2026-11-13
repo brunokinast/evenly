@@ -204,12 +204,12 @@ test.describe("on an iPhone", () => {
   });
 });
 
-test("APP-3 Android gets the APK, with the note to uninstall the old app first", async ({ page }, info) => {
+test("APP-3 Android gets the APK, with the note on allowing the install", async ({ page }, info) => {
   await enterName(page, "Ana");
   await page.getByRole("button", { name: "Profile" }).click();
   await page.getByRole("button", { name: "Install app" }).click();
   const sheet = page.getByRole("dialog", { name: "Get the Android app" });
-  await expect(sheet.getByText("If you have the old Evenly app, uninstall it first.")).toBeVisible();
+  await expect(sheet.getByText("allow your browser to install apps", { exact: false })).toBeVisible();
   await expect(sheet.getByRole("link", { name: "Download" })).toHaveAttribute(
     "href",
     "https://github.com/brunokinast/evenly/releases/latest/download/evenly.apk",

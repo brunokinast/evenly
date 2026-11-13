@@ -87,7 +87,7 @@ function rawJson(value: unknown): string {
 
 const withoutLost = (trips: Trip[]) => trips.filter((trip) => lostTrips.get(trip.id) !== rawOf.get(trip));
 
-/** TRIP-5, KI-1, KI-2: Home's single query, most recently active first (TRIP-12). */
+/** TRIP-5: Home's single query, most recently active first (TRIP-12). */
 export function useMyTrips(uid: string): Live<Trip[]> {
   const live = useMyTripsQuery(uid);
   const version = useSyncExternalStore(lostChanges.subscribe, () => lostVersion);
@@ -103,7 +103,7 @@ export function useMyTrips(uid: string): Live<Trip[]> {
 
 /**
  * My trips, for writes that touch all of them (ID-5): Home's live list, or, before Home ever loaded (the
- * Welcome name of a user who already has trips, e.g. migrated), one read of the same query. Not on screen.
+ * Welcome name of a user who already has trips, e.g. after a relink), one read of the same query. Not on screen.
  */
 export async function myTripsForWrite(uid: string): Promise<Trip[]> {
   const live = peekLive<Trip[]>(myTripsKey(uid));

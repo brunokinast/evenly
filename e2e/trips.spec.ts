@@ -579,14 +579,14 @@ test("ID-5 MEM-3 a new name shows live for the other members", async ({ browser 
   await expect(ana.getByRole("tabpanel").getByText("Beatriz")).toBeVisible();
 });
 
-test("ID-5 a name entered on Welcome reaches trips the user already has (migrated users)", async ({
+test("ID-5 a name entered on Welcome reaches trips the user already has (e.g. after a relink)", async ({
   browser,
 }) => {
   const ana = await newUser(browser, "Ana");
   const bia = await newUser(browser, "Bia");
   await createTrip(ana, "Tavira");
   await join(bia, await inviteCode(ana), "Tavira");
-  // A migrated user: member of trips, but no name in the sign-in profile (the old app kept it elsewhere).
+  // A user who is a member of trips but has no name in the sign-in profile yet.
   const uid = await bia.evaluate(
     () =>
       new Promise<string>((resolve, reject) => {

@@ -1,4 +1,4 @@
-// Phase 6b (docs/performance.md): timings of the Android app ("Evenly Dev", the debug APK against the local
+// docs/performance.md: timings of the Android app ("Evenly Dev", the debug APK against the local
 // emulators) on a connected device or AVD. Needs: the emulators running, `npm run android:dev` installed.
 //   node scripts/perf-android.mjs [--runs 5] [--serial <adb serial>] [--label "after X"]
 // Each run: force-stop → cold start (`am start -W`: Android's own launch time) → the app's marks read over the

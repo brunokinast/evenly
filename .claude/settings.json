@@ -1,24 +1,4 @@
 {
-  "permissions": {
-    "deny": [
-      "Read(//c/Users/bruno/Documents/git/evenly/**)",
-      "Read(../evenly/**)",
-      "Edit(//c/Users/bruno/Documents/git/evenly/**)",
-      "Edit(../evenly/**)",
-      "Bash(git checkout origin/main:*)",
-      "Bash(git switch origin/main:*)",
-      "Bash(git show origin/main:*)",
-      "Bash(git log origin/main:*)",
-      "Bash(git diff origin/main:*)",
-      "Bash(git merge origin/main:*)",
-      "Bash(git rebase origin/main:*)",
-      "Bash(git restore origin/main:*)",
-      "Bash(git fetch origin main:*)",
-      "Bash(git pull origin main:*)",
-      "Bash(git checkout main:*)",
-      "Bash(git switch main:*)"
-    ]
-  },
   "hooks": {
     "PostToolUse": [
       {

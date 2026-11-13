@@ -78,7 +78,7 @@ export function renameTrip(trip: Trip, name: string) {
   return batch([update(`trips/${trip.id}`, { name }), ...inviteOp(trip, (ref) => update(ref, { name }))]);
 }
 
-/** TRIP-7, KI-5 (owner): expenses in chunks, then the trip last, so a retry resumes safely. Reads the
+/** TRIP-7 (owner): expenses in chunks, then the trip last, so a retry resumes safely. Reads the
  * expense ids itself (not the on-screen list, which hides malformed ones): once the trip is gone, no one
  * could delete a leftover expense. */
 export async function deleteTrip(trip: Trip) {
