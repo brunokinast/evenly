@@ -26,6 +26,8 @@ Status: accepted (2026-10-27). Decided with the user after research; don't re-li
 
 ## Gemini (deferred, Phase 7)
 
+Superseded by ADR 0008 (2026-11-13): Gemini writes to a calendar and the app reviews it, since AppFunctions stayed allowlisted.
+
 - Mechanism: Android **AppFunctions** (Jetpack, Kotlin; Android 16+). As of the latest info (Oct 2026) Gemini calling third-party AppFunctions is still a private preview / Early Access Program (https://forms.gle/GN5ybjQFhzHRCguM7). The user's phone runs Android 17.
 - Apps can't render their own UI cards inside Gemini; use a confirmation notification instead.
 - To keep it cheap later: native auth from day one, a documented data model Kotlin can write to, validation in Security Rules, semantic/accessible HTML.
