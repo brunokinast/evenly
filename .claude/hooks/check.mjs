@@ -2,12 +2,16 @@
 // Skips when the working tree has no changes. Exit 2 = block and show stderr to Claude.
 import { execSync, spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
+// Run from the project root, whatever folder the session's shell is in.
+const cwd = fileURLToPath(new URL("../..", import.meta.url));
 
 const input = JSON.parse(readFileSync(0, "utf8") || "{}");
-const dirty = execSync("git status --porcelain", { encoding: "utf8" }).trim();
+const dirty = execSync("git status --porcelain", { cwd, encoding: "utf8" }).trim();
 if (!dirty) process.exit(0);
 
-const run = spawnSync("npm run check", { shell: true, encoding: "utf8" });
+const run = spawnSync("npm run check", { cwd, shell: true, encoding: "utf8" });
 if (run.status === 0) process.exit(0);
 
 const tail = `${run.stdout}\n${run.stderr}`.trim().split("\n").slice(-60).join("\n");
