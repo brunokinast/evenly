@@ -162,4 +162,4 @@ Both as APKs on the same AVD (`node scripts/android.mjs dev --js-sdk` vs `npm ru
 | Add expense → form ready                  |              9 |      9 |
 | Save → back on the trip                   |             37 |     35 |
 
-Every journey is well inside its target on both. The JS SDK only wins on opening a trip (~55 ms), not worth giving every Android user a new identity. **R5: no** (keep the native plugins); the `--js-sdk` build stays for a re-check on a slower phone. The S25 is high-end: a mid phone is ~3–4× slower on scripting, which the lab harness's 4× CPU throttle already covers.
+Every journey is well inside its target on both. The JS SDK only wins on opening a trip (~55 ms), not worth giving every Android user a new identity. **R5: no** (keep the native plugins); the `--js-sdk` build was kept for a re-check on a slower phone (removed 2026-11-13, see Simplified). The S25 is high-end: a mid phone is ~3–4× slower on scripting, which the lab harness's 4× CPU throttle already covers.

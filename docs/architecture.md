@@ -90,7 +90,7 @@ Tokens from `specs/design.md` as CSS variables, mapped into Tailwind. Theme ligh
 
 ## PWA and performance (APP-3, APP-4)
 
-- `vite-plugin-pwa`: manifest + service worker that precaches the app shell, so repeat opens don't hit the network for code. On-demand code (PDF export and its fonts, the `?perf` panel) isn't precached: it's cached on first use (F7). `index.html` preloads the Firebase SDK chunks so they download alongside the main chunk (F3).
+- `vite-plugin-pwa`: manifest + service worker that precaches the app shell, so repeat opens don't hit the network for code. On-demand code (PDF export and its fonts, the `?perf` panel) isn't precached: it's cached on first use (F7). `index.html` preloads the Firebase SDK chunks so they download alongside the main chunk (F3), but only when they come from the service worker or the APK, so a first visit on a slow connection isn't held back (F11). A new service worker takes over at once (`skipWaiting`) without reloading the open page, so the next launch doesn't wait for the version switch (F12). The production build preconnects to the Firebase Auth and Firestore hosts (F13).
 - Budget: JavaScript loaded at startup ≤ 350 kB gzipped, checked by `scripts/check-bundle-size.mjs` after `vite build`. It counts every chunk, since the Firebase plugins import their SDKs dynamically right at startup. (Raised from 250 kB in the identity slice: Firestore with its offline cache is ~153 kB and Auth ~29 kB on their own; 350 kB still downloads in well under a second on 4G and repeat opens come from the service worker.) Heavy, rarely used code (PDF export) is loaded only when used and listed in the script's `ON_DEMAND`.
 - First paint shows skeletons in the real layout; never a full-screen spinner after it.
 
