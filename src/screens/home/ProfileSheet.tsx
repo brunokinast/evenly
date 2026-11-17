@@ -8,7 +8,7 @@ import { ListGroup, Row } from "@/components/List";
 import { Segmented } from "@/components/Segmented";
 import { Sheet } from "@/components/Sheet";
 import { TextField } from "@/components/TextField";
-import { canResetForTesting, resetForTesting } from "@/data/session";
+import { resetForTesting } from "@/data/session";
 import { t } from "@/i18n";
 import { useNameForm } from "../useNameForm";
 
@@ -110,8 +110,8 @@ function ProfileForm({
       <Button type="submit" variant="primary" busy={form.busy} className="w-full">
         {t("common.done")}
       </Button>
-      {canResetForTesting && (
-        // Local testing only; never shown with the real database.
+      {/* Builds against the local emulators only; written out so the real build leaves it out. */}
+      {import.meta.env.MODE !== "production" && (
         <Button variant="destructive" className="w-full" onClick={() => void resetForTesting()}>
           <RotateCcw aria-hidden />
           Reset account (testing)

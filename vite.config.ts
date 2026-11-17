@@ -27,7 +27,7 @@ function preloadFirebase(): Plugin {
           )
           .map((c) => `/${c.fileName}`);
         // Only when the files are local (service worker cache, Android app): on a first open they'd share a
-        // slow connection with the main chunk and hold back the first screen (docs/performance.md, F11).
+        // slow connection with the main chunk and hold back the first screen (docs/performance.md).
         const files = JSON.stringify(chunks);
         return [
           {
@@ -44,7 +44,7 @@ function preloadFirebase(): Plugin {
 /**
  * Real project only: open the connections to Google's servers while the page loads. On the web, Auth checks the
  * saved login with the server before Firestore reads even its offline cache, and a cold secure connection over
- * mobile data costs ~0.3–0.5 s per host (docs/performance.md, "Opening after a while").
+ * mobile data costs ~0.3–0.5 s per host (docs/performance.md).
  */
 function preconnectFirebase(): Plugin {
   let real = false;
@@ -94,13 +94,13 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,woff2}"],
-        // On-demand code (PDF export with its fonts, ~490 kB; the ?perf panel) isn't pre-downloaded with every
+        // On-demand code (PDF export with its fonts, ~490 kB) isn't pre-downloaded with every
         // install/update: it's cached the first time it's used (hashed names, so never stale). Same chunks as
         // ON_DEMAND in scripts/check-bundle-size.mjs, plus the PDF fonts.
-        globIgnores: ["**/exportPdf-*", "**/noto-sans-*", "**/PerfPanel-*"],
+        globIgnores: ["**/exportPdf-*", "**/noto-sans-*"],
         runtimeCaching: [
           {
-            urlPattern: /\/assets\/(exportPdf|noto-sans|PerfPanel)-/,
+            urlPattern: /\/assets\/(exportPdf|noto-sans)-/,
             handler: "CacheFirst",
             options: { cacheName: "on-demand", expiration: { maxEntries: 10 } }, // old versions age out
           },
@@ -109,7 +109,7 @@ export default defineConfig({
         // Control the first session too, so on-demand code used then is cached already.
         clientsClaim: true,
         // A downloaded update takes over at once, in the background. Waiting until every tab is closed made the
-        // next launch switch versions first: ~0.9 s before anything showed (docs/performance.md, F12).
+        // next launch switch versions first: ~0.9 s before anything showed (docs/performance.md).
         skipWaiting: true,
       },
     }),
@@ -122,7 +122,7 @@ export default defineConfig({
         test: {
           name: "unit",
           include: ["src/**/*.test.{ts,tsx}", "scripts/**/*.test.ts"],
-          environment: "jsdom",
+          environment: "node",
         },
       },
       {

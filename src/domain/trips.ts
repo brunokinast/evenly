@@ -40,8 +40,5 @@ export function pdfFileName(tripName: string): string {
   return `${base || "trip"}_summary.pdf`;
 }
 
-/** TRIP-12: when the trip was last active (an expense added, edited or deleted), else its creation. */
-export const lastActive = (trip: Trip) => trip.activeAt ?? trip.createdAt;
-
-/** TRIP-12: Home's order, most recently active first. */
-export const byActivity = (a: Trip, b: Trip) => lastActive(b) - lastActive(a);
+/** TRIP-12: Home's order, most recently active (an expense added, edited or deleted, else created) first. */
+export const byActivity = (a: Trip, b: Trip) => (b.activeAt ?? b.createdAt) - (a.activeAt ?? a.createdAt);

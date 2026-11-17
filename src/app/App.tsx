@@ -12,7 +12,7 @@ export function App() {
   const session = useSession();
   if (session.status === "loading") return null; // Until Auth restores the session (docs/performance.md); no spinner.
   if (session.status === "error") return <ConnectError />;
-  if (session.status === "creating" || !session.name) return <Welcome />; // F8: no wait for the identity
+  if (session.status === "creating" || !session.name) return <Welcome />; // the name screen doesn't wait for the identity
   return (
     <>
       <Switch>

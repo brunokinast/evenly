@@ -1,6 +1,6 @@
 # Assistant (Gemini)
 
-Replaces the old Google Assistant voice command, which stopped working when Assistant was removed from Android (Sept 2026). Research and why this route: `docs/research/gemini-assistant.md`.
+Lets the user add expenses by talking to Gemini on their Android phone. Why this route: ADR 0008.
 
 ## Description
 

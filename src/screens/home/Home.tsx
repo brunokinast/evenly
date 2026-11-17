@@ -43,7 +43,7 @@ export function Home() {
     setInstallSheet(startInstall(install.method));
   };
   const list = trips.status === "ready" ? trips.data : [];
-  // F9: the top trips load while Home shows, so opening one is instant (still live data, not a copy).
+  // The top trips load while Home shows, so opening one is instant (still live data, not a copy).
   const held = list
     .filter(onServer)
     .slice(0, HELD_TRIPS)

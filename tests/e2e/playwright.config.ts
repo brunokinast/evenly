@@ -1,11 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
-import { skippedInstallFirst } from "./e2e/helpers";
+import { skippedInstallFirst } from "./helpers";
 
 // Phone-viewport checks against the dev server and the local emulators (both started here if not running).
 // Screenshots land in test-results/ for review against specs/design.md.
 export default defineConfig({
-  testDir: "e2e",
-  globalSetup: "./e2e/global-setup.ts",
+  testDir: ".",
+  outputDir: "../../test-results",
+  globalSetup: "./global-setup.ts",
   use: {
     ...devices["Pixel 7"],
     baseURL: "http://localhost:5173",

@@ -1,7 +1,6 @@
 node_modules/
 dist/
 .env*
-!.env.production
 *.keystore
 *.jks
 key.properties
@@ -12,7 +11,6 @@ test-results/
 *-debug.log
 node_modules/.tmp/
 .emulator-data/
-backups/
 .firebase/
 dist-perf/
 perf-results/

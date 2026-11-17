@@ -127,7 +127,7 @@ function useMyTripsQuery(uid: string): Live<Trip[]> {
   return useLive(myTripsKey(uid), (emit) =>
     listen(() =>
       FirebaseFirestore.addCollectionSnapshotListener(
-        // Metadata changes too: a new trip's server confirmation flips it to onServer (F9, APP-10 copy).
+        // Metadata changes too: a new trip's server confirmation flips it to onServer (APP-10 copy).
         { ...myTripsQuery(uid), includeMetadataChanges: true },
         (event, error) => {
           if (error || !event) return emit({ status: "gone" });
@@ -174,7 +174,7 @@ export function useExpenses(tripId: string): Live<Expense[]> {
   return useLive(expensesKey(tripId), expensesListener(tripId));
 }
 
-/** F9 (docs/performance.md): Home keeps its top trips' listeners running, so opening one shows it at once.
+/** docs/performance.md: Home keeps its top trips' listeners running, so opening one shows it at once.
  * Returns the release. */
 export function holdTrip(tripId: string) {
   const releases = [
@@ -184,7 +184,7 @@ export function holdTrip(tripId: string) {
   return () => releases.forEach((release) => release());
 }
 
-/** F6: a trip's listeners start on touch-down, ~0.1 s before the tap opens it (for trips Home doesn't hold). */
+/** A trip's listeners start on touch-down, ~0.1 s before the tap opens it (for trips Home doesn't hold). */
 export function warmTrip(tripId: string) {
   holdTrip(tripId)();
 }

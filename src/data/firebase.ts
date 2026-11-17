@@ -4,10 +4,11 @@ import { FirebaseAuthentication } from "@capacitor-firebase/authentication";
 import { FirebaseFirestore } from "@capacitor-firebase/firestore";
 import { mark } from "@/lib/perf";
 
-// Production config comes from .env.production (VITE_FIREBASE_*). Without it (dev, tests) the app runs
-// against the local emulators under a demo project, so nothing can touch real data.
+// Only the real build (`vite build`, mode "production") talks to the real project. Every other mode (dev
+// server, tests, `--mode emulator`, `--mode perf`) uses the local emulators under a demo project, so nothing
+// can touch real data. Being a build-time constant, the emulator-only code is left out of the real build.
 const env = import.meta.env;
-export const usesEmulators = !env.VITE_FIREBASE_API_KEY;
+const usesEmulators = import.meta.env.MODE !== "production";
 
 /** Firebase runs in the native SDKs (the Android app), not as the JS SDK in the page. */
 export const nativeFirebase = Capacitor.isNativePlatform();
@@ -16,17 +17,18 @@ initializeApp(
   usesEmulators
     ? { projectId: "demo-evenly", apiKey: "demo-key", authDomain: "demo-evenly.firebaseapp.com" }
     : {
-        apiKey: env.VITE_FIREBASE_API_KEY,
-        authDomain: env.VITE_FIREBASE_AUTH_DOMAIN,
-        projectId: env.VITE_FIREBASE_PROJECT_ID,
-        appId: env.VITE_FIREBASE_APP_ID,
+        // Public client identifiers, not secrets (ADR 0003).
+        apiKey: "AIzaSyCr3ngkIDuU81Q1AhmmzDA9e-JZVuJXz5o",
+        authDomain: "evenly-app-6f5f2.firebaseapp.com",
+        projectId: "evenly-app-6f5f2",
+        appId: "1:842719625398:web:b228b3da4ed9e0db9d2617",
       },
 );
 
 // The plugins' useEmulator() methods are not React hooks.
 /* eslint-disable react-hooks/rules-of-hooks */
 async function connect() {
-  // Single-tab cache (web): ~60–90 ms faster launches than multi-tab coordination (docs/performance.md, R2). A
+  // Single-tab cache (web): ~60–90 ms faster launches than multi-tab coordination (docs/performance.md). A
   // second tab of the site falls back to a memory cache and still works, just without offline data.
   const persistence = setup(FirebaseFirestore.enablePersistence({ synchronizeTabs: false }));
   await Promise.all([persistence, nativeFirebase ? null : webAuth()]);

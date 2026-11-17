@@ -7,8 +7,11 @@ import { spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, writeFileSync } from "node:fs";
 import { randomBytes } from "node:crypto";
 import { resolve } from "node:path";
-import { adb, sdk } from "./android-sdk.mjs";
 import { lanIp } from "./lan-ip.mjs";
+
+const sdk =
+  process.env.ANDROID_HOME ?? (process.env.LOCALAPPDATA && `${process.env.LOCALAPPDATA}/Android/Sdk`);
+const adb = sdk ? `"${sdk}/platform-tools/adb"` : "adb";
 
 const mode = process.argv[2];
 const APK = "android/evenly.apk"; // gitignored (android/.gitignore: *.apk)
