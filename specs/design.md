@@ -1,6 +1,6 @@
 # Design
 
-Visual and interaction rules for Evenly. Screens must follow this file. The interactive mockup (`specs/design-mockup.html`; open it locally, see below) shows the rules applied to Home, Trip and Add expense. When this file and the mockup disagree, this file wins.
+Visual and interaction rules for Evenly. Screens must follow this file.
 
 ## Direction
 
@@ -8,7 +8,7 @@ Calm, cool neutrals with one warm accent, **marigold**, the color of luggage tag
 
 ## Tokens
 
-Implemented as CSS variables (shadcn/ui convention) and mapped into Tailwind. Components use tokens only, never literal colors.
+Implemented as CSS variables (`src/index.css`) and mapped into Tailwind. Components use tokens only, never literal colors.
 
 ### Color
 
@@ -139,7 +139,7 @@ An A4 report in the light theme's token values, set in Noto Sans (the app font h
 
 ## Icons
 
-**Lucide** (shadcn's default set), 20px in rows, 24px in bars, stroke 2. Trip icons (TRIP-4) map to: luggage → `luggage`, flight → `plane`, beach → `tree-palm`, camping → `tent`, restaurant → `utensils-crossed`, home → `house`, celebration → `party-popper`, sports → `trophy`, music → `music`, shopping → `shopping-bag`, car → `car`, boat → `sailboat`, mountain → `mountain`, city → `building-2`, work → `briefcase`, school → `graduation-cap`.
+**Lucide** (`lucide-react`), 20px in rows, 24px in bars, stroke 2. Trip icons (TRIP-4) map to: luggage → `luggage`, flight → `plane`, beach → `tree-palm`, camping → `tent`, restaurant → `utensils-crossed`, home → `house`, celebration → `party-popper`, sports → `trophy`, music → `music`, shopping → `shopping-bag`, car → `car`, boat → `sailboat`, mountain → `mountain`, city → `building-2`, work → `briefcase`, school → `graduation-cap`.
 
 ## Motion
 
@@ -156,8 +156,3 @@ Short and functional: sheets slide 200ms ease-out, toasts fade, pressed rows dar
 | Expense details, New trip, Join trip, Invite, Profile, Trip menu, payer/split/date-and-time pickers, confirmations | bottom sheets            | the first input, if any (not Profile: ID-9) |
 | Gemini review, Gemini setup guide, amount and trip pickers (review)                                                | bottom sheets            | — (amount: the keypad)                      |
 | Trip not found                                                                                                     | full screen              | —                                           |
-
-## Viewing the mockup
-
-Serve the `specs` folder on the local network and open it on a phone connected to the same Wi-Fi:
-`python -m http.server 8765 --bind 0.0.0.0 --directory specs`, then `http://<this PC's LAN IP>:8765/design-mockup.html`.

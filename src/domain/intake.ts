@@ -15,7 +15,7 @@ export type ParsedTitle = {
   payer: string | null;
 };
 
-export const MAX_CENTS = 10_000_000_000; // EXP-1, as the rules allow
+const MAX_CENTS = 10_000_000_000; // EXP-1, as the rules allow
 
 /**
  * AST-4: the first number in the text as cents. Reads 32, 32.50, 32,50, 1.234,56 and 1,234.56: with both

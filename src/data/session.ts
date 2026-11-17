@@ -4,7 +4,7 @@ import { renameMeInTrips } from "./commands";
 import { changes } from "@/lib/changes";
 import { mark } from "@/lib/perf";
 import { FirebaseAuthentication } from "@capacitor-firebase/authentication";
-import { firebaseReady, nativeFirebase, usesEmulators } from "./firebase";
+import { firebaseReady, nativeFirebase } from "./firebase";
 import { confirmIdentity, launchIdentity } from "./launchCopy";
 import { myTripsForWrite } from "./trips";
 
@@ -101,9 +101,6 @@ export function useMe(): { uid: string; name: string } {
   if (s.status !== "ready" || !s.name) throw new Error("useMe() outside the session gate");
   return { uid: s.uid, name: s.name };
 }
-
-/** True on the local emulators, where testing helpers may show. */
-export const canResetForTesting = usesEmulators;
 
 /**
  * Testing only (local emulators): forget this identity and this device's settings, back to Welcome.

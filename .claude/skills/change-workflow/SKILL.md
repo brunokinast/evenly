@@ -12,7 +12,7 @@ The user doesn't write code and won't remember this process. Follow every step; 
 3. **Failing tests first**, named after the AC IDs (`it("EXP-2 fills cents from the right", …)`):
    - logic → `src/domain/*.test.ts`
    - permissions/validation → `tests/rules/*.test.ts` (one test per rule case in `docs/data-model.md`)
-   - screens → `e2e/*.spec.ts` (phone viewport)
+   - screens → `tests/e2e/*.spec.ts` (phone viewport)
 4. **Implement**, reusing what exists. Respect `CLAUDE.md` rules (layers, live data, one write or one batch, cents/ms, tokens only).
 5. **See it**: run the Playwright check (`npm run emulators` in the background when data is needed, then `npm run e2e`) and look at the screenshots against `specs/design.md`, light and dark.
 6. **Review** in a fresh subagent: give it the diff and the spec, ask for correctness against the ACs only (skip style). Then run a reuse/simplify pass. Fix what holds up.

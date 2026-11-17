@@ -8,21 +8,137 @@
 // Times come from the page's own clock (performance.now) and the app's marks (src/lib/perf.ts), so they
 // include rendering, not Playwright's overhead.
 import { spawn, spawnSync } from "node:child_process";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { chromium, devices } from "@playwright/test";
-import { doc, setDoc } from "firebase/firestore";
-import {
-  clickText,
-  emulatorEnv,
-  expenseDoc,
-  hasFlag,
-  markAt,
-  memberIds,
-  now,
-  option,
-  recorder,
-  seedTrips,
-  waitMark,
-} from "./perf-lib.mjs";
+import { initializeTestEnvironment } from "@firebase/rules-unit-testing";
+import { doc, setDoc, writeBatch } from "firebase/firestore";
+
+// ---------- helpers: options, results, the app's marks read from the page, seeded trips ----------
+const args = process.argv.slice(2);
+/** `--name value` from the command line, or `def`. */
+const option = (name, def) => (args.includes(name) ? args[args.indexOf(name) + 1] : def);
+const hasFlag = (name) => args.includes(name);
+
+/** Admin access to the local emulators' demo project (rules off for seeding). */
+const emulatorEnv = () =>
+  initializeTestEnvironment({ projectId: "demo-evenly", firestore: { host: "127.0.0.1", port: 8080 } });
+
+/** Timings by name, printed as medians and saved to perf-results/<prefix><time>.json. */
+function recorder() {
+  const results = {};
+  return {
+    results,
+    record: (name, ms) => (results[name] ??= []).push(Math.round(ms)),
+    report(title, prefix, meta) {
+      const median = (xs) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
+      console.log(`\n${title} (ms)`);
+      for (const [name, xs] of Object.entries(results)) {
+        console.log(`  ${name.padEnd(52)} ${String(median(xs)).padStart(6)}   [${xs.join(", ")}]`);
+      }
+      mkdirSync("perf-results", { recursive: true });
+      const file = `perf-results/${prefix}${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
+      writeFileSync(file, JSON.stringify({ ...meta, results }, null, 1));
+      console.log(`\n→ ${file}`);
+    },
+  };
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function now(page) {
+  return page.evaluate(() => performance.now());
+}
+
+/** Waits until the app's mark `evenly:<name>` exists. */
+function waitMark(page, name) {
+  return page.waitForFunction((n) => performance.getEntriesByName(`evenly:${n}`).length > 0, name, {
+    timeout: 60_000,
+  });
+}
+
+/** Page time of a mark (the first, or `index` -1 = the last); NaN if none. */
+function markAt(page, name, index = 0) {
+  return page.evaluate(
+    ([n, i]) => performance.getEntriesByName(`evenly:${n}`).at(i)?.startTime ?? NaN,
+    [name, index],
+  );
+}
+
+/** Clicks the last element matching `selector` whose text includes `text`; returns the page time. Clicks
+ * through the page (Playwright's click() can hang in an Android WebView). */
+function clickText(page, selector, text) {
+  return page.evaluate(
+    ([s, x]) => {
+      const el = [...document.querySelectorAll(s)].filter((e) => e.textContent.includes(x)).at(-1);
+      const t = performance.now();
+      el.click();
+      return t;
+    },
+    [selector, text],
+  );
+}
+
+const GUESTS = ["Ana", "Bia", "Caio", "Duda", "Edu", "Fê", "Gui", "Hana", "Ivo", "Juca"];
+/** Member ids of a seeded main trip: me, then guests g0, g1, … */
+const memberIds = (people) => Array.from({ length: people }, (_, i) => (i === 0 ? "me" : `g${i - 1}`));
+
+/** An equal-split expense of 10.00 per person. */
+function expenseDoc(description, payerId, at, ids) {
+  return {
+    description,
+    amountCents: 1000 * ids.length,
+    payerId,
+    shares: Object.fromEntries(ids.map((id) => [id, 1000])),
+    split: "equal",
+    spentAt: at,
+    createdBy: "seed",
+    createdAt: at,
+    updatedAt: at,
+  };
+}
+
+/** A user's trips: "Perf main trip" with `people` and `expenses` ("Expense 0…n-1"), and two small ones. */
+async function seedTrips(env, uid, { myName, people, expenses }) {
+  const ids = memberIds(people);
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    const t0 = Date.now();
+    const trip = (id, name, size, createdAt) => {
+      const members = { me: { name: myName, uid, joinedAt: t0 - 1e9 } };
+      for (let i = 0; i < size - 1; i++) {
+        members[`g${i}`] = { name: `${GUESTS[i % GUESTS.length]} ${i}`, joinedAt: t0 - 1e9 + i + 1 };
+      }
+      return setDoc(doc(db, `trips/${id}`), {
+        name,
+        icon: "beach",
+        currency: "BRL",
+        ownerUid: uid,
+        createdAt,
+        members,
+        memberIdsByUid: { [uid]: "me" },
+        memberUids: [uid],
+        invite: null,
+      });
+    };
+    const main = `perf-${uid}`;
+    await trip(`${main}-2`, "Perf small one", 2, t0 - 3e9);
+    await trip(`${main}-3`, "Perf small two", 2, t0 - 2e9);
+    await trip(main, "Perf main trip", people, t0 - 1e9);
+    for (let start = 0; start < expenses; start += 400) {
+      const batch = writeBatch(db);
+      for (let i = start; i < Math.min(expenses, start + 400); i++) {
+        const at = t0 - (expenses - i) * 3_600_000;
+        batch.set(
+          doc(db, `trips/${main}/expenses/e${i}`),
+          expenseDoc(`Expense ${i}`, ids[i % people], at, ids),
+        );
+      }
+      await batch.commit();
+    }
+  });
+}
+
+// ---------- journeys ----------
 
 const RUNS = Number(option("--runs", 5));
 // Typical trips are what users have (docs/performance.md); big is kept to compare with earlier results.
@@ -52,7 +168,7 @@ if (!size || !network) throw new Error(`unknown --size ${SIZE} or --network ${NE
 const ids = memberIds(size.people);
 
 if (!hasFlag("--no-build")) {
-  // Mode "perf" has no .env file, so the build talks to the emulators (src/data/firebase.ts).
+  // Any mode but "production" talks to the emulators (src/data/firebase.ts).
   const b = spawnSync("npx vite build --mode perf --outDir dist-perf", { shell: true, stdio: "inherit" });
   if (b.status !== 0) process.exit(1);
 }
@@ -368,7 +484,7 @@ async function waitForServer() {
 async function checkEmulator() {
   let slowest = await writeTime();
   if (slowest > 150) {
-    // Clearing its data brings it back (docs/performance.md, R4); the demo trip is seeded again for the LAN preview.
+    // Clearing its data brings it back; the demo trip is seeded again for the LAN preview.
     console.log(
       `The Firestore emulator takes ${slowest} ms per write: clearing it and re-seeding the demo trip.`,
     );

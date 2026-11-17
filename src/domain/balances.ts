@@ -56,23 +56,15 @@ export function settlements(balance: Map<string, number>, order: string[]): Paym
 
 export const totalSpent = (expenses: Expense[]) => expenses.reduce((sum, e) => sum + e.amountCents, 0);
 
-/** BAL-8: suggested payments shown in the MEM-6 list order of the payer, then of the receiver. */
-export function paymentsInListOrder(
-  balance: Map<string, number>,
-  order: string[],
-  listed: string[],
-): Payment[] {
-  const by = byListOrder(listed);
-  return settlements(balance, order).sort((a, b) => by(a.from, b.from) || by(a.to, b.to));
-}
-
 /** The Balances tab and the PDF: balances, suggested payments (BAL-8) and the balance rows in the MEM-6
  * order with former members after (BAL-6). `order` = stored member order, `listed` = MEM-6 order. */
 export function settle(order: string[], expenses: Expense[], listed: string[]) {
   const bal = balances(order, expenses);
+  const by = byListOrder(listed);
   return {
     bal,
-    pays: paymentsInListOrder(bal, order, listed),
-    rows: [...bal.keys()].sort(byListOrder(listed)),
+    // BAL-8: in the MEM-6 list order of the payer, then of the receiver.
+    pays: settlements(bal, order).sort((a, b) => by(a.from, b.from) || by(a.to, b.to)),
+    rows: [...bal.keys()].sort(by),
   };
 }
