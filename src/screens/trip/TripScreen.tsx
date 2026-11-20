@@ -133,7 +133,7 @@ export function TripScreen({ tripId, tab: tabParam }: { tripId: string; tab?: st
       </div>
 
       <div className="relative shrink-0">
-        {/* specs/design.md "Add expense button": only on Expenses, where the new expense shows. */}
+        {/* docs/specs/design.md "Add expense button": only on Expenses, where the new expense shows. */}
         {tab === "expenses" && (
           <Button
             variant="primary"

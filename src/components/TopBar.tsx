@@ -12,7 +12,7 @@ type Props = {
   large?: { tile: ReactNode };
 };
 
-/** Top bar with safe-area padding (specs/design.md "Top bar"), plus the APP-6 offline banner under it. */
+/** Top bar with safe-area padding (docs/specs/design.md "Top bar"), plus the APP-6 offline banner under it. */
 export function TopBar({ title, leading, actions, large }: Props) {
   const online = useOnline();
   const top = "pt-[max(8px,env(safe-area-inset-top))]";

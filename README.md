@@ -99,7 +99,7 @@ Gemini only calls apps Google has allow-listed, so Evenly meets it halfway: Gemi
 | Home → trip                             | 300 ms |    72 ms |
 | Save → back on the trip, expense listed | 100 ms |    64 ms |
 
-**Quality.** 70 unit tests, 46 Security Rules tests against the Firestore emulator and 41 phone-viewport end-to-end tests, all run by CI on every push. Behavior lives in [specs](specs/features) with acceptance-criteria IDs that the tests are named after, and decisions are recorded as [ADRs](docs/decisions). Built and maintained with Claude Code, following that spec-first process.
+**Quality.** 70 unit tests, 46 Security Rules tests against the Firestore emulator and 41 phone-viewport end-to-end tests, all run by CI on every push. Behavior lives in [specs](docs/specs) with acceptance-criteria IDs that the tests are named after, and decisions are recorded as [ADRs](docs/decisions). Built and maintained with Claude Code, following that spec-first process.
 
 **Stack.** React 19 · TypeScript · Vite · Tailwind CSS 4 · Firebase (Auth, Firestore, Hosting) · Capacitor 8 · Vitest · Playwright
 

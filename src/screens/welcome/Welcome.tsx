@@ -11,7 +11,7 @@ import { usePaintedMark } from "@/lib/perf";
 import { useNameForm } from "../useNameForm";
 import { InstallFirst } from "./InstallFirst";
 
-/** First impression (specs/design.md "Welcome"); ID-2, ID-3, ID-8: a name before Home; ID-10 first. */
+/** First impression (docs/specs/design.md "Welcome"); ID-2, ID-3, ID-8: a name before Home; ID-10 first. */
 export function Welcome() {
   const { method, firstSkipped } = useInstall();
   if (showInstallFirst(method, firstSkipped)) return <InstallFirst method={method} />;

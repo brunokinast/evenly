@@ -26,7 +26,7 @@ export function MembersTab({ view, onInvite, focusGuest }: Props) {
   return (
     <>
       {isOwner && trip.members.length === 1 && (
-        // specs/design.md "Invite card": secondary, since Add expense is the screen's one primary.
+        // docs/specs/design.md "Invite card": secondary, since Add expense is the screen's one primary.
         <section className="flex flex-col gap-3 rounded-card border border-border bg-surface p-3.5">
           <div className="flex items-center gap-3">
             <IconTile>

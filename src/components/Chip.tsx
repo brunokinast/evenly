@@ -9,7 +9,7 @@ const tones = {
   missing: "bg-surface-2 text-negative outline-2 -outline-offset-2 outline-negative",
 };
 
-/** A compact field value that opens its picker (Gemini review, specs/design.md "Chips"). */
+/** A compact field value that opens its picker (Gemini review, docs/specs/design.md "Chips"). */
 export function Chip({
   icon,
   tone = "plain",

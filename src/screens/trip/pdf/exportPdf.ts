@@ -1,4 +1,4 @@
-// PDF-1..6, specs/design.md "PDF". Loaded on demand (listed in scripts/check-bundle-size.mjs ON_DEMAND),
+// PDF-1..6, docs/specs/design.md "PDF". Loaded on demand (listed in scripts/check-bundle-size.mjs ON_DEMAND),
 // so pdf-lib and the fonts aren't startup code.
 import { PDFDocument, rgb, type PDFPage } from "pdf-lib";
 import { shareFile } from "@/app/share";
@@ -14,7 +14,7 @@ const W = 595.28; // A4 in pt
 const H = 841.89;
 const M = 40;
 const ROW = 22;
-// The light theme's token values (specs/design.md "Color"); a PDF can't read CSS variables.
+// The light theme's token values (docs/specs/design.md "Color"); a PDF can't read CSS variables.
 const C: Record<
   "fg" | "muted" | "border" | "surface2" | "accent" | "accentFg" | "positive" | "negative",
   Rgb

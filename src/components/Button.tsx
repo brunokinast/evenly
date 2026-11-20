@@ -40,7 +40,7 @@ export const buttonClass = (
     className,
   );
 
-/** specs/design.md "Buttons": the label is never cut; as a last resort it wraps. */
+/** docs/specs/design.md "Buttons": the label is never cut; as a last resort it wraps. */
 export function Button({
   variant = "secondary",
   size = "md",
@@ -65,7 +65,7 @@ export function Button({
 
 /**
  * Buttons side by side, equal width, that stack full-width when a label doesn't fit on one line
- * (specs/design.md "Bottom action bar"). The last button ends up at the bottom.
+ * (docs/specs/design.md "Bottom action bar"). The last button ends up at the bottom.
  */
 export function ButtonRow({ children, className }: { children: ReactNode; className?: string }) {
   return (

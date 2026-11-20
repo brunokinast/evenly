@@ -1,5 +1,5 @@
 // Stop hook: blocks "done" until typecheck, lint, unit and rules tests pass.
-// Skips when nothing but docs, specs or mock-ups changed. Exit 2 = block and show stderr to Claude.
+// Skips when nothing but docs changed. Exit 2 = block and show stderr to Claude.
 import { execSync, spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -8,12 +8,12 @@ import { fileURLToPath } from "node:url";
 const cwd = fileURLToPath(new URL("../..", import.meta.url));
 
 const input = JSON.parse(readFileSync(0, "utf8") || "{}");
-// Only code needs the checks: skip when nothing changed, or only docs, specs and mock-ups did.
+// Only code needs the checks: skip when nothing changed, or only docs did.
 const changed = execSync("git status --porcelain", { cwd, encoding: "utf8" })
   .split("\n")
   .filter(Boolean)
   .map((line) => line.slice(3).replace(/^"|"$/g, ""));
-const docsOnly = (path) => /^(docs|specs)\//.test(path) || /\.md$/.test(path);
+const docsOnly = (path) => /^docs\//.test(path) || /\.md$/.test(path);
 if (changed.every(docsOnly)) process.exit(0);
 
 const run = spawnSync("npm run check", { cwd, shell: true, encoding: "utf8" });

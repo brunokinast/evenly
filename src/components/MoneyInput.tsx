@@ -14,7 +14,7 @@ type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange"> &
 };
 
 /**
- * Money input (specs/design.md, EXP-2): digits fill from the right in cents, the caret stays at the end,
+ * Money input (docs/specs/design.md, EXP-2): digits fill from the right in cents, the caret stays at the end,
  * and the value is formatted as you type. Clearing it gives null.
  */
 export function MoneyInput({ cents, onCents, format, zero, ...rest }: Props) {

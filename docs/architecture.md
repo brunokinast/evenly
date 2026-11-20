@@ -93,7 +93,7 @@ Pure functions with unit tests named after the acceptance criteria:
 
 ## Theme and design
 
-Tokens from `specs/design.md` as CSS variables, mapped into Tailwind. Theme light/dark/system stored in `localStorage` (APP-2). Hanken Grotesk self-hosted. Lucide icons.
+Tokens from `docs/specs/design.md` as CSS variables, mapped into Tailwind. Theme light/dark/system stored in `localStorage` (APP-2). Hanken Grotesk self-hosted. Lucide icons.
 
 ## PWA and performance (APP-3, APP-4)
 
@@ -115,7 +115,7 @@ Capacitor wraps the same build (`capacitor.config.ts`, `android/`) and uses the 
 
 - **Vitest**: domain unit tests; data and components where useful.
 - **Rules tests**: `@firebase/rules-unit-testing` against the Firestore emulator, one test per rule case in `docs/data-model.md`. Needs Java (emulator requirement).
-- **Playwright**: phone-viewport screenshots against the dev server + emulators, compared with `specs/design.md`; includes the two-browser live join check (INV-6).
+- **Playwright**: phone-viewport screenshots against the dev server + emulators, compared with `docs/specs/design.md`; includes the two-browser live join check (INV-6).
 - Tests name the AC IDs they cover, e.g. `it("BAL-7 worked example", …)`.
 
 ## Deploy

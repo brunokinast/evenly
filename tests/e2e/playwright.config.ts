@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 import { skippedInstallFirst } from "./helpers";
 
 // Phone-viewport checks against the dev server and the local emulators (both started here if not running).
-// Screenshots land in test-results/ for review against specs/design.md.
+// Screenshots land in test-results/ for review against docs/specs/design.md.
 export default defineConfig({
   testDir: ".",
   outputDir: "../../test-results",

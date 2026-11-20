@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
-/** Rows grouped on one surface card with inset dividers (specs/design.md "List row"). */
+/** Rows grouped on one surface card with inset dividers (docs/specs/design.md "List row"). */
 export function ListGroup({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div
@@ -98,7 +98,7 @@ export function IconTile({ children, small }: { children: ReactNode; small?: boo
   );
 }
 
-/** Centered message with an icon tile (specs/design.md "Empty states"). */
+/** Centered message with an icon tile (docs/specs/design.md "Empty states"). */
 export function EmptyState({ icon, text }: { icon: ReactNode; text: string }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4 px-3 py-8 text-center">

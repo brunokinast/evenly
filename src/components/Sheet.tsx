@@ -12,7 +12,7 @@ type Props = {
 };
 
 /**
- * Bottom sheet (specs/design.md): drag handle, title, content, max 85% height. Closes on backdrop tap,
+ * Bottom sheet (docs/specs/design.md): drag handle, title, content, max 85% height. Closes on backdrop tap,
  * swipe down, Escape and Android back. A native <dialog> keeps focus inside and focuses the first input
  * (give it `autoFocus`). Content updates in place while open.
  */

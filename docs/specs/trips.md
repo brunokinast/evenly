@@ -17,12 +17,12 @@ A trip groups members and expenses. It has a name, an icon and a currency. The p
 - **TRIP-1** Given a user creates a trip, then it appears at the top of their Home immediately, and they're its owner and first member.
 - **TRIP-2** A trip name is required (trimmed, non-empty).
 - **TRIP-3** Currency is chosen at creation from BRL, USD, EUR, GBP, defaulting to the one matching the user's language (PT-BR → BRL, otherwise the last one they used, else USD). It can't be changed afterwards.
-- **TRIP-10** Create trip opens with the name field focused and the keyboard up; icon and currency have defaults. Enter on the name closes the keyboard (so the icon and currency are in view to change); the Create trip button creates it.
-- **TRIP-11** The owner can rename the trip; the new name shows live for all members.
 - **TRIP-4** Icon is chosen from: luggage, flight, beach, camping, restaurant, home, celebration, sports, music, shopping, car, boat, mountain, city, work, school.
 - **TRIP-5** Home shows exactly the trips the user is a member of: no more, no less. It updates live when the user joins, leaves or is removed, or when a trip is deleted.
 - **TRIP-6** Only the owner sees and can use owner actions; non-owners can't perform them even by bypassing the UI.
 - **TRIP-7** Given the owner deletes a trip (after confirming "This cannot be undone"), then the trip, its members and its expenses are removed, and it disappears live from every member's Home. A member currently viewing it is taken back to Home with a short notice.
 - **TRIP-8** Only members can see a trip's details, members and expenses.
-- **TRIP-12** Home is ordered by latest activity, most recent first: the last time any member added, edited or deleted an expense in the trip, or its creation if that never happened. A trip moves up live when someone adds an expense. Old, finished trips sink to the bottom on their own.
 - **TRIP-9** Opening a trip that doesn't exist or that the user can't access shows "Trip not found" with a way back to Home.
+- **TRIP-10** Create trip opens with the name field focused and the keyboard up; icon and currency have defaults. Enter on the name closes the keyboard (so the icon and currency are in view to change); the Create trip button creates it.
+- **TRIP-11** The owner can rename the trip; the new name shows live for all members.
+- **TRIP-12** Home is ordered by latest activity, most recent first: the last time any member added, edited or deleted an expense in the trip, or its creation if that never happened. A trip moves up live when someone adds an expense. Old, finished trips sink to the bottom on their own.

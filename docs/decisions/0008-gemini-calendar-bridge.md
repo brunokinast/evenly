@@ -12,7 +12,7 @@ The user wants to tell Gemini on their phone "add 40 to my trip, split with Ana"
 
 ## Decision
 
-- Gemini writes each expense as an event in a Google calendar named "Evenly", titled `amount | what | split with | trip | paid by` (the skill text is in specs/features/assistant.md and in the setup guide).
+- Gemini writes each expense as an event in a Google calendar named "Evenly", titled `amount | what | split with | trip | paid by` (the skill text is in docs/specs/assistant.md and in the setup guide).
 - The Android app reads that calendar through the system calendar store (`EvenlyCalendarPlugin.java`, READ/WRITE_CALENDAR). It reads on open and on return, after Home's list shows, and asks for a sync first.
 - Nothing is saved without the user: a review sheet shows every pending expense, with forgiving matching and guesses highlighted. "Add" saves them in one batch and deletes their events, so the calendar is the waiting list and Evenly stores nothing new.
 - The review edits the same `ExpenseDraft` as the Add/Edit expense form, through the same pickers (`src/screens/expense/fields.tsx`), so the two can't drift.

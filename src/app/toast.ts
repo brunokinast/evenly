@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { changes } from "@/lib/changes";
 
-// Toasts (specs/design.md): bottom, above bars, auto-hide after 3 s. One at a time; a new one replaces it.
+// Toasts (docs/specs/design.md): bottom, above bars, auto-hide after 3 s. One at a time; a new one replaces it.
 type Toast = { id: number; text: string } | null;
 
 let current: Toast = null;

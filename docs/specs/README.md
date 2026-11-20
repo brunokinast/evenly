@@ -2,7 +2,7 @@
 
 Specs describe **what** Evenly does, in plain language. They are the source of truth: when behavior changes, the spec changes first, in the same commit as the code.
 
-- `features/`: one file per feature, with acceptance criteria (AC). Tests reference AC IDs, e.g. `TRIP-3`.
+One file per feature, with acceptance criteria (AC); tests reference their IDs, e.g. `TRIP-3`. `design.md` covers how everything looks. The list is in `docs/README.md`.
 
 ## Product in one paragraph
 

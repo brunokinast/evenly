@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Tokens from specs/design.md. Components use these only, never literal colors. */
+/* Tokens from docs/specs/design.md. Components use these only, never literal colors. */
 @font-face {
   font-family: "Hanken Grotesk";
   src: url("/fonts/hanken-grotesk.woff2") format("woff2");
@@ -93,14 +93,14 @@
   --radius-ctl: 10px;
   --radius-card: 16px;
   --radius-sheet: 24px;
-  /* Small inner shapes (specs/design.md): segments and buttons inside a field follow its curve; checkboxes. */
+  /* Small inner shapes (docs/specs/design.md): segments and buttons inside a field follow its curve; checkboxes. */
   --radius-inner: 7px;
   --radius-check: 6px;
 
   --shadow-float: var(--shadow);
   --color-scrim: var(--scrim);
 
-  /* Type roles from specs/design.md (size / line height / weight) */
+  /* Type roles from docs/specs/design.md (size / line height / weight) */
   --text-amount: 44px;
   --text-amount--line-height: 52px;
   --text-amount--font-weight: 700;
@@ -169,7 +169,7 @@
   display: none;
 }
 
-/* Motion (specs/design.md): sheets slide 200ms ease-out; none with reduced motion. */
+/* Motion (docs/specs/design.md): sheets slide 200ms ease-out; none with reduced motion. */
 @keyframes sheet-up {
   from {
     transform: translateY(100%);
@@ -195,7 +195,7 @@
 :root {
   --toast-bottom: 140px; /* above the bottom bars */
 }
-/* specs/design.md "Toast": above the floating Add button, never over it. */
+/* docs/specs/design.md "Toast": above the floating Add button, never over it. */
 :root:has([data-fab]) {
   --toast-bottom: calc(150px + env(safe-area-inset-bottom));
 }
