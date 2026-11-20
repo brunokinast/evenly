@@ -51,7 +51,18 @@ function trip(id, code, name, icon, currency, people, expenses, activeAt, create
       memberUids: ["readme-ana"],
       invite: { code, expiresAt: now + day },
     },
-    invite: { tripId: id, expiresAt: now + day, name, icon, currency, guests: { bruno: ME } },
+    invite: {
+      tripId: id,
+      expiresAt: now + day,
+      name,
+      icon,
+      currency,
+      guests: Object.fromEntries(
+        Object.entries(members)
+          .filter(([, m]) => !m.uid)
+          .map(([k, m]) => [k, m.name]),
+      ),
+    },
     expenses: expenses.map(([description, amountCents, payerId, shares, spentAt, split = "equal"], i) => ({
       id: `e${i}`,
       description,
@@ -178,6 +189,31 @@ const phone = {
   deviceScaleFactor: 3,
 };
 const settle = (page) => page.waitForTimeout(700);
+const SKIP_INSTALL = {
+  cookies: [],
+  origins: [{ origin: BASE, localStorage: [{ name: "evenly.installFirstSkipped", value: "1" }] }],
+};
+// What Gemini wrote to the "Evenly" calendar (dev stand-in, src/app/devCalendar.ts); "rta" is a typo for Rita.
+const GEMINI_EVENTS = [
+  { id: "g1", title: "40 | dinner | ana | lisbon | ", start: now - 3 * 60_000, allDay: false },
+  {
+    id: "g2",
+    title: "18.50 | museum tickets | everyone | lisbon | ",
+    start: now - 2 * 60_000,
+    allDay: false,
+  },
+  { id: "g3", title: "12 | uber to the hotel | rta | lisbon | ", start: now - 60_000, allDay: false },
+];
+/** Shows a soft dot where the (simulated) finger taps, for the videos. */
+const TAP_DOTS = `addEventListener("pointerdown", (e) => {
+  const d = document.createElement("div");
+  d.style.cssText = "position:fixed;z-index:2147483647;pointer-events:none;width:44px;height:44px;margin:-22px 0 0 -22px;" +
+    "border-radius:50%;background:rgba(23,26,33,.28);transition:transform .45s ease-out,opacity .45s ease-out;" +
+    "left:" + e.clientX + "px;top:" + e.clientY + "px";
+  document.documentElement.appendChild(d);
+  requestAnimationFrame(() => requestAnimationFrame(() => { d.style.transform = "scale(1.6)"; d.style.opacity = "0"; }));
+  setTimeout(() => d.remove(), 600);
+}, true);`;
 
 async function capture() {
   rmSync(RAW, { recursive: true, force: true });
@@ -190,10 +226,7 @@ async function capture() {
     const ctx = await browser.newContext({
       ...phone,
       reducedMotion: "reduce",
-      storageState: {
-        cookies: [],
-        origins: [{ origin: BASE, localStorage: [{ name: "evenly.installFirstSkipped", value: "1" }] }],
-      },
+      storageState: SKIP_INSTALL,
     });
     const page = await ctx.newPage();
     await page.goto("/");
@@ -229,21 +262,9 @@ async function capture() {
 
     // Gemini review: what Gemini wrote to the "Evenly" calendar (dev stand-in, src/app/devCalendar.ts).
     await page.getByRole("button", { name: "Back to your trips" }).click();
-    await page.evaluate(
-      (events) => {
-        localStorage.setItem("evenly.devCalendar", JSON.stringify({ access: "granted", events }));
-      },
-      [
-        { id: "g1", title: "40 | dinner | ana | lisbon | ", start: now - 3 * 60_000, allDay: false },
-        {
-          id: "g2",
-          title: "18.50 | museum tickets | everyone | lisbon | ",
-          start: now - 2 * 60_000,
-          allDay: false,
-        },
-        { id: "g3", title: "12 | uber to the hotel | rta | lisbon | ", start: now - 60_000, allDay: false },
-      ],
-    );
+    await page.evaluate((events) => {
+      localStorage.setItem("evenly.devCalendar", JSON.stringify({ access: "granted", events }));
+    }, GEMINI_EVENTS);
     await page.reload();
     const sheet = page.getByRole("dialog", { name: /^From Gemini/ });
     await expect(sheet).toBeVisible();
@@ -253,40 +274,149 @@ async function capture() {
     const state = await ctx.storageState({ indexedDB: true });
     await ctx.close();
 
-    // Video: add an expense, then see the balances (real animations, a human typing pace).
-    const vctx = await browser.newContext({
-      ...phone,
-      deviceScaleFactor: 1,
-      storageState: state,
-      // Recorded at the viewport's CSS size (Playwright doesn't upscale); the GIF is smaller anyway.
-      recordVideo: { dir: RAW, size: phone.viewport },
-    });
-    const v = await vctx.newPage();
-    await v.goto("/trip/readme-lisbon/expenses");
-    await expect(v.getByText("Dinner at Time Out Market")).toBeVisible();
-    await v.waitForTimeout(1200);
-    await v.getByRole("button", { name: "Add expense" }).click();
-    await expect(v.getByRole("heading", { name: "New expense" })).toBeVisible();
-    await v.waitForTimeout(500);
-    await v.keyboard.type("6000", { delay: 220 });
-    await v.waitForTimeout(400);
-    await v.keyboard.press("Enter");
-    await v.keyboard.type("Fado night", { delay: 90 });
-    await v.keyboard.press("Enter");
-    await v.waitForTimeout(700);
-    await v.getByRole("button", { name: "Save" }).click();
-    await expect(v.getByText("Fado night").first())
-      .toBeVisible()
-      .catch(async (e) => {
-        await v.screenshot({ path: join(RAW, "video-failed.png") });
-        throw e;
+    // Feature videos: real animations, a human pace, a dot where the finger taps.
+    const record = async (name, storageState) => {
+      const c = await browser.newContext({
+        ...phone,
+        deviceScaleFactor: 1,
+        storageState,
+        // Recorded at the viewport's CSS size (Playwright doesn't upscale); the GIFs are smaller anyway.
+        recordVideo: { dir: join(RAW, name), size: phone.viewport },
       });
-    await v.waitForTimeout(1300);
-    await v.getByRole("tab", { name: "Balances" }).click();
-    await v.waitForTimeout(2200);
-    await vctx.close();
-    const video = readdirSync(RAW).find((f) => f.endsWith(".webm"));
-    renameSync(join(RAW, video), join(RAW, "demo.webm"));
+      await c.addInitScript(TAP_DOTS);
+      const p = await c.newPage();
+      return { c, p, name };
+    };
+    const save = async ({ c, name }) => {
+      await c.close();
+      const dir = join(RAW, name);
+      renameSync(
+        join(
+          dir,
+          readdirSync(dir).find((f) => f.endsWith(".webm")),
+        ),
+        join(RAW, `${name}.webm`),
+      );
+      rmSync(dir, { recursive: true });
+    };
+    const tap = async (locator) => {
+      await locator.hover();
+      await locator.page().waitForTimeout(250);
+      await locator.click();
+    };
+
+    // Settle-up: from the expenses to the balances and who pays whom.
+    {
+      const r = await record("settle", state);
+      const v = r.p;
+      await v.goto("/trip/readme-lisbon/expenses");
+      await expect(v.getByText("Dinner at Time Out Market")).toBeVisible();
+      await v.waitForTimeout(1500);
+      await tap(v.getByRole("tab", { name: "Balances" }));
+      await v.waitForTimeout(1800);
+      await v.mouse.move(206, 500);
+      for (let i = 0; i < 12; i++) {
+        await v.mouse.wheel(0, 40);
+        await v.waitForTimeout(60);
+      }
+      await v.waitForTimeout(2500);
+      await save(r);
+    }
+
+    // Join: a new person types the code and claims their spot.
+    {
+      const pre = await browser.newContext({ ...phone, storageState: SKIP_INSTALL });
+      const p = await pre.newPage();
+      await p.goto("/");
+      await p.getByRole("textbox", { name: "What's your name?" }).fill("Rita");
+      await p.keyboard.press("Enter");
+      await expect(p.getByRole("heading", { name: "Your trips" })).toBeVisible();
+      const ritaState = await pre.storageState({ indexedDB: true });
+      await pre.close();
+      const r = await record("join", ritaState);
+      const v = r.p;
+      await v.goto("/");
+      await expect(v.getByRole("heading", { name: "Your trips" })).toBeVisible();
+      await v.waitForTimeout(1200);
+      await tap(v.getByRole("button", { name: "Join trip" }));
+      await v.waitForTimeout(600);
+      await v.getByRole("textbox", { name: "Invite code" }).pressSequentially("710001", { delay: 200 });
+      const dialog = v.getByRole("dialog", { name: "Join trip" });
+      await expect(dialog.getByText("Lisbon weekend")).toBeVisible();
+      await v.waitForTimeout(1200);
+      await tap(dialog.getByRole("button", { name: "Rita" }));
+      await v.waitForTimeout(700);
+      await tap(dialog.getByRole("button", { name: "Join as Rita" }));
+      await expect(v.getByRole("heading", { name: "Lisbon weekend" })).toBeVisible();
+      await v.waitForTimeout(2500);
+      await save(r);
+    }
+
+    // Live: Marco adds an expense on his phone; it appears on Bruno's at once.
+    {
+      const pre = await browser.newContext({ ...phone, storageState: SKIP_INSTALL });
+      const p = await pre.newPage();
+      await p.goto("/");
+      await p.getByRole("textbox", { name: "What's your name?" }).fill("Marco");
+      await p.keyboard.press("Enter");
+      await p.getByRole("button", { name: "Join trip" }).click();
+      await p.getByRole("textbox", { name: "Invite code" }).fill("710001");
+      const dialog = p.getByRole("dialog", { name: "Join trip" });
+      await dialog.getByRole("button", { name: "Marco" }).click();
+      await dialog.getByRole("button", { name: "Join as Marco" }).click();
+      await expect(p.getByRole("heading", { name: "Lisbon weekend" })).toBeVisible();
+      const marcoState = await pre.storageState({ indexedDB: true });
+      await pre.close();
+      const [me, marco] = await Promise.all([record("live-me", state), record("live-marco", marcoState)]);
+      await Promise.all([
+        me.p.goto("/trip/readme-lisbon/expenses"),
+        marco.p.goto("/trip/readme-lisbon/expenses"),
+      ]);
+      await expect(me.p.getByText("Dinner at Time Out Market")).toBeVisible();
+      await expect(marco.p.getByText("Dinner at Time Out Market")).toBeVisible();
+      const v = marco.p;
+      await v.waitForTimeout(1500);
+      await tap(v.getByRole("button", { name: "Add expense" }));
+      await expect(v.getByRole("heading", { name: "New expense" })).toBeVisible();
+      await v.waitForTimeout(500);
+      await v.keyboard.type("6000", { delay: 220 });
+      await v.waitForTimeout(400);
+      await v.keyboard.press("Enter");
+      await v.keyboard.type("Fado night", { delay: 90 });
+      await v.keyboard.press("Enter");
+      await v.waitForTimeout(600);
+      await tap(v.getByRole("button", { name: "Save" }));
+      await expect(me.p.getByText("Fado night").first()).toBeVisible();
+      await v.waitForTimeout(3000);
+      await Promise.all([save(me), save(marco)]);
+    }
+
+    // Gemini: the review appears on Home; check the guess, add them all.
+    {
+      const r = await record("gemini", state);
+      const v = r.p;
+      await v.goto("/");
+      await v.evaluate((events) => {
+        localStorage.setItem("evenly.devCalendar", JSON.stringify({ access: "granted", events }));
+      }, GEMINI_EVENTS);
+      await v.reload();
+      const sheet = v.getByRole("dialog", { name: /^From Gemini/ });
+      await expect(sheet).toBeVisible();
+      await v.waitForTimeout(1800);
+      await tap(sheet.getByRole("button", { name: /uber/ }));
+      await v.waitForTimeout(1800);
+      await tap(sheet.getByRole("button", { name: /^Add 3 expenses/ }));
+      await v.waitForTimeout(1200);
+      await tap(
+        v
+          .getByRole("main")
+          .getByRole("button", { name: /Lisbon weekend/ })
+          .first(),
+      );
+      await expect(v.getByText("museum tickets")).toBeVisible();
+      await v.waitForTimeout(2500);
+      await save(r);
+    }
   } finally {
     await browser.close();
     await unseed();
@@ -301,6 +431,7 @@ const ICON = dataUrl("public/icon.svg", "image/svg+xml");
 const shot = (name) => dataUrl(join(RAW, `${name}.png`), "image/png");
 // Screen aspect of the captures (Pixel 7 viewport).
 const SCREEN = devices["Pixel 7"].viewport.height / devices["Pixel 7"].viewport.width;
+const GIF = { w: 460, h: 600 };
 
 const css = (dark) => `
   @font-face { font-family: Hanken; src: url(${FONT}) format("woff2"); font-weight: 100 900; }
@@ -323,7 +454,7 @@ const phoneHtml = (w, img, hole = false) => `
   <div class="phone" style="--w:${w}px; --b:${Math.round(w * 0.035)}px; ${hole ? "background:transparent; box-shadow:none" : ""}">
     <div class="screen" style="${hole ? `background:transparent; box-shadow:0 0 0 ${Math.round(w * 0.035)}px #101114` : ""}">
       <div class="bar" style="background:#f6f7f9"><span>9:41</span><span><i></i><i></i></span></div>
-      ${hole ? `<div style="height:${Math.round(w * SCREEN)}px"></div>` : `<img src="${img}">`}
+      ${hole ? `<div class="hole" style="height:${Math.round(w * SCREEN)}px"></div>` : `<img src="${img}">`}
     </div>
   </div>`;
 
@@ -423,40 +554,96 @@ async function compose() {
       );
     }
 
-    // Demo GIF: the video inside a phone frame on the banner's marigold.
-    const gw = 300;
-    const frame = join(RAW, "frame.png");
-    await render(page, `<div style="padding:28px 40px 36px">${phoneHtml(gw, "", true)}</div>`, frame, {
-      scale: 1,
-    });
-    const pad = { x: 40 + Math.round(gw * 0.035), y: 28 + Math.round(gw * 0.035) + Math.round(gw * 0.075) };
+    // Feature GIFs: the videos inside phone frames (holes in an HTML layout) on the brand's soft yellow.
     const ffmpeg = process.env.FFMPEG ?? "ffmpeg";
-    const filter = [
-      `color=c=0xf2b233:s=${gw + 80 + Math.round(gw * 0.07)}x${Math.round(gw * SCREEN + gw * 0.075 + gw * 0.07) + 64}[bg]`,
-      `[0:v]fps=15,scale=${gw}:-2:flags=lanczos[v]`,
-      `[bg][v]overlay=${pad.x}:${pad.y}:shortest=1[a]`,
-      `[a][1:v]overlay=0:0:shortest=1,split[s0][s1]`,
-      `[s0]palettegen=max_colors=128:stats_mode=diff[p]`,
-      `[s1][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle`,
-    ].join(";");
-    execFileSync(ffmpeg, [
-      "-y",
-      "-loglevel",
-      "error",
-      "-ss",
-      "1",
-      "-i",
-      join(RAW, "demo.webm"),
-      "-loop",
-      "1",
-      "-i",
-      frame,
-      "-filter_complex",
-      filter,
-      "-loop",
-      "0",
-      join(OUT, "demo.gif"),
-    ]);
+    const featureGif = async (name, phones, seconds) => {
+      const w = phones.length > 1 ? 188 : 232;
+      const frameFile = join(RAW, `${name}-frame.png`);
+      const label = (text) =>
+        text
+          ? `<div style="font-size:15px; font-weight:700; color:#8a5a00; letter-spacing:.3px">${text}</div>`
+          : "";
+      await page.setViewportSize({ width: 1600, height: 1200 });
+      await page.setContent(
+        `<style>${css(false)}</style>
+        <div id="root" style="width:${GIF.w}px; height:${GIF.h}px; display:flex; justify-content:center;
+          align-items:center; gap:22px">
+          ${phones
+            .map(
+              (p) => `<div style="display:flex; flex-direction:column; align-items:center; gap:12px">
+                ${label(p.label)}${phoneHtml(w, "", true)}</div>`,
+            )
+            .join("")}
+        </div>`,
+      );
+      await page.evaluate(() => document.fonts.ready);
+      const holes = await page.locator(".hole").evaluateAll((els) =>
+        els.map((e) => {
+          const r = e.getBoundingClientRect();
+          return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height) };
+        }),
+      );
+      await page.locator("#root").screenshot({ path: frameFile, omitBackground: true, scale: "css" });
+      const n = phones.length;
+      const filter = [
+        `color=c=0xfdf1d6:s=${GIF.w}x${GIF.h}:r=12:d=${seconds}[bg0]`,
+        ...phones.map((_, i) => `[${i}:v]fps=12,scale=${holes[i].w}:${holes[i].h}:flags=lanczos[v${i}]`),
+        ...phones.map(
+          (_, i) => `[bg${i}][v${i}]overlay=${holes[i].x}:${holes[i].y}:eof_action=repeat[bg${i + 1}]`,
+        ),
+        `[bg${n}][${n}:v]overlay=0:0:shortest=1,split[s0][s1]`,
+        `[s0]palettegen=max_colors=96:stats_mode=diff[p]`,
+        `[s1][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle`,
+      ].join(";");
+      execFileSync(ffmpeg, [
+        "-y",
+        "-loglevel",
+        "error",
+        ...phones.flatMap((p) => ["-ss", "0.8", "-i", join(RAW, `${p.video}.webm`)]),
+        ...["-loop", "1", "-framerate", "12", "-t", String(seconds), "-i", frameFile],
+        ...["-filter_complex", filter, "-t", String(seconds), "-loop", "0", join(OUT, `${name}.gif`)],
+      ]);
+    };
+    await featureGif(
+      "feature-live",
+      [
+        { video: "live-marco", label: "Marco adds an expense" },
+        { video: "live-me", label: "…your phone shows it" },
+      ],
+      10.5,
+    );
+    await featureGif("feature-settle", [{ video: "settle" }], 6.6);
+    await featureGif("feature-join", [{ video: "join" }], 8.2);
+    await featureGif("feature-gemini", [{ video: "gemini" }], 8.8);
+
+    // Big link buttons for the README.
+    const button = (file, { bg, fg, sub, main, icon }) =>
+      render(
+        page,
+        `<div style="display:flex; align-items:center; gap:16px; padding:14px 30px 14px 22px; border-radius:18px;
+          background:${bg}; color:${fg}">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="${fg}" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">${icon}</svg>
+          <div><div style="font-size:14px; font-weight:600; opacity:.7">${sub}</div>
+            <div style="font-size:22px; font-weight:800; letter-spacing:-.3px">${main}</div></div>
+        </div>`,
+        join(OUT, file),
+      );
+    // Lucide "globe" and "download".
+    await button("button-web.png", {
+      bg: "#171a21",
+      fg: "#ffffff",
+      sub: "Try it in your browser",
+      main: "Open the web app",
+      icon: '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+    });
+    await button("button-android.png", {
+      bg: "#f2b233",
+      fg: "#1a1405",
+      sub: "Free APK",
+      main: "Download for Android",
+      icon: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+    });
   } finally {
     await browser.close();
   }

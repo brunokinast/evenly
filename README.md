@@ -3,8 +3,8 @@
 </p>
 
 <p align="center">
-  <b>A fast, real-time alternative to Splitwise for trips.</b><br>
-  Everyone adds what they paid; Evenly works out who owes whom, live on every phone.
+  <b>Split trip expenses with friends, live on every phone.</b><br>
+  Everyone adds what they paid; Evenly works out who owes whom and the fewest payments to settle up.
 </p>
 
 <p align="center">
@@ -15,10 +15,12 @@
 </p>
 
 <p align="center">
-  <a href="https://evenly-app-6f5f2.web.app"><b>Open the web app</b></a> &nbsp;·&nbsp;
-  <a href="https://github.com/brunokinast/evenly/releases/latest/download/evenly.apk"><b>Download for Android</b></a> &nbsp;·&nbsp;
-  <a href="#how-its-built"><b>How it's built</b></a>
+  <a href="https://evenly-app-6f5f2.web.app"><img src="docs/readme/button-web.png" alt="Open the web app" height="60"></a>
+  &nbsp;
+  <a href="https://github.com/brunokinast/evenly/releases/latest/download/evenly.apk"><img src="docs/readme/button-android.png" alt="Download for Android" height="60"></a>
 </p>
+
+<p align="center"><sub><a href="#how-its-built">How it's built ↓</a></sub></p>
 
 <br>
 
@@ -27,43 +29,29 @@
 <table>
   <tr>
     <td width="50%" valign="top">
+      <img src="docs/readme/feature-live.gif" alt="Marco adds an expense on his phone and it appears on yours at once." width="100%"><br><br>
       <b>Live for everyone</b><br>
       A new expense shows up on every phone in about a second. No refresh button, and the app opens instantly from its offline copy.
     </td>
     <td width="50%" valign="top">
+      <img src="docs/readme/feature-settle.gif" alt="The balances tab: who owes, who gets back, and who pays whom." width="100%"><br><br>
       <b>Fair settle-up</b><br>
-      Balances and the fewest payments to even out, per person. Splits are equal or custom, and no cent is ever lost to rounding.
+      Balances and the fewest payments to even out. Splits are equal or custom, and no cent is ever lost to rounding.
     </td>
   </tr>
   <tr>
     <td valign="top">
+      <img src="docs/readme/feature-join.gif" alt="Typing a 6-digit code, picking your name from the guests and joining the trip." width="100%"><br><br>
       <b>Join with a 6-digit code</b><br>
       No accounts or passwords. Friends without the app can be added as guests and claim their spot later.
     </td>
     <td valign="top">
+      <img src="docs/readme/feature-gemini.gif" alt="Expenses dictated to Gemini wait for review in Evenly, then are added with one tap." width="100%"><br><br>
       <b>Just tell Gemini</b><br>
-      “Add 40 to Lisbon for dinner, split with Ana.” Evenly picks it up and asks you to confirm.
+      “Add 40 to Lisbon for dinner, split with Ana.” Evenly picks it up and asks you to confirm (<a href="#talking-to-gemini">how</a>).
     </td>
   </tr>
 </table>
-
-<br>
-
-<p align="center">
-  <img src="docs/readme/demo.gif" alt="Adding an expense: type the amount and a description, save, and the balances are already updated." width="300"><br>
-  <sub>Adding an expense: saved instantly, balances update on everyone's phone.</sub>
-</p>
-
-<br>
-
-## Just tell Gemini
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/readme/gemini-flow-dark.png">
-  <img src="docs/readme/gemini-flow-light.png" alt="You tell Gemini an expense, Gemini writes it to an Evenly calendar, and Evenly shows it for review." width="100%">
-</picture>
-
-Gemini only calls apps Google has allow-listed, so Evenly meets it halfway: Gemini writes each expense as an event in a calendar named “Evenly”, and the Android app reads it from the phone's calendar. Nothing is saved until you check it; names and trips are matched forgivingly, and guesses are highlighted. [Why this design](docs/decisions/0008-gemini-calendar-bridge.md)
 
 <br>
 
@@ -86,6 +74,17 @@ flowchart LR
 - **One live-data layer.** Every piece of data on screen comes from a shared, reference-counted Firestore listener, so other people's changes simply appear. No manual caches. ([architecture](docs/architecture.md))
 - **Saves don't wait for the server.** Firestore applies a write locally at once and syncs in the background, so saving closes immediately; a refused write comes back as a notice.
 - **Speed is measured, not guessed.** A Playwright harness runs each journey on a throttled phone profile, and the startup bundle has a size budget that CI enforces. ([performance](docs/performance.md))
+
+### Talking to Gemini
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/readme/gemini-flow-dark.png">
+  <img src="docs/readme/gemini-flow-light.png" alt="You tell Gemini an expense, Gemini writes it to an Evenly calendar, and Evenly shows it for review." width="100%">
+</picture>
+
+Gemini only calls apps Google has allow-listed, so Evenly meets it halfway: Gemini writes each expense as an event in a calendar named “Evenly”, and the Android app reads it from the phone's calendar. Nothing is saved until you check it; names and trips are matched forgivingly, and guesses are highlighted. ([why this design](docs/decisions/0008-gemini-calendar-bridge.md))
+
+### Numbers
 
 **Speed** (median on the live site, slow 4G, CPU 4× slower)
 
