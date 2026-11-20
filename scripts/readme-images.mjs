@@ -206,11 +206,14 @@ const GEMINI_EVENTS = [
 ];
 /** Shows a soft dot where the (simulated) finger taps, for the videos. */
 const TAP_DOTS = `addEventListener("pointerdown", (e) => {
+  // A popover lives in the top layer, so the dot shows above open sheets (native <dialog>s) too.
   const d = document.createElement("div");
-  d.style.cssText = "position:fixed;z-index:2147483647;pointer-events:none;width:44px;height:44px;margin:-22px 0 0 -22px;" +
-    "border-radius:50%;background:rgba(23,26,33,.28);transition:transform .45s ease-out,opacity .45s ease-out;" +
-    "left:" + e.clientX + "px;top:" + e.clientY + "px";
-  document.documentElement.appendChild(d);
+  d.popover = "manual";
+  d.style.cssText = "position:fixed;inset:auto;margin:0;padding:0;border:0;pointer-events:none;" +
+    "width:44px;height:44px;translate:-22px -22px;border-radius:50%;background:rgba(23,26,33,.3);" +
+    "transition:transform .45s ease-out,opacity .45s ease-out;left:" + e.clientX + "px;top:" + e.clientY + "px";
+  document.body.appendChild(d);
+  d.showPopover();
   requestAnimationFrame(() => requestAnimationFrame(() => { d.style.transform = "scale(1.6)"; d.style.opacity = "0"; }));
   setTimeout(() => d.remove(), 600);
 }, true);`;

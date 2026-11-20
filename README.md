@@ -14,6 +14,8 @@
   <img src="https://img.shields.io/badge/languages-English%20·%20Português-171a21?style=flat-square" alt="Languages: English and Portuguese">
 </p>
 
+<hr>
+
 <p align="center">
   <a href="https://evenly-app-6f5f2.web.app"><img src="docs/readme/button-web.png" alt="Open the web app" height="60"></a>
   &nbsp;
@@ -21,6 +23,8 @@
 </p>
 
 <p align="center"><sub><a href="#how-its-built">How it's built ↓</a></sub></p>
+
+<hr>
 
 <br>
 
