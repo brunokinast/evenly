@@ -34,7 +34,9 @@ async function connect() {
   await Promise.all([persistence, nativeFirebase ? null : webAuth()]);
   if (usesEmulators) {
     if (nativeFirebase) await setup(FirebaseAuthentication.useEmulator({ host: emulatorHost(), port: 9099 }));
-    await setup(FirebaseFirestore.useEmulator({ host: emulatorHost(), port: 8080 }));
+    // VITE_FIRESTORE_PORT: for when another program holds 8080 on this PC.
+    const port = Number(env.VITE_FIRESTORE_PORT) || 8080;
+    await setup(FirebaseFirestore.useEmulator({ host: emulatorHost(), port }));
   }
 }
 
