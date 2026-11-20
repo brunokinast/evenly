@@ -17,7 +17,7 @@
 <hr>
 
 <p align="center">
-  <a href="https://evenly-app-6f5f2.web.app"><img src="docs/readme/button-web.png" alt="Open the web app" height="60"></a>
+  <a href="https://evenly.kinast.com.br"><img src="docs/readme/button-web.png" alt="Open the web app" height="60"></a>
   &nbsp;
   <a href="https://github.com/brunokinast/evenly/releases/latest/download/evenly.apk"><img src="docs/readme/button-android.png" alt="Download for Android" height="60"></a>
 </p>

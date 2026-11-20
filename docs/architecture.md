@@ -120,4 +120,4 @@ Capacitor wraps the same build (`capacitor.config.ts`, `android/`) and uses the 
 
 ## Deploy
 
-Firebase Hosting (same project `evenly-app-6f5f2`, same site, so web users keep their identity) + `firestore.rules`. Spark plan only.
+Firebase Hosting (same project `evenly-app-6f5f2`, same site, so web users keep their identity) + `firestore.rules`. Spark plan only. Public address: https://evenly.kinast.com.br (a CNAME to `evenly-app-6f5f2.web.app`; each address keeps its own browser storage, so share only the custom one).
