@@ -10,7 +10,7 @@ Nothing reaches a trip until the user confirms it. The next time Evenly opens, i
 
 ## Flows
 
-1. **Setup** (once, Android app only): Profile → "Add expenses with Gemini" opens a short guide: create the "Evenly" calendar, create the Gemini skill (its name, description and instructions, each with a Copy button), allow Evenly to read the calendar.
+1. **Setup** (once, Android app only): Profile → "Add expenses with Gemini" opens a short guide: create the "Evenly" calendar, create the Gemini skill (one button opens Gemini with the request already typed: tap send; or by hand), allow Evenly to read the calendar.
 2. **Say it**, in plain words, no keyword needed: "dinner 60 split with everyone", "gastei 32 no uber com a Ana na viagem Lisboa, a Bia pagou". Saying "Evenly" also works. Gemini confirms and shows its usual event card.
 3. **Review**: open Evenly → after Home's list shows, the "From Gemini" sheet slides up with every pending expense, one line each. A dot marks the lines that need a look. Tap a line to open it in place and change anything; Remove drops it.
 4. **Add**: "Add 3 expenses" saves them all; "Later" keeps them for next time.
@@ -19,7 +19,7 @@ Nothing reaches a trip until the user confirms it. The next time Evenly opens, i
 
 - **AST-1** Setup: in the Android app only, Profile has an "Add expenses with Gemini" row. It opens a guide with three steps:
   1. create a Google calendar named "Evenly" (a button opens Google Calendar);
-  2. create a Gemini skill (where to do it, then its name, description and instructions, each with its own Copy button);
+  2. create the Gemini skill: "Create the skill in Gemini" opens the Gemini app with a message already typed that asks it to create the skill with the exact name, description and instructions below; the user taps send. Under it, "Or create it by hand" shows where to do it in Gemini and the three fields, each with its own Copy button. If the Gemini app isn't on the phone, the button opens the by-hand part instead and says so;
   3. allow calendar access (a button that asks for it, then shows "Allowed").
 
   Under the steps, a line says whether the "Evenly" calendar was found on the phone.

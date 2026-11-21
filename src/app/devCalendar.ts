@@ -5,6 +5,7 @@ import type { CalendarSource } from "./calendarInbox";
 /**
  * Dev server only (dropped from production builds): a stand-in for the phone's "Evenly" calendar, kept in
  * localStorage under `evenly.devCalendar` as `{ access, events }`, so e2e tests can show the Gemini review.
+ * Opening Gemini keeps the typed request under `evenly.devGemini`.
  */
 const KEY = "evenly.devCalendar";
 type Stored = { access: "granted" | "denied" | "prompt"; events: IntakeEvent[] };
@@ -28,6 +29,10 @@ export const devCalendar: CalendarSource = {
   remove: async ({ ids }) => {
     const s = load();
     save({ ...s, events: s.events.filter((e) => !ids.includes(e.id)) });
+  },
+  openGemini: async ({ text }) => {
+    writeStored("evenly.devGemini", text);
+    return { opened: true };
   },
   addListener: async () => ({ remove: async () => {} }),
 };

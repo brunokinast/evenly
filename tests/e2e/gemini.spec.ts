@@ -125,7 +125,16 @@ test("AST-1 the setup guide in Profile", async ({ browser }, info) => {
   await ana.getByRole("button", { name: "Profile" }).click();
   await ana.getByRole("button", { name: "Add expenses with Gemini" }).click();
   const guide = ana.getByRole("dialog", { name: "Add expenses with Gemini" });
-  // Gemini picks a skill from its name and description, so each part is copied on its own.
+  await ana.screenshot({ path: info.outputPath("gemini-setup-start.png") });
+  // One tap: Gemini opens with the request typed (the dev stand-in keeps what was sent).
+  await guide.getByRole("button", { name: "Create the skill in Gemini" }).click();
+  const sent = await ana.evaluate(() => localStorage.getItem("evenly.devGemini"));
+  expect(sent).toContain("note-expense");
+  expect(sent).toContain("Use when the user mentions money");
+  expect(sent).toContain("amount | what | split with | trip | paid by");
+  // By hand: Gemini picks a skill from its name and description, so each part is copied on its own.
+  await expect(guide.getByText("note-expense", { exact: true })).toBeHidden();
+  await guide.getByRole("button", { name: "Or create it by hand" }).click();
   await expect(guide.getByText("note-expense", { exact: true })).toBeVisible();
   await expect(guide.getByText(/Use when the user mentions money/)).toBeVisible();
   await expect(

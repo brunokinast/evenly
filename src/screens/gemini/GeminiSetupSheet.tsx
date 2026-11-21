@@ -1,6 +1,6 @@
-import { useEffect, type ReactNode } from "react";
-import { Check, Copy, ExternalLink } from "lucide-react";
-import { recheckInbox, requestCalendarAccess, useCalendarInbox } from "@/app/calendarInbox";
+import { useEffect, useState, type ReactNode } from "react";
+import { Check, ChevronDown, Copy, ExternalLink, Sparkles } from "lucide-react";
+import { openGemini, recheckInbox, requestCalendarAccess, useCalendarInbox } from "@/app/calendarInbox";
 import { showToast } from "@/app/toast";
 import { Button, buttonClass } from "@/components/Button";
 import { IconButton } from "@/components/IconButton";
@@ -17,6 +17,15 @@ export function GeminiSetupSheet({ open, onClose }: { open: boolean; onClose: ()
     if (open) void recheckInbox();
   }, [open]);
   const allowed = inbox.access === "granted";
+  const [byHand, setByHand] = useState(false);
+  const name = t("gemini.skillName");
+  const description = t("gemini.skillDescription");
+  const instructions = t("gemini.skillText");
+  const create = async () => {
+    if (await openGemini(t("gemini.createPrompt", { name, description, instructions }))) return;
+    setByHand(true);
+    showToast(t("gemini.noApp"));
+  };
   return (
     <Sheet open={open} onClose={onClose} title={t("gemini.setupTitle")} focusField={false}>
       <p className="text-caption text-fg-muted">{t("gemini.setupIntro")}</p>
@@ -28,9 +37,28 @@ export function GeminiSetupSheet({ open, onClose }: { open: boolean; onClose: ()
           </a>
         </Step>
         <Step n={2} text={t("gemini.step2")}>
-          <SkillPart part="name" text={t("gemini.skillName")} />
-          <SkillPart part="description" text={t("gemini.skillDescription")} />
-          <SkillPart part="instructions" text={t("gemini.skillText")} />
+          <Button onClick={() => void create()}>
+            <Sparkles aria-hidden />
+            {t("gemini.createSkill")}
+          </Button>
+          <Button
+            variant="quiet"
+            size="sm"
+            className="self-start px-0"
+            aria-expanded={byHand}
+            onClick={() => setByHand(!byHand)}
+          >
+            {t("gemini.byHand")}
+            <ChevronDown aria-hidden className={cn("transition-transform", byHand && "rotate-180")} />
+          </Button>
+          {byHand && (
+            <>
+              <p className="text-caption text-fg-muted">{t("gemini.byHandHint")}</p>
+              <SkillPart part="name" text={name} />
+              <SkillPart part="description" text={description} />
+              <SkillPart part="instructions" text={instructions} />
+            </>
+          )}
         </Step>
         <Step n={3} text={t("gemini.step3")}>
           <Button disabled={allowed} onClick={() => void requestCalendarAccess()}>
