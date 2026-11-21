@@ -240,11 +240,19 @@ export const ptBR: Record<MessageKey, string> = {
   "gemini.row": "Adicionar despesas com o Gemini",
   "gemini.setupTitle": "Adicionar despesas com o Gemini",
   "gemini.setupIntro":
-    "Diga ao Gemini “Evenly, táxi 25 dividido com a Ana” e ele anota numa agenda. Na próxima vez que abrir o Evenly, você confere e adiciona com um toque. Configure uma vez:",
+    "Diga ao Gemini “gastei 25 no táxi, divide com a Ana” e ele anota numa agenda. Na próxima vez que abrir o Evenly, você confere e adiciona com um toque. Configure uma vez:",
   "gemini.step1": "Crie uma agenda do Google chamada “Evenly”.",
   "gemini.openCalendar": "Abrir o Google Agenda",
-  "gemini.step2": "No Gemini, abra Personalizar → Habilidades → + → Criar manualmente e cole este texto:",
-  "gemini.copy": "Copiar o texto",
+  "gemini.step2": "No Gemini, abra Personalizar → Habilidades → + → Criar manualmente e preencha os três campos:",
+  "gemini.part.name": "Nome",
+  "gemini.part.description": "Descrição",
+  "gemini.part.instructions": "Instruções",
+  "gemini.copy.name": "Copiar o nome",
+  "gemini.copy.description": "Copiar a descrição",
+  "gemini.copy.instructions": "Copiar as instruções",
+  "gemini.skillName": "anotar-despesa",
+  "gemini.skillDescription":
+    "Anota uma despesa compartilhada (um gasto de viagem dividido com amigos) na agenda \"Evenly\". Use quando o usuário falar de um gasto dele ou de um amigo para dividir ou anotar, por exemplo \"gastei 25 no táxi\", \"paguei o jantar, 60, divide com a Ana\", \"anota uma despesa\", \"a Bia pagou 80 no mercado\", \"racha o uber com todo mundo\", ou quando disser Evenly (ou algo parecido: ivenli, iveni, even lee).",
   "gemini.copied": "Copiado",
   "gemini.step3": "Deixe o Evenly ler essa agenda.",
   "gemini.allow": "Permitir acesso à agenda",
@@ -255,7 +263,7 @@ export const ptBR: Record<MessageKey, string> = {
   "gemini.notFound":
     "A agenda “Evenly” ainda não está neste celular. Pode levar um minuto depois de criá-la.",
   "gemini.skillText":
-    'Quando eu disser Evenly ou pedir para adicionar uma despesa no Evenly, crie um evento na minha agenda "Evenly" que começa agora e dura 15 minutos. O título deve ser exatamente: valor | o quê | dividido com | viagem | pago por. valor: só o número, sem moeda. o quê: com o que foi, nas minhas palavras. dividido com: os nomes que eu disse, separados por vírgula. viagem: o nome da viagem, só se eu disser. pago por: quem pagou, só se não fui eu. Deixe vazio o que eu não disser, mas mantenha todos os |. Exemplo: "Evenly, táxi 25 dividido com a Ana e a Bia" → 25 | táxi | Ana, Bia | | . Os nomes são membros da viagem, não contatos: nunca procure contatos e nunca convide ninguém. Depois confirme numa frase curta.',
+    'Crie um evento na minha agenda "Evenly" que começa agora e dura 15 minutos. O título deve ser exatamente: valor | o quê | dividido com | viagem | pago por. valor: só o número, sem moeda. o quê: com o que foi, nas minhas palavras. dividido com: os nomes que eu disse, separados por vírgula. viagem: o nome da viagem, só se eu disser. pago por: quem pagou, só se não fui eu. Deixe vazio o que eu não disser, mas mantenha todos os |. Exemplo: "táxi 25 dividido com a Ana e a Bia" → 25 | táxi | Ana, Bia | | . Os nomes são membros da viagem, não contatos: nunca procure contatos e nunca convide ninguém. Depois confirme numa frase curta.',
   "gemini.title": "Do Gemini",
   "gemini.subtitle": "Confira e depois adicione. Nada foi salvo ainda.",
   "gemini.fallbackDescription": "Despesa",

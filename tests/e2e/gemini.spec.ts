@@ -125,9 +125,15 @@ test("AST-1 the setup guide in Profile", async ({ browser }, info) => {
   await ana.getByRole("button", { name: "Profile" }).click();
   await ana.getByRole("button", { name: "Add expenses with Gemini" }).click();
   const guide = ana.getByRole("dialog", { name: "Add expenses with Gemini" });
+  // Gemini picks a skill from its name and description, so each part is copied on its own.
+  await expect(guide.getByText("note-expense", { exact: true })).toBeVisible();
+  await expect(guide.getByText(/Use when the user mentions money/)).toBeVisible();
   await expect(
     guide.getByText("amount | what | split with | trip | paid by", { exact: false }),
   ).toBeVisible();
+  for (const part of ["name", "description", "instructions"]) {
+    await expect(guide.getByRole("button", { name: `Copy the ${part}` })).toBeVisible();
+  }
   await guide.getByRole("button", { name: "Allow calendar access" }).click();
   await expect(guide.getByRole("button", { name: "Allowed" })).toBeDisabled();
   await expect(guide.getByText("The “Evenly” calendar is on this phone.")).toBeVisible();
