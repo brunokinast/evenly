@@ -3,6 +3,7 @@ import { Toaster } from "@/components/Toaster";
 import { useSession } from "@/data/session";
 import { ConnectError } from "@/screens/ConnectError";
 import { ExpenseFormScreen } from "@/screens/expense/ExpenseForm";
+import { GeminiInbox } from "@/screens/gemini/GeminiInbox";
 import { Home } from "@/screens/home/Home";
 import { TripScreen } from "@/screens/trip/TripScreen";
 import { Welcome } from "@/screens/welcome/Welcome";
@@ -30,6 +31,7 @@ export function App() {
           <Redirect to="/" replace />
         </Route>
       </Switch>
+      <GeminiInbox />
       <Toaster />
     </>
   );

@@ -1,4 +1,5 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
+import { changes } from "@/lib/changes";
 
 type Props = {
   open: boolean;
@@ -95,6 +96,14 @@ let entry: string | null = null; // token of our entry, while it exists
 let backPending = false; // we called history.back() and its popstate hasn't arrived yet
 let leaving = false; // navigating away: sheets still open don't get a new entry
 let waiters: (() => void)[] = [];
+const stackChanges = changes();
+
+/**
+ * A sheet (or a back guard, like a form with unsaved changes) is open, or the app is leaving one for another
+ * screen: the user is in the middle of something, and a new sheet would miss its history entry.
+ */
+export const useSheetsOpen = () =>
+  useSyncExternalStore(stackChanges.subscribe, () => stack.length > 0 || backPending);
 
 // A reload while a sheet was open leaves a marked entry behind; unmark it so back works normally.
 if (history.state?.evenlySheet) history.replaceState(null, "");
@@ -108,8 +117,10 @@ function registerBack(close: () => void, under = false) {
   if (under) stack.unshift(close);
   else stack.push(close);
   if (entry === null && !backPending) pushEntry();
+  stackChanges.notify();
   return () => {
     stack.splice(stack.indexOf(close), 1);
+    stackChanges.notify();
     // Deferred so a sheet that remounts right away (React StrictMode) keeps the entry.
     setTimeout(() => {
       // Back closed this one while others remain (a sheet under it, a guard): they need an entry again.
@@ -119,6 +130,7 @@ function registerBack(close: () => void, under = false) {
       entry = null;
       if (onEntry) {
         backPending = true;
+        stackChanges.notify();
         history.back();
       }
     });
@@ -145,12 +157,14 @@ export function leaveSheets(): Promise<void> {
   entry = null;
   if (!backPending) return Promise.resolve();
   leaving = true;
+  stackChanges.notify();
   return new Promise((resolve) => waiters.push(resolve));
 }
 
 addEventListener("popstate", () => {
   if (backPending) {
     backPending = false;
+    stackChanges.notify();
     if (leaving) {
       leaving = false;
       const done = waiters;

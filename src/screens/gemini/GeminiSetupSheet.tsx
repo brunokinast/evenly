@@ -1,8 +1,9 @@
-import { useEffect, type ReactNode } from "react";
-import { Check, Copy, ExternalLink } from "lucide-react";
-import { recheckInbox, requestCalendarAccess, useCalendarInbox } from "@/app/calendarInbox";
+import { useEffect, useState, type ReactNode } from "react";
+import { Check, ChevronDown, Copy, ExternalLink, Sparkles } from "lucide-react";
+import { openGemini, recheckInbox, requestCalendarAccess, useCalendarInbox } from "@/app/calendarInbox";
 import { showToast } from "@/app/toast";
 import { Button, buttonClass } from "@/components/Button";
+import { IconButton } from "@/components/IconButton";
 import { Sheet } from "@/components/Sheet";
 import { t } from "@/i18n";
 import { cn } from "@/lib/cn";
@@ -16,7 +17,15 @@ export function GeminiSetupSheet({ open, onClose }: { open: boolean; onClose: ()
     if (open) void recheckInbox();
   }, [open]);
   const allowed = inbox.access === "granted";
-  const skill = t("gemini.skillText");
+  const [byHand, setByHand] = useState(false);
+  const name = t("gemini.skillName");
+  const description = t("gemini.skillDescription");
+  const instructions = t("gemini.skillText");
+  const create = async () => {
+    if (await openGemini(t("gemini.createPrompt", { name, description, instructions }))) return;
+    setByHand(true);
+    showToast(t("gemini.noApp"));
+  };
   return (
     <Sheet open={open} onClose={onClose} title={t("gemini.setupTitle")} focusField={false}>
       <p className="text-caption text-fg-muted">{t("gemini.setupIntro")}</p>
@@ -28,20 +37,28 @@ export function GeminiSetupSheet({ open, onClose }: { open: boolean; onClose: ()
           </a>
         </Step>
         <Step n={2} text={t("gemini.step2")}>
-          <p className="max-h-36 overflow-y-auto rounded-card bg-surface-2 px-3.5 py-2.5 text-caption">
-            {skill}
-          </p>
-          <Button
-            onClick={() =>
-              void navigator.clipboard.writeText(skill).then(
-                () => showToast(t("gemini.copied")),
-                () => showToast(t("common.error")),
-              )
-            }
-          >
-            <Copy aria-hidden />
-            {t("gemini.copy")}
+          <Button onClick={() => void create()}>
+            <Sparkles aria-hidden />
+            {t("gemini.createSkill")}
           </Button>
+          <Button
+            variant="quiet"
+            size="sm"
+            className="self-start px-0"
+            aria-expanded={byHand}
+            onClick={() => setByHand(!byHand)}
+          >
+            {t("gemini.byHand")}
+            <ChevronDown aria-hidden className={cn("transition-transform", byHand && "rotate-180")} />
+          </Button>
+          {byHand && (
+            <>
+              <p className="text-caption text-fg-muted">{t("gemini.byHandHint")}</p>
+              <SkillPart part="name" text={name} />
+              <SkillPart part="description" text={description} />
+              <SkillPart part="instructions" text={instructions} />
+            </>
+          )}
         </Step>
         <Step n={3} text={t("gemini.step3")}>
           <Button disabled={allowed} onClick={() => void requestCalendarAccess()}>
@@ -62,6 +79,33 @@ export function GeminiSetupSheet({ open, onClose }: { open: boolean; onClose: ()
         {t("common.done")}
       </Button>
     </Sheet>
+  );
+}
+
+/** AST-1: Gemini picks a skill from its name and description alone, so each field is pasted on its own. */
+function SkillPart({ part, text }: { part: "name" | "description" | "instructions"; text: string }) {
+  const copy = () =>
+    void navigator.clipboard.writeText(text).then(
+      () => showToast(t("gemini.copied")),
+      () => showToast(t("common.error")),
+    );
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-caption text-fg-muted">{t(`gemini.part.${part}`)}</span>
+        <IconButton label={t(`gemini.copy.${part}`)} className="-my-2 text-fg-muted" onClick={copy}>
+          <Copy aria-hidden />
+        </IconButton>
+      </div>
+      <p
+        className={cn(
+          "rounded-card bg-surface-2 px-3.5 py-2.5 text-caption",
+          part === "instructions" && "max-h-36 overflow-y-auto",
+        )}
+      >
+        {text}
+      </p>
+    </div>
   );
 }
 

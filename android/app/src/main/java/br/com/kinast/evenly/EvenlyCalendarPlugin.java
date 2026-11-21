@@ -2,8 +2,10 @@ package br.com.kinast.evenly;
 
 import android.Manifest;
 import android.accounts.Account;
+import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
 import android.content.ContentUris;
+import android.content.Intent;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
@@ -28,7 +30,8 @@ import org.json.JSONArray;
 /**
  * Gemini intake (docs/specs/assistant.md): Gemini writes expenses as events in a Google calendar named
  * "Evenly"; this reads them from the phone's calendar store, asks for a sync first (AST-3) and deletes the
- * handled ones (AST-9, AST-10). JS side: src/app/calendarInbox.ts.
+ * handled ones (AST-9, AST-10). It also opens Gemini with the skill request typed (AST-1). JS side:
+ * src/app/calendarInbox.ts.
  */
 @CapacitorPlugin(
     name = "EvenlyCalendar",
@@ -81,6 +84,23 @@ public class EvenlyCalendarPlugin extends Plugin {
         out.put("access", access());
         out.put("found", allowed() && !calendars(null).isEmpty());
         return out;
+    }
+
+    /** AST-1: the Gemini app, with `text` typed in its prompt (the user taps send). */
+    @PluginMethod
+    public void openGemini(PluginCall call) {
+        Intent intent = new Intent(Intent.ACTION_SEND)
+            .setType("text/plain")
+            .setPackage("com.google.android.apps.bard")
+            .putExtra(Intent.EXTRA_TEXT, call.getString("text", ""));
+        JSObject out = new JSObject();
+        try {
+            getActivity().startActivity(intent);
+            out.put("opened", true);
+        } catch (ActivityNotFoundException e) {
+            out.put("opened", false); // Gemini isn't installed
+        }
+        call.resolve(out);
     }
 
     @PluginMethod

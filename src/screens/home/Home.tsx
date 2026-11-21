@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { openTrip } from "@/app/nav";
 import { ChevronRight, Luggage, Plus, Ticket } from "lucide-react";
-import { startInbox, useCalendarInbox } from "@/app/calendarInbox";
+import { useCalendarInbox } from "@/app/calendarInbox";
 import { useInstall } from "@/app/install";
 import { useOnline } from "@/app/online";
 import { Avatar } from "@/components/Avatar";
@@ -16,7 +16,6 @@ import { useMe } from "@/data/session";
 import { holdTrip, onServer, useMyTrips, warmTrip } from "@/data/trips";
 import { usePaintedMark } from "@/lib/perf";
 import { longDate, t } from "@/i18n";
-import { GeminiReview } from "../gemini/GeminiReview";
 import { GeminiSetupSheet } from "../gemini/GeminiSetupSheet";
 import { InstallSheets, startInstall, type InstallSheet } from "../install/InstallSheets";
 import { JoinSheet } from "./JoinSheet";
@@ -53,12 +52,6 @@ export function Home() {
     const releases = held ? held.split(" ").map(holdTrip) : [];
     return () => releases.forEach((release) => release());
   }, [held]);
-
-  // AST-3: the Gemini calendar is read only once the list shows, so starting up is never slower.
-  const listShown = trips.status === "ready";
-  useEffect(() => {
-    if (listShown) startInbox();
-  }, [listShown]);
 
   return (
     <div className="mx-auto flex h-full max-w-app flex-col">
@@ -139,7 +132,6 @@ export function Home() {
         onGemini={() => setSheet("gemini")}
       />
       <GeminiSetupSheet open={sheet === "gemini"} onClose={() => setSheet(null)} />
-      {trips.status === "ready" && <GeminiReview trips={list} myUid={me.uid} />}
       <NewTripSheet open={sheet === "newTrip"} onClose={() => setSheet(null)} />
       <JoinSheet open={sheet === "join"} onClose={() => setSheet(null)} myTrips={list} />
       <InstallSheets open={installSheet} onClose={() => setInstallSheet(null)} />

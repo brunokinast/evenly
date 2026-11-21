@@ -120,14 +120,52 @@ test("AST-10 Later keeps everything for next time; AST-8 another trip resets pay
   await expect(ana.getByRole("dialog", { name: "From Gemini · 1" }).getByText("Lisbon")).toBeVisible();
 });
 
-test("AST-1 the setup guide in Profile", async ({ browser }, info) => {
+test("AST-3 AST-6 the review opens on any screen, but waits while adding an expense", async ({ browser }) => {
+  const ana = await newUser(browser, "Ana");
+  await lisbonWithBia(ana);
+  await ana.getByRole("button", { name: /Lisbon/ }).click();
+  await expect(ana).toHaveURL(/\/trip\//);
+  const sheet = ana.getByRole("dialog", { name: /^From Gemini/ });
+
+  // In a trip: the app comes back with one event → the review opens right there.
+  await geminiWrote(ana, ["60 | dinner | | |"]);
+  await expect(sheet.getByRole("heading", { name: "From Gemini · 1" })).toBeVisible();
+  await expect(ana).toHaveURL(/\/trip\//);
+  await sheet.getByRole("button", { name: "Later" }).click();
+
+  // On the Add expense screen it waits, and opens once the user leaves it.
+  await ana.getByRole("button", { name: "Add expense" }).click();
+  await expect(ana).toHaveURL(/\/expense\/new/);
+  await geminiWrote(ana, ["60 | dinner | | |", "25 | taxi | | |"]);
+  await expect(ana.getByRole("textbox", { name: "Amount" })).toBeVisible();
+  await expect(sheet).toHaveCount(0);
+  await ana.goBack();
+  await expect(sheet.getByRole("heading", { name: "From Gemini · 2" })).toBeVisible();
+});
+
+test("AST-1 the setup guide in Profile",async ({ browser }, info) => {
   const ana = await newUser(browser, "Ana");
   await ana.getByRole("button", { name: "Profile" }).click();
   await ana.getByRole("button", { name: "Add expenses with Gemini" }).click();
   const guide = ana.getByRole("dialog", { name: "Add expenses with Gemini" });
+  await ana.screenshot({ path: info.outputPath("gemini-setup-start.png") });
+  // One tap: Gemini opens with the request typed (the dev stand-in keeps what was sent).
+  await guide.getByRole("button", { name: "Create the skill in Gemini" }).click();
+  const sent = await ana.evaluate(() => localStorage.getItem("evenly.devGemini"));
+  expect(sent).toContain("note-expense");
+  expect(sent).toContain("Use when the user mentions money");
+  expect(sent).toContain("amount | what | split with | trip | paid by");
+  // By hand: Gemini picks a skill from its name and description, so each part is copied on its own.
+  await expect(guide.getByText("note-expense", { exact: true })).toBeHidden();
+  await guide.getByRole("button", { name: "Or create it by hand" }).click();
+  await expect(guide.getByText("note-expense", { exact: true })).toBeVisible();
+  await expect(guide.getByText(/Use when the user mentions money/)).toBeVisible();
   await expect(
     guide.getByText("amount | what | split with | trip | paid by", { exact: false }),
   ).toBeVisible();
+  for (const part of ["name", "description", "instructions"]) {
+    await expect(guide.getByRole("button", { name: `Copy the ${part}` })).toBeVisible();
+  }
   await guide.getByRole("button", { name: "Allow calendar access" }).click();
   await expect(guide.getByRole("button", { name: "Allowed" })).toBeDisabled();
   await expect(guide.getByText("The “Evenly” calendar is on this phone.")).toBeVisible();

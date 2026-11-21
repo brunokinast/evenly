@@ -18,6 +18,8 @@ export type CalendarSource = {
   /** Reads the events; `sync` first asks the phone to sync the calendar (AST-3). */
   read(o: { sync: boolean }): Promise<{ found: boolean; events: IntakeEvent[] }>;
   remove(o: { ids: string[] }): Promise<void>;
+  /** AST-1: opens the Gemini app with `text` typed; false when it isn't installed. */
+  openGemini(o: { text: string }): Promise<{ opened: boolean }>;
   /** The calendar changed (e.g. a sync brought a new event). */
   addListener(event: "change", listener: () => void): Promise<PluginListenerHandle>;
 };
@@ -106,6 +108,16 @@ export async function requestCalendarAccess() {
   if (!source) return;
   set(await source.requestAccess());
   await refresh(false);
+}
+
+/** AST-1 step 2: Gemini opens with the skill request typed. False when it can't. */
+export async function openGemini(text: string) {
+  if (!source) return false;
+  try {
+    return (await source.openGemini({ text })).opened;
+  } catch {
+    return false;
+  }
 }
 
 /** AST-1: the setup guide re-checks whether the calendar exists. */

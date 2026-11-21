@@ -41,8 +41,11 @@ const confirm = (e: Edit, ...fields: GuessField[]): Edit => ({
   confirmed: [...e.confirmed, ...fields],
 });
 
-/** The "From Gemini" sheet over Home (docs/specs/assistant.md). `trips` in Home's order. */
-export function GeminiReview({ trips, myUid }: { trips: Trip[]; myUid: string }) {
+/**
+ * The "From Gemini" sheet (docs/specs/assistant.md). `trips` in Home's order. `busy`: the user is in the middle
+ * of something, so it doesn't open yet (once open, its own pickers don't close it).
+ */
+export function GeminiReview({ trips, myUid, busy }: { trips: Trip[]; myUid: string; busy: boolean }) {
   const inbox = useCalendarInbox();
   const online = useOnline();
   const [edits, setEdits] = useState<Record<string, Edit>>({});
@@ -81,7 +84,10 @@ export function GeminiReview({ trips, myUid }: { trips: Trip[]; myUid: string })
     };
   });
 
-  const open = lines.length > 0 && !inbox.postponed;
+  const [shown, setShown] = useState(false);
+  const due = lines.length > 0 && !inbox.postponed;
+  if (shown !== (due && (shown || !busy))) setShown(!shown);
+  const open = due && shown;
   const current = lines.find((l) => l.eventId === openId) ?? null;
   const ready = lines.filter((l) => l.valid);
 

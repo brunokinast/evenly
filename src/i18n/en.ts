@@ -235,11 +235,25 @@ export const en = {
   "gemini.row": "Add expenses with Gemini",
   "gemini.setupTitle": "Add expenses with Gemini",
   "gemini.setupIntro":
-    "Tell Gemini “Evenly, taxi 25 split with Ana” and it writes it down in a calendar. Next time you open Evenly, you check it and add it in a tap. Set it up once:",
+    "Tell Gemini “taxi 25, split with Ana” and it writes it down in a calendar. Next time you open Evenly, you check it and add it in a tap. Set it up once:",
   "gemini.step1": "Create a Google calendar named “Evenly”.",
   "gemini.openCalendar": "Open Google Calendar",
-  "gemini.step2": "In Gemini, open Personalize → Skills → + → Create manually, and paste this text:",
-  "gemini.copy": "Copy the text",
+  "gemini.step2": "Create the Gemini skill. Gemini opens with the request typed: just tap send.",
+  "gemini.createSkill": "Create the skill in Gemini",
+  "gemini.byHand": "Or create it by hand",
+  "gemini.byHandHint": "In Gemini, open Personalize → Skills → + → Create manually, and fill in its three fields:",
+  "gemini.noApp": "The Gemini app isn't on this phone. Create the skill by hand.",
+  "gemini.createPrompt":
+    "Create a new skill for me with exactly these fields, without changing any of the text:\n\nName: {name}\n\nDescription: {description}\n\nInstructions: {instructions}",
+  "gemini.part.name": "Name",
+  "gemini.part.description": "Description",
+  "gemini.part.instructions": "Instructions",
+  "gemini.copy.name": "Copy the name",
+  "gemini.copy.description": "Copy the description",
+  "gemini.copy.instructions": "Copy the instructions",
+  "gemini.skillName": "note-expense",
+  "gemini.skillDescription":
+    "Writes down a shared expense (a trip cost split with friends) in the \"Evenly\" calendar. Use when the user mentions money they or a friend spent that should be split or noted down, e.g. \"I paid 25 for the taxi\", \"dinner 60, split with Ana\", \"add an expense\", \"Bia paid 80 for groceries\", or when they say Evenly (or something that sounds like it: evenlee, even lee, ivenli).",
   "gemini.copied": "Copied",
   "gemini.step3": "Let Evenly read that calendar.",
   "gemini.allow": "Allow calendar access",
@@ -249,7 +263,7 @@ export const en = {
   "gemini.notFound":
     "The “Evenly” calendar isn't on this phone yet. It can take a minute after you create it.",
   "gemini.skillText":
-    'When I say Evenly or ask to add an expense for Evenly, create an event in my "Evenly" calendar that starts now and lasts 15 minutes. Its title must be exactly: amount | what | split with | trip | paid by. amount: only the number, no currency. what: what it was for, in my words. split with: the names I said, separated by commas. trip: the trip name, only if I said one. paid by: who paid, only if it wasn\'t me. Leave anything I didn\'t say empty, but keep all the |. Example: "Evenly, taxi 25 split with Ana and Bia" → 25 | taxi | Ana, Bia | | . The names are trip members, not contacts: never look up contacts and never invite anyone. Then confirm in one short sentence.',
+    'Create an event in my "Evenly" calendar that starts now and lasts 15 minutes. Its title must be exactly: amount | what | split with | trip | paid by. amount: only the number, no currency. what: what it was for, in my words. split with: the names I said, separated by commas. trip: the trip name, only if I said one. paid by: who paid, only if it wasn\'t me. Leave anything I didn\'t say empty, but keep all the |. Example: "taxi 25 split with Ana and Bia" → 25 | taxi | Ana, Bia | | . The names are trip members, not contacts: never look up contacts and never invite anyone. Then confirm in one short sentence.',
   "gemini.title": "From Gemini",
   "gemini.subtitle": "Check them, then add. Nothing is saved yet.",
   "gemini.fallbackDescription": "Expense",

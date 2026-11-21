@@ -23,4 +23,4 @@ The owner invites friends with a short-lived 6-digit code, created on demand. Fr
 - **INV-9** Code guessing is limited: a user gets a limited number of failed attempts per time window.
 - **INV-10** Only the owner can create codes.
 - **INV-11** A user who left or was removed can rejoin with a new valid code. Their former place is now a guest (MEM-5), so they can claim it back (MEM-7) with its expenses, or join as a new member.
-- **INV-12** No shareable join links; code only.
+- **INV-12** No shareable join links; code only. Why (looked at on 2026-11-20): Android could open a link in the app, but on iPhone a link opens in Safari, not the Home Screen app, and Safari is a separate identity (ID-10), so an iPhone user would end up joining as someone else.
