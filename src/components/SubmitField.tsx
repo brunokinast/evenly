@@ -18,7 +18,7 @@ type Props = InputHTMLAttributes<HTMLInputElement> & {
 };
 
 /**
- * A text field with a round submit button inside its right edge (specs/design.md "Field with a submit
+ * A text field with a round submit button inside its right edge (docs/specs/design.md "Field with a submit
  * button"). Place it in a <form>: the button and Enter both submit.
  */
 export function SubmitField({

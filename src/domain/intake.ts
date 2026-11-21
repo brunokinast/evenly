@@ -1,7 +1,7 @@
 import { newDraft, type ExpenseDraft } from "./draft";
 import type { Member, Trip } from "./types";
 
-// Gemini intake (specs/features/assistant.md): reading the events Gemini writes into the "Evenly" calendar.
+// Gemini intake (docs/specs/assistant.md): reading the events Gemini writes into the "Evenly" calendar.
 
 /** An event of the "Evenly" calendar, as the phone's calendar gives it. */
 export type IntakeEvent = { id: string; title: string; start: number; allDay: boolean };

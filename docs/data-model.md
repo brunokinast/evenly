@@ -1,6 +1,6 @@
 # Data model
 
-Firestore schema and Security Rules design. Designed from `specs/` only. Written so a reader with no context (including future Kotlin code) can use it.
+Firestore schema and Security Rules design. Designed from `docs/specs/` only. Written so a reader with no context (including future Kotlin code) can use it.
 
 ## Principles
 

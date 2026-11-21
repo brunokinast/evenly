@@ -18,7 +18,7 @@ type Props = {
   errorText?: string;
 };
 
-/** Confirmation (specs/design.md): the consequence in plain words, the destructive action in red. */
+/** Confirmation (docs/specs/design.md): the consequence in plain words, the destructive action in red. */
 export function ConfirmSheet({
   open,
   title,

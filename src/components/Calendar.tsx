@@ -13,7 +13,7 @@ const sameDay = (a: Date, b: Date) =>
   a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
 /**
- * Month calendar (specs/design.md, Date and time sheet): fixed 6-week grid, days after `max` disabled.
+ * Month calendar (docs/specs/design.md, Date and time sheet): fixed 6-week grid, days after `max` disabled.
  * `value` and `max` are local midnights.
  */
 export function Calendar({ value, max, onPick }: { value: Date; max: Date; onPick: (day: Date) => void }) {

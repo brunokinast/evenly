@@ -6,7 +6,7 @@ import { changes } from "@/lib/changes";
 import { devCalendar } from "./devCalendar";
 
 /**
- * The "Evenly" calendar on this phone, where Gemini writes expenses (specs/features/assistant.md).
+ * The "Evenly" calendar on this phone, where Gemini writes expenses (docs/specs/assistant.md).
  * Device state, not server data: the Android app reads it through EvenlyCalendarPlugin.java.
  */
 export type CalendarAccess = "granted" | "denied" | "prompt";

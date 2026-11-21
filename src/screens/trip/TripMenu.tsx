@@ -38,7 +38,7 @@ export function TripMenu({ open, view, onClose, onAddGuest, onLeaving, onLeft }:
   return (
     <>
       <Sheet open={open && step === "menu"} onClose={close} title={trip.name}>
-        {/* specs/design.md "⋯ menu sheet": one grouped list, destructive last. */}
+        {/* docs/specs/design.md "⋯ menu sheet": one grouped list, destructive last. */}
         <ListGroup>
           {isOwner ? (
             <>

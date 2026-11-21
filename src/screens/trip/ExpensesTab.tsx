@@ -32,7 +32,7 @@ export function ExpensesTab({ view }: { view: TripView }) {
   const total = money(totalSpent(expenses), trip.currency);
   return (
     <>
-      {/* specs/design.md "Trip total". */}
+      {/* docs/specs/design.md "Trip total". */}
       <div className="flex flex-col items-center px-1 pt-2 pb-1 text-center">
         <span className="text-caption text-fg-muted">{t("expenses.total")}</span>
         <span className={cn("whitespace-nowrap", total.length > 11 ? "text-total" : "text-amount")}>

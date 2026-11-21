@@ -41,7 +41,7 @@ const confirm = (e: Edit, ...fields: GuessField[]): Edit => ({
   confirmed: [...e.confirmed, ...fields],
 });
 
-/** The "From Gemini" sheet over Home (specs/features/assistant.md). `trips` in Home's order. */
+/** The "From Gemini" sheet over Home (docs/specs/assistant.md). `trips` in Home's order. */
 export function GeminiReview({ trips, myUid }: { trips: Trip[]; myUid: string }) {
   const inbox = useCalendarInbox();
   const online = useOnline();

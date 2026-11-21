@@ -4,7 +4,7 @@ import { Logo } from "@/components/Logo";
 import { t } from "@/i18n";
 import { ApkDownload, IosSteps } from "../install/InstallSheets";
 
-/** ID-10 (specs/design.md "Install first"): before the name, where the installed app is a separate identity. */
+/** ID-10 (docs/specs/design.md "Install first"): before the name, where the installed app is a separate identity. */
 export function InstallFirst({ method }: { method: "apk" | "ios" }) {
   const { apkUrl } = useInstall();
   return (

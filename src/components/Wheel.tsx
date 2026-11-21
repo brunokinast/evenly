@@ -4,7 +4,7 @@ import { cn } from "@/lib/cn";
 const ROW = 44; // px, matches h-11
 
 /**
- * Scroll-and-snap wheel (specs/design.md, Date and time sheet): five rows visible, the middle one is the
+ * Scroll-and-snap wheel (docs/specs/design.md, Date and time sheet): five rows visible, the middle one is the
  * value. A listbox for screen readers and keyboards (arrow keys); tapping a row picks it.
  */
 export function Wheel(props: {

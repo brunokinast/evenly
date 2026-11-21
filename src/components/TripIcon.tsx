@@ -20,7 +20,7 @@ import {
 import type { TripIcon as TripIconId } from "@/domain/types";
 import { IconTile } from "./List";
 
-/** TRIP-4 ids → Lucide icons (specs/design.md "Icons"). */
+/** TRIP-4 ids → Lucide icons (docs/specs/design.md "Icons"). */
 export const TRIP_ICON: Record<TripIconId, LucideIcon> = {
   luggage: Luggage,
   flight: Plane,

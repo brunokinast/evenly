@@ -1,4 +1,4 @@
-// "The keyboard never covers the field being typed in" (specs/design.md). Android resizes the layout
+// "The keyboard never covers the field being typed in" (docs/specs/design.md). Android resizes the layout
 // (interactive-widget=resizes-content); iOS doesn't, so --kb holds the keyboard height for sheets and bars.
 const vv = window.visualViewport;
 

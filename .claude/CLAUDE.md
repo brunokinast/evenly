@@ -4,7 +4,9 @@ Trip expense splitting app, maintained entirely by Claude. The user doesn't writ
 
 ## Where things are
 
-- `specs/`: source of truth for behavior (acceptance criteria like `TRIP-3`) and `specs/design.md` for visuals.
+Everything is in `docs/` (index: `docs/README.md`).
+
+- `docs/specs/`: source of truth for behavior (one file per feature, acceptance criteria like `TRIP-3`) and `docs/specs/design.md` for visuals.
 - `docs/architecture.md`: folders, layers, the live-data pattern. `docs/data-model.md`: Firestore schema and rules design.
 - `docs/decisions/`: ADRs (append-only; a changed decision gets a new ADR). Read `0001` before proposing any technology.
 - `docs/performance.md`: how speed is measured, targets and findings. `docs/relink.md`: moving a person's trips to a new identity.
@@ -17,7 +19,7 @@ Trip expense splitting app, maintained entirely by Claude. The user doesn't writ
 - Every write is one document or one batched write that the Security Rules validate. No Cloud Functions, no transactions.
 - Writes that change existing documents aren't awaited by screens (local-first, EXP-8/APP-9; `docs/architecture.md`).
 - Money is integer cents; times are integer ms. Format with `Intl`, never by hand.
-- Follow `specs/design.md` tokens; no literal colors.
+- Follow `docs/specs/design.md` tokens; no literal colors.
 - Previews go on a local LAN server for the user's phone, never published to claude.ai.
 
 ## Git
@@ -31,7 +33,7 @@ Any feature, bug or change request goes through the `change-workflow` skill (`.c
 ## Commands
 
 - `npm run check`: typecheck + lint + unit tests + rules tests (starts the Firestore emulator; needs Java).
-- `npm run preview:lan`: emulators (data kept in `.emulator-data/`) + demo trip + dev server for the phone at `http://<LAN IP>:5173`. Demo trip: join with code **123456** (`scripts/seed-demo.mjs`; `npm run demo:reset` rewrites it). On the emulators the Profile sheet has "Reset account (testing)": new identity, back to Welcome. Without `VITE_FIREBASE_*` env vars the app always uses the emulators.
+- `npm run preview:lan`: emulators (data kept in `.emulator-data/`) + demo trip + dev server for the phone at `http://<LAN IP>:5173`. Demo trip: join with code **123456** (`scripts/seed-demo.mjs`; `npm run demo:reset` rewrites it). On the emulators the Profile sheet has "Reset account (testing)": new identity, back to Welcome. Every build except `vite build` (mode `production`) uses the emulators.
 - `npm run emulators`: just the emulators, empty (used by e2e).
 - `npm run e2e`: Playwright phone-viewport checks; screenshots in `test-results/`.
 - `npm run deploy`: builds and deploys the website and the Firestore rules to the real project (only with the user's OK).
@@ -54,7 +56,7 @@ Any feature, bug or change request goes through the `change-workflow` skill (`.c
 - PDF export is lazy (`import("./pdf/exportPdf")`); its chunk is listed in `ON_DEMAND` in `scripts/check-bundle-size.mjs`. New on-demand code must be added there. Text goes through `PdfText` (`pdf/text.ts`, ADR 0006), never pdf-lib's `drawText`.
 - Rules tests reuse a Firestore emulator already running on :8080 (e.g. the LAN preview); otherwise they start one. They use project `demo-evenly-rules` so `clearFirestore()` never wipes the preview's `demo-evenly` data. Scripts that join the demo trip must remove themselves after (`seed-demo.mjs --remove-name`).
 - People lists use `view.listed` (MEM-6: me first, then join order); computations keep `trip.members` order. Button pairs go in `ButtonRow`; one-field forms use `SubmitField`.
-- Typecheck with `npm run typecheck` (`tsc -b`); `tsc --noEmit -p .` checks nothing here (the root tsconfig only has references).
+- Typecheck with `npm run typecheck` (`tsc -b`, one `tsconfig.json` for the app, tests and scripts).
 - Gemini intake (ADR 0008): the expense fields with a picker live in `src/screens/expense/fields.tsx`, shared by the form and the Gemini review; add a field there, never in one screen. On the dev server the "Evenly" calendar is a localStorage stand-in (`evenly.devCalendar`, see `tests/e2e/gemini.spec.ts`). To try it on a phone with Evenly Dev: `adb shell pm grant br.com.kinast.evenly.debug android.permission.READ_CALENDAR` (and WRITE_CALENDAR), or use Profile → "Add expenses with Gemini".
 - TypeScript is pinned to 6.0 (typescript-eslint support); Firebase JS SDK to 12 (Capacitor Firebase plugins).
 - `@emnapi/core` and `@emnapi/runtime` are listed only so `npm ci` works on CI's Linux: npm on Windows leaves rolldown's wasm-only dependency out of the lock file. When rolldown updates, set them to the version `@rolldown/binding-wasm32-wasi` asks for (or drop them if `npm ci` passes on CI without).

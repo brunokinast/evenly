@@ -26,7 +26,7 @@ import java.util.List;
 import org.json.JSONArray;
 
 /**
- * Gemini intake (specs/features/assistant.md): Gemini writes expenses as events in a Google calendar named
+ * Gemini intake (docs/specs/assistant.md): Gemini writes expenses as events in a Google calendar named
  * "Evenly"; this reads them from the phone's calendar store, asks for a sync first (AST-3) and deletes the
  * handled ones (AST-9, AST-10). JS side: src/app/calendarInbox.ts.
  */
