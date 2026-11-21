@@ -32,12 +32,61 @@ export function isWellFormed(e: Expense): boolean {
 
 export type Payment = { from: string; to: string; cents: number };
 
+/** Past this many people owing or owed, finding the groups (2^n work) is skipped: one group (BAL-3). */
+const MAX_GROUPED = 15; // ~1 ms on a PC, a few on a phone; 18 took 5–7 ms on a PC
+
 /**
- * BAL-3: repeatedly the member who owes the most pays the member owed the most the smaller of the two
- * amounts. Ties go to the earlier id in `order` (member order), so results are stable.
+ * BAL-3: the fewest payments. People are split into the most groups whose balances sum to zero, and each
+ * group settles within itself (n people with a non-zero balance in k groups → n − k payments). Ties go to the
+ * earlier id in `order` (member order), so results are stable.
  */
 export function settlements(balance: Map<string, number>, order: string[]): Payment[] {
   const ids = [...order, ...[...balance.keys()].filter((id) => !order.includes(id))];
+  const open = ids.filter((id) => (balance.get(id) ?? 0) !== 0);
+  return zeroSumGroups(open, balance).flatMap((group) => settleGroup(group, balance));
+}
+
+/**
+ * The most groups whose balances sum to zero. most[m] = the most zero-sum groups that the people in bit set
+ * m can be ordered into, taking them one at a time: each time the running sum is zero, a group closes.
+ * If balances don't sum to zero (a malformed expense, BAL-1), the rest is one last group.
+ */
+function zeroSumGroups(ids: string[], balance: Map<string, number>): string[][] {
+  const n = ids.length;
+  if (n > MAX_GROUPED) return n ? [ids] : [];
+  const cents = ids.map((id) => balance.get(id)!);
+  const size = 1 << n;
+  const sum = new Float64Array(size); // whole cents: exact
+  const most = new Int8Array(size);
+  for (let m = 1; m < size; m++) {
+    const low = m & -m;
+    sum[m] = sum[m ^ low]! + cents[31 - Math.clz32(low)]!;
+    let best = 0;
+    for (let rest = m; rest; rest &= rest - 1) best = Math.max(best, most[m ^ (rest & -rest)]!);
+    most[m] = best + (sum[m] === 0 ? 1 : 0);
+  }
+  // Walk back from everyone, removing one person at a time along a best path; a zero sum ends a group.
+  const groups: number[][] = [];
+  let current: number[] = [];
+  for (let m = size - 1; m; ) {
+    if (sum[m] === 0 && current.length) {
+      groups.unshift(current);
+      current = [];
+    }
+    const keep = most[m]! - (sum[m] === 0 ? 1 : 0);
+    let rest = m;
+    while (most[m ^ (rest & -rest)] !== keep) rest &= rest - 1; // the lowest such person: stable
+    const bit = rest & -rest;
+    current.push(31 - Math.clz32(bit));
+    m ^= bit;
+  }
+  if (current.length) groups.unshift(current);
+  // Back to member order inside each group.
+  return groups.map((g) => g.sort((a, b) => a - b).map((i) => ids[i]!));
+}
+
+/** Within a group: the member who owes the most pays the member owed the most the smaller amount. */
+function settleGroup(ids: string[], balance: Map<string, number>): Payment[] {
   const b = new Map(ids.map((id) => [id, balance.get(id) ?? 0]));
   const out: Payment[] = [];
   // At most one payment per member settles everyone; the cap also guards against balances not summing to 0.

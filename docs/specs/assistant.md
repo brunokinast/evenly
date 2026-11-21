@@ -12,7 +12,7 @@ Nothing reaches a trip until the user confirms it. The next time Evenly opens, i
 
 1. **Setup** (once, Android app only): Profile → "Add expenses with Gemini" opens a short guide: create the "Evenly" calendar, create the Gemini skill (one button opens Gemini with the request already typed: tap send; or by hand), allow Evenly to read the calendar.
 2. **Say it**, in plain words, no keyword needed: "dinner 60 split with everyone", "gastei 32 no uber com a Ana na viagem Lisboa, a Bia pagou". Saying "Evenly" also works. Gemini confirms and shows its usual event card.
-3. **Review**: open Evenly → after Home's list shows, the "From Gemini" sheet slides up with every pending expense, one line each. A dot marks the lines that need a look. Tap a line to open it in place and change anything; Remove drops it.
+3. **Review**: open or come back to Evenly, on any screen → the "From Gemini" sheet slides up with every pending expense, one line each. A dot marks the lines that need a look. Tap a line to open it in place and change anything; Remove drops it.
 4. **Add**: "Add 3 expenses" saves them all; "Later" keeps them for next time.
 
 ## Acceptance criteria
@@ -25,7 +25,7 @@ Nothing reaches a trip until the user confirms it. The next time Evenly opens, i
   Under the steps, a line says whether the "Evenly" calendar was found on the phone.
 
 - **AST-2** The skill makes Gemini add an event **starting now** to the "Evenly" calendar, titled `amount | what | split with | trip | paid by`: the amount as a plain number, what it was for in the user's words, the names said, the trip name if said, and who paid if it wasn't the user. Anything not said stays empty. Gemini never looks up contacts or invites anyone.
-- **AST-3** When Evenly checks: each time the Android app opens or comes back to the screen, once Home's trip list is shown (so starting up is never slower), if calendar access is allowed. It asks the phone to sync the calendar and reads every event in it; events that arrive while the app is open are picked up too.
+- **AST-3** When Evenly checks: each time the Android app opens or comes back to the screen, whatever screen it's on, once the list of trips has loaded (so starting up is never slower), if calendar access is allowed. It asks the phone to sync the calendar and reads every event in it; events that arrive while the app is open are picked up too.
 - **AST-4** Reading an event (forgiving):
   - **Amount**: reads 32, 32.50, 32,50, 1.234,56 or 1,234.56. Currency words and symbols are ignored: the trip's currency is used.
   - **What**: as written. If it's empty, "Expense".
@@ -35,7 +35,7 @@ Nothing reaches a trip until the user confirms it. The next time Evenly opens, i
   - **When**: the event's start time, never in the future. An all-day event means noon that day.
   - A title without `|` (e.g. typed by hand) is read as: its first number is the amount, the rest is what it was for.
 - **AST-5** Matching ignores capitals, accents and extra words, and tolerates small spelling differences ("bea" → Bia, "lisboa" → Lisbon). The best match is always used. When the match is weak, or two candidates are about equally close, that field is marked as a **guess**.
-- **AST-6** Review sheet: when there's at least one event, a "From Gemini · n" sheet opens over Home.
+- **AST-6** Review sheet: when there's at least one event, a "From Gemini · n" sheet opens over the current screen. If the user is in the middle of something (a sheet is open, or they're on the Add/Edit expense screen), it waits and opens once they're done.
   - **Lines**: grouped by trip, in Home's order. Each line shows the description, who shares it ("All" or the names) and the amount in the trip's currency. A marigold dot marks a line with a guess; a red dot marks one that can't be added yet (no amount).
   - **Opening a line**: tapping it opens it in place (one at a time). It shows:
     - the description as a text field;

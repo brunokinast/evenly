@@ -120,7 +120,30 @@ test("AST-10 Later keeps everything for next time; AST-8 another trip resets pay
   await expect(ana.getByRole("dialog", { name: "From Gemini · 1" }).getByText("Lisbon")).toBeVisible();
 });
 
-test("AST-1 the setup guide in Profile", async ({ browser }, info) => {
+test("AST-3 AST-6 the review opens on any screen, but waits while adding an expense", async ({ browser }) => {
+  const ana = await newUser(browser, "Ana");
+  await lisbonWithBia(ana);
+  await ana.getByRole("button", { name: /Lisbon/ }).click();
+  await expect(ana).toHaveURL(/\/trip\//);
+  const sheet = ana.getByRole("dialog", { name: /^From Gemini/ });
+
+  // In a trip: the app comes back with one event → the review opens right there.
+  await geminiWrote(ana, ["60 | dinner | | |"]);
+  await expect(sheet.getByRole("heading", { name: "From Gemini · 1" })).toBeVisible();
+  await expect(ana).toHaveURL(/\/trip\//);
+  await sheet.getByRole("button", { name: "Later" }).click();
+
+  // On the Add expense screen it waits, and opens once the user leaves it.
+  await ana.getByRole("button", { name: "Add expense" }).click();
+  await expect(ana).toHaveURL(/\/expense\/new/);
+  await geminiWrote(ana, ["60 | dinner | | |", "25 | taxi | | |"]);
+  await expect(ana.getByRole("textbox", { name: "Amount" })).toBeVisible();
+  await expect(sheet).toHaveCount(0);
+  await ana.goBack();
+  await expect(sheet.getByRole("heading", { name: "From Gemini · 2" })).toBeVisible();
+});
+
+test("AST-1 the setup guide in Profile",async ({ browser }, info) => {
   const ana = await newUser(browser, "Ana");
   await ana.getByRole("button", { name: "Profile" }).click();
   await ana.getByRole("button", { name: "Add expenses with Gemini" }).click();
